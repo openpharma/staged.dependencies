@@ -1,0 +1,10 @@
+# For Example purposes
+---
+staging_rule: features-master
+repositories:
+- repo: Roche/rtables
+  host: api.github.com
+  type: github
+- repo: Roche/respectables
+  host: api.github.com
+  type: github
