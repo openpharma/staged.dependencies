@@ -11,7 +11,7 @@
 #' \dontrun{
 #' restore()
 #' }
-restore <- function(local_branch = NULL, project = ".", upgrade = c("default", "ask", "always", "never")) {
+restore <- function(target_branch, local_branch = NULL, project = ".", upgrade = c("default", "ask", "always", "never")) {
 
   upgrade <- match.arg(upgrade)
 
@@ -75,8 +75,8 @@ install_staged_dependency <- function(x, upgrade, local_branch, staging_rule) {
 
   # TODO check if this works
   switch(x$type,
-         "github" = do.call(remotes::install_github, c(x[-("type")], list(ref = branch, auth_token = GITHUB_PAT))),
-         "gitlab" = do.call(remotes::install_gitlab, c(x[-("type")], list(ref = branch, auth_token = GITLAB_PAT)))
+         "github" = do.call(remotes::install_github, c(x[-("type")], list(ref = remote_ref, auth_token = GITHUB_PAT))),
+         "gitlab" = do.call(remotes::install_gitlab, c(x[-("type")], list(ref = remote_ref, auth_token = GITLAB_PAT)))
   )
 }
 
@@ -90,18 +90,37 @@ install_staged_dependency <- function(x, upgrade, local_branch, staging_rule) {
 #' @examples
 #'
 #' determine_remote_ref("01_abc", c("main", "01_abc"))
-#' determine_remote_ref("01_abc", c("main", "01_abc"), feature_keyword = "") # always match branches
+#' determine_remote_ref("01_abc", c("main", "01_abc"), feature_keyword = "^") # always match branches
+#'
+#' determine_remote_ref("feature:01_abc", c("main", "feature:01_abc"))
 #'
 #' determine_remote_ref("pre-release/01_abc", c("main", "01_abc", "pre-release"))
 #'
-#' determine_remote_ref("feature:01_abc", c("main", "feature:01_abc", "devel"))
+#' determine_remote_ref("pre-release/devel/01_abc", c("main", "01_abc", "pre-release", "devel"))
+#' determine_remote_ref("pre-release/devel/01_abc", c("main", "01_abc", "devel"))
+#' determine_remote_ref("pre-release/devel/01_abc", c("main", "01_abc"))
+#' determine_remote_ref("pre-release/devel/01_abc", c("01_abc"))
+#'
+#'
+#' determine_remote_ref("devel/01_abc", c("devel", "pre-release", "master"))
+#' determine_remote_ref("master/01_abc", c("devel", "pre-release", "master"))
+#'
+#' determine_remote_ref("pre-release/main/devel/feature:01_abc", c("main", "feature:01_abc", "devel"))
+#'
+#'
+#' devel > pre-release > master
+#' main > pre-release > releases/2020_01_01
 #'
 #' determine_remote_ref("feature:01_abc", c("main", "feature:01_abc", "devel"))
 #'
+#' determine_remote_ref("feature:01_abc", c("main", "feature:01_abc", "devel"))
 #'
+#'
+#' # TODO: rename arguments: pkg_branch, dep_branches
 determine_remote_ref <- function(local_branch, remote_branches, overall_fallback = "main", feature_keyword = "^feature:") {
 
-  els <- unlist(strsplit(local_branch, "/", fixed = TRUE))
+  # TODO: feature_keyword needed?
+  els <- unlist(strsplit(local_branch, "/", fixed = TRUE)) # TODO: maybe remove and make it simpler
 
   if (grepl(feature_keyword, tail(els, 1)) && local_branch %in% remote_branches) {
     local_branch

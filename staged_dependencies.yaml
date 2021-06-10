@@ -1,13 +1,16 @@
 # For Example purposes
 ---
-repositories:
+overall_fallback:
+  - main
+  - pre-release
+upstream-repositories:
 - repo: Roche/rtables
   host: https://api.github.com/v3
   type: github
 - repo: Roche/respectables
   host: https://api.github.com
   type: github
-
+downstream-repositories:
 
 
 # TODO: need downstream & upstream dependencies
