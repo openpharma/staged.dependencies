@@ -1,0 +1,9 @@
+Name: Restore Upstream Dependencies
+Description: Installs upstream dependencies from particular branches
+Binding: restore
+Interactive: false
+
+Name: Check if changes in current package de
+Description: Installs upstream dependencies from particular branches
+Binding: check_downstream
+Interactive: false

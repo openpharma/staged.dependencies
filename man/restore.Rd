@@ -4,7 +4,11 @@
 \alias{restore}
 \title{Restore Staged Dependencies}
 \usage{
-restore(project = ".", upgrade = c("default", "ask", "always", "never"))
+restore(
+  local_branch = NULL,
+  project = ".",
+  upgrade = c("default", "ask", "always", "never")
+)
 }
 \description{
 Restore Staged Dependencies

@@ -1,10 +1,13 @@
 # For Example purposes
 ---
-staging_rule: features-master
 repositories:
 - repo: Roche/rtables
-  host: api.github.com
+  host: https://api.github.com/v3
   type: github
 - repo: Roche/respectables
-  host: api.github.com
+  host: https://api.github.com
   type: github
+
+
+
+# TODO: need downstream & upstream dependencies

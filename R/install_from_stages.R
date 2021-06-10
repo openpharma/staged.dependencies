@@ -11,7 +11,7 @@
 #' \dontrun{
 #' restore()
 #' }
-restore <- function(project = ".", upgrade = c("default", "ask", "always", "never")) {
+restore <- function(local_branch = NULL, project = ".", upgrade = c("default", "ask", "always", "never")) {
 
   upgrade <- match.arg(upgrade)
 
@@ -24,23 +24,28 @@ restore <- function(project = ".", upgrade = c("default", "ask", "always", "neve
     message("file staged_dependencies.yaml does not exits in project folder")
   } else {
 
-    # TODO: is there a better way?
-    local_branch <- system2("git", args = c("--git-dir", file.path(fpath, ".git"), "branch"), stdout = TRUE)
-
-    if (identical(local_branch,128)) ## TODO: is there a better way?
-      stop("no git repo")
-
-    local_branch <- gsub("^\\*[[:space:]]", "", local_branch)
+    if (is.null(local_branch)) {
+      # TODO: is there a better way?
+      local_branch <- system2("git", args = c("--git-dir", file.path(project, ".git"), "branch"), stdout = TRUE)
+      if (identical(local_branch,128)) ## TODO: is there a better way?
+        stop("no git repo")
+      local_branch <- gsub("^\\*[[:space:]]", "", local_branch)
+    }
 
     x <- read_yaml(fpath)$repo
 
-    staging_rule <- x$staging_rule
-
     lapply(x$repos, install_staged_dependency,
-           upgrade = upgrade, local_branch = local_branch, staging_rule = staging_rule)
+           upgrade = upgrade, local_branch = local_branch, staging_rule = x$staging_rule)
+
   }
 }
 
+empty_to_null <- function(x) {
+  if (identical(x, ""))
+    NULL
+  else
+    x
+}
 
 install_staged_dependency <- function(x, upgrade, local_branch, staging_rule) {
 
@@ -50,10 +55,19 @@ install_staged_dependency <- function(x, upgrade, local_branch, staging_rule) {
   GITHUB_PAT <- Sys.getenv("GITHUB_PAT")
   GITLAB_PAT <- Sys.getenv("GITLAB_PAT")
 
-  remote_branches <- switch(x$type,
-                            "github" = gh::gh(paste0("GET /repos/", x$repo, "/branches")), # todo GITHUB_PAT
-                            "gitlab" = c(), # TODO: gitlab rest api call with GITLAB_PAT
-                            stop(paste("remote types supported are github and gitlab,", x$ref, "has remote type:", x$type)),
+  remote_branches <- switch(
+    EXPR = x$type,
+    "github" = {
+      obj <- gh::gh(
+        endpoint = paste0("GET /repos/", x$repo, "/branches"),
+        .token = empty_to_null(GITHUB_PAT),
+        .api_url = x$host,
+        .send_headers = c("Accept" = "application/vnd.github.inertia-preview+json")
+      )
+      vapply(obj, `[[`, character(1), "name")
+    },
+    "gitlab" = c(), # TODO: gitlab rest api call with GITLAB_PAT
+    stop(paste("remote types supported are github and gitlab,", x$ref, "has remote type:", x$type))
   )
 
   # branch to install remote repo from
@@ -67,11 +81,46 @@ install_staged_dependency <- function(x, upgrade, local_branch, staging_rule) {
 }
 
 
-determine_remote_ref <- function(local_branch, remote_branches, staging_rule) {
+#' Implement Staging Rules
+#'
+#' @param local_brach name of branch of package to install
+#' @param remote_branches names of
+#'
+#'
+#' @examples
+#'
+#' determine_remote_ref("01_abc", c("main", "01_abc"))
+#' determine_remote_ref("01_abc", c("main", "01_abc"), feature_keyword = "") # always match branches
+#'
+#' determine_remote_ref("pre-release/01_abc", c("main", "01_abc", "pre-release"))
+#'
+#' determine_remote_ref("feature:01_abc", c("main", "feature:01_abc", "devel"))
+#'
+#' determine_remote_ref("feature:01_abc", c("main", "feature:01_abc", "devel"))
+#'
+#'
+determine_remote_ref <- function(local_branch, remote_branches, overall_fallback = "main", feature_keyword = "^feature:") {
 
-  # TODO: first implement the feature/* rule
-  "master"
+  els <- unlist(strsplit(local_branch, "/", fixed = TRUE))
+
+  if (grepl(feature_keyword, tail(els, 1)) && local_branch %in% remote_branches) {
+    local_branch
+  } else {
+    fallback <- c(head(els, -1), overall_fallback)
+
+    final_fallback <- fallback[fallback %in% remote_branches]
+
+    if (length(final_fallback) == 0)
+      stop("none of the fallback branches exist in the remote repository:", paste(fallback, collapse = ", "))
+    else
+      final_fallback[1]
+  }
 }
 
+# TODO
+check_downstream <- function(includ_current_package = TRUE) {
 
-# TODO: create rstudio adin restore that calls restore(".")
+  # download downstream packages from particular branch and run R CMD build & R CMD check
+
+}
+
