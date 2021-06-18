@@ -4,11 +4,12 @@
 \alias{restore}
 \title{Restore Staged Dependencies}
 \usage{
-restore(
-  local_branch = NULL,
-  project = ".",
-  upgrade = c("default", "ask", "always", "never")
-)
+restore(target = NULL, project = ".", ...)
+}
+\arguments{
+\item{target}{feature branch we want to build, includes fallbacks}
+
+\item{...}{additional args to pass to installation functions}
 }
 \description{
 Restore Staged Dependencies

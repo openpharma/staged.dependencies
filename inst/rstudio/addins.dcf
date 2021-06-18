@@ -1,9 +1,9 @@
 Name: Restore Upstream Dependencies
-Description: Installs upstream dependencies from particular branches
+Description: Installs upstream dependencies from particular branches to match feature branch
 Binding: restore
 Interactive: false
 
-Name: Check if changes in current package de
-Description: Installs upstream dependencies from particular branches
+Name: Check if changes in current package break downstream packages
+Description: Installs downstream dependencies and runs R CMD check on each of them
 Binding: check_downstream
 Interactive: false
