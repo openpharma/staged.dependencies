@@ -1,182 +1,222 @@
+# todo: into package.R
+CACHE_DIR <- "~/.staged.dependencies"
+if (!dir.exists(CACHE_DIR)) {
+  dir.create(CACHE_DIR)
+}
 
+# todo: function to clean cache
 
-#' Restore Staged Dependencies
+get_repo_cache_dir <- function(repo, host) {
+  file.path(CACHE_DIR, paste0(gsub("/", "_", repo, fixed = TRUE), "_", digest::digest(paste0(repo, "/", host))))
+}
+
+# system2_succeed <- function(...) {
+#   res <- system2(..., stdout = TRUE)
+#   if (!is.null(attr(res, "status"))) {
+#     # stop("Error running command '", toString(list(...)), "': ", toString(attr(res, "errmsg")))
+#     stop("Error running command")
+#   }
+#   res
+# }
+# system2_succeed("git", "hh")
+# system2_succeed("echo", "hh"
+# system2_succeed("git", args = c("-C", repo_dir, "pull")))
+# system2_succeed("git", args = c("clone", file.path(host, repo), repo_dir))
+# system2_succeed("git", args = c("-C", repo_dir, "branch", "-r", "-l"))
+# system2_succeed("git", args = c("-C", repo_dir, "checkout", ))
+#todo: remove
+
+# todo: add auth tokens?
+
+# checks out the correct branch (corresponding to target) in the repo, clones the repo if necessary
+checkout_repo <- function(repo, host, target) {
+  repo_dir <- get_repo_cache_dir(repo, host)
+  if (!dir.exists(repo_dir)) {
+    git_repo <- git2r::clone(url = file.path(host, repo), local_path = repo_dir)
+
+  } else {
+    git_repo <- git2r::repository(repo_dir)
+  }
+  git2r::pull(git_repo)
+  # this directory should only contain remote branches (+ 1 local master branch)
+  available_branches <- names(git2r::branches(git_repo, flags = "remote"))
+  available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
+  branch <- determine_branch(target, available_branches)
+  git2r::checkout(git_repo, branch = branch, force = TRUE) # force = TRUE to discard any changes (which should not happen)
+  repo_dir
+}
+
+# get upstream repos and downstream repos according to yaml file in repo directory
+get_deps_info <- function(repo_dir) {
+  stopifnot(dir.exists(repo_dir))
+  yaml_file <- file.path(repo_dir, "staged_dependencies.yaml")
+  if (file.exists(yaml_file)) {
+    yaml::read_yaml(yaml_file)
+  } else {
+    list(upstream_repos = list(), downstream_repos = list())
+  }
+}
+
+# checks out all repos to match target, starting from repos_to_process and including all upstream repos recursively
+# returns the order in which the repos must be installed
+checkout_repos <- function(repos_to_process, target) {
+  upstream_deps_graph <- list()
+  while (length(repos_to_process) > 0) {
+    repo_and_host <- repos_to_process[[1]]
+    repos_to_process <- setdiff(repos_to_process, repo_and_host)
+
+    stopifnot(!is.null(repo_and_host$repo))
+    stopifnot(!is.null(repo_and_host$host))
+
+    repo_dir <- checkout_repo(repo_and_host$repo, repo_and_host$host, target)
+    upstream_deps <- get_deps_info(repo_dir)$upstream_repos
+    processed_repos <- names(upstream_deps_graph)
+    repos_to_process <- union(repos_to_process, setdiff(upstream_deps, processed_repos))
+    upstream_deps_graph[[repo_and_host]] <- upstream_deps
+  }
+
+  install_order <- topological_sort(upstream_deps_graph)
+  install_order
+}
+
+# gets the currently checked out branch
+get_current_branch <- function(repo_dir) {
+  git2r::repository_head(git2r::repository(repo_dir))$name
+}
+
+#' Install upstream dependencies of project corresponding to target
 #'
 #' This reads the upstream dependencies for the project and installs the right branches based
-#' on the target. This does not include the current package (specified by `project`).
+#' on the target.
 #'
 #' @md
 #' @param project directory of project (for which to restore the dependencies according to target)
+#'   must be a git repository; currently checked out branch must be a local branch (not a remote branch)
+#' @param install_current_package whether to also install the current package
 #' @inheritParams install_staged_dependency
 #'
-#' @export
-#'
-#'
-#' @examples
-#' \dontrun{
-#' restore()
-#' }
-#'
-#' @importFrom yaml read_yaml
-restore <- function(target = NULL, project = ".", include_current_package = TRUE, ...) {
-  fpath <- normalizePath(
-    file.path(project, "staged_dependencies.yaml"),
-    winslash = "/", mustWork = FALSE # output error, see below
-  )
-  if (!file.exists(fpath)) {
-    stop("file staged_dependencies.yaml does not exits in project folder")
-  }
-
-  if (is.null(target)) {
-    # TODO: is there a better way? use git2r::branches
-    # get current branch as target
-    target <- get_current_branch(project)
-  }
-
-  repos_to_install <- read_yaml(fpath)$upstream_repos
-  if (include_current_package) {
-    repos_to_install <- c(repos_to_install, list())
-  }
-  lapply(repos_to_install, install_staged_dependency, target = target, ...)
-}
-
-#' Download downstream packages from particular branch and run `R CMD build & R CMD check`
-#' For each downstream package, we also install all of its dependencies.
-#'
-#' @inheritParams restore
-#' @param include_current_package whether to also install the current package
+#' @return installed packages in installation order
 #'
 #' @export
 #'
+#'
 #' @examples
 #' \dontrun{
-#' check_downstream()
+#' install_upstream_deps()
 #' }
-check_downstream <- function(target = NULL, project = ".", include_current_package = TRUE, ...) {
+#'
+#' # todo @importFrom yaml read_yaml
+install_upstream_deps <- function(target = NULL, project = ".", install_current_package = TRUE) {
   fpath <- normalizePath(
-    file.path(project, "staged_dependencies.yaml"),
+    file.path(project, "staged_dependencies.yaml"), #todo: yaml name into variable
     winslash = "/", mustWork = FALSE # output error, see below
   )
   if (!file.exists(fpath)) {
-    stop("file staged_dependencies.yaml does not exits in project folder")
+    warning("file staged_dependencies.yaml does not exist in project folder: not restoring anything")
   }
+
+  project_branch <- get_current_branch(project)
+  # todo: add
+  # stopifnot(project_branch == determine_branch(
+  #   target, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
+  # ))
 
   if (is.null(target)) {
-    # TODO: is there a better way? use git2r::branches
-    # get current branch
-    target <- get_current_branch(project)
+    target <- project_branch
   }
 
-  x <- c(read_yaml(fpath)$upstream_repos, read_yaml(fpath)$downstream_repos)
-  lapply(x, install_staged_dependency, target = target, ...)
+  repos_to_process <- get_deps_info(project)$upstream_repos
+  install_order <- checkout_repos(repos_to_process)
 
-  # todo
-  # install this package as well
-  # R CMD check "/Library/Frameworks/R.framework/Versions/3.6/Resources/library/scda.2021"
-}
-
-get_current_branch <- function(project) {
-  target <- system2("git", args = c("--git-dir", file.path(project, ".git"), "rev-parse", "--abbrev-ref", "HEAD"), stdout = TRUE)
-  if (identical(attr(target, "status"), 128L)) {
-    stop("no git repo")
-  }
-  target
-}
-
-empty_to_null <- function(x) {
-  if (identical(x, "")) {
-    NULL
-  } else {
-    x
-  }
-}
-
-# Returns the auth token from environment variable
-get_auth_token <- function(host) {
-  switch(
-    host,
-    "https://api.github.com" = Sys.getenv("PUBLIC_GITHUB_PAT"),
-    "https://github.roche.com/api/v3" = Sys.getenv("ROCHE_GITHUB_PAT"), # todo
-    "https://code.roche.com" = Sys.getenv("ROCHE_GITLAB_PAT") # todo: add to config file
-  )
-}
-
-# get branches for package specified by x with the remote API
-get_remote_branches <- function(x) {
-  auth_token <- get_auth_token(x$host)
-  available_branches <- switch(
-    EXPR = x$type,
-    "github" = {
-      obj <- gh::gh(
-        endpoint = paste0("GET /repos/", x$repo, "/branches"),
-        .token = empty_to_null(auth_token),
-        .api_url = x$host,
-        .send_headers = c("Accept" = "application/vnd.github.inertia-preview+json")
-      )
-      vapply(obj, `[[`, character(1), "name")
-    },
-    "gitlab" = {
-      # not working for GitLab, there is also the GitlabR package, but avoid this dependency
-      # obj <- gh::gh(
-      #   endpoint = paste0("GET /projects/", URLencode(x$repo, reserved = TRUE), "/repository/branches"),
-      #   .token = empty_to_null(auth_token),
-      #   .api_url = x$host
-      # )
-      obj <- content(GET(paste0(x$host, "/api/v4/projects/", URLencode(x$repo, reserved = TRUE),
-                                "/repository/branches"), query=list(private_token=empty_to_null(auth_token))))
-
-      vapply(obj, `[[`, character(1), "name")
-    },
-    stop(paste("remote types supported are github and gitlab,", x$ref, "has remote type:", x$type))
-  )
-}
-
-#' Install a package from a git repo with branch corresponding to target
-#'
-#' @param x info about how to fetch the package from git (GitHub or GitLab)
-#' @inheritParams determine_branch
-#' @param ... additional args to pass to installation functions
-#'
-#' @examples
-#' \dontrun{
-#' install_staged_dependency(list(repo = "openpharma/staged.dependencies", host = "https://api.github.com",
-#' type = "github"), "master", upgrade = FALSE)
-#' install_staged_dependency(list(repo = "NEST/utils.nest", host = "https://github.roche.com/api/v3",
-#'                                type = "github"), "master", upgrade = FALSE)
-#' install_staged_dependency(list(repo = "nest/scda.2021", host = "https://code.roche.com", type = "gitlab"), "master", upgrade = FALSE)
-#'
-#' # deps_file <- yaml::read_yaml("staged_dependencies.yaml")
-#' # install_staged_dependency(deps_file[["upstream_repos"]][[3]], "master", upgrade = FALSE)
-#' }
-#'
-#' @importFrom httr content GET
-install_staged_dependency <- function(x, target, ...) {
-
-  if (!all(c("repo", "host", "type") %in% names(x))) {
-    stop("incomplete information for:", paste(paste(names(x), x, sep = ": "), collapse = ", "))
+  for (repo_and_host in install_order) {
+    repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host)
+    install_repo_add_sha(repo_dir)
   }
 
-  # branch to install remote repo from
-  branch <- determine_branch(target, available_branches = get_remote_branches(x))
-  auth_token <- get_auth_token(x$host)
+  installed_pkgs <- install_order
+  if (install_current_package) {
+    install_repo_add_sha(project)
+    installed_pkgs <- c(installed_pkgs, project)
+  }
 
-  switch(x$type,
-         "github" = do.call(remotes::install_github, c(x[names(x) != "type"], list(ref = branch, auth_token = auth_token), list(...))),
-         "gitlab" = do.call(remotes::install_gitlab, c(x[names(x) != "type"], list(ref = branch, auth_token = auth_token), list(...)))
-  )
+  installed_pkgs
 }
 
-# install_staged_dependency(list(repo = "nest/scda.2021", host = "https://code.roche.com", type = "gitlab"), "master", upgrade = FALSE, force=TRUE, INSTALL_opts = "--with-keep.source")
-# remotes:::remote_download
-#
-# # git clone https://oauth2:, token, host_without_https
-# install_staged_dependency(x, target, ...)
-# branch <- determine_branch(target, available_branches = get_remote_branches(x))
-# path <- remotes:::remote_download(remotes:::github_remote(x$repo, ref = branch, auth_token = auth_token, host = x$host))
-# R CMD check path
-# R CMD install path
+install_repo_add_sha <- function(repo_dir) {
+  read_dcf <- function(path) {
+    fields <- colnames(read.dcf(path))
+    as.list(read.dcf(path, keep.white = fields)[1, ])
+  }
 
-# todo: incorporate workflow in gitlab
+  write_dcf <- function(path, desc) {
+    write.dcf(
+      rbind(unlist(desc)),
+      file = path,
+      keep.white = names(desc),
+      indent = 0
+    )
+  }
+
+  # returns the installed sha of a git package and NULL if package is not installed or sha was not saved in DESCRIPTION file
+  get_local_sha <- function(pkg_name) {
+    # see remotes:::package2remote
+    pkg_desc <- tryCatch(utils::packageDescription(pkg_name),
+                         error = function(e) NA, warning = function(e) NA)
+    if (identical(pkg_desc, NA)) {
+      return(NULL)
+    }
+    pkg_desc$RemoteSha
+  }
+
+  commit_sha <- git2r::sha(git2r::repository_head(git2r::repository(repo_dir)))
+
+  # see remotes:::add_metadata
+  source_desc <- file.path(repo_dir, "DESCRIPTION")
+  desc <- read_dcf(source_desc)
+  desc <- utils::modifyList(desc, list(RemoteSha = commit_sha))
+  write_dcf(source_desc, desc)
+
+  # only install if SHA differs
+  if (identical(commit_sha, get_local_sha(desc$Package))) {
+    cat("Skipping installation of", repo_dir, "since same commit sha already installed")
+    return(invisible(NULL))
+  }
+
+  install.packages(repo_dir, repos = NULL, type = "source")
+}
+
+# topologically sorts nodes so that parents are listed before all their children
+# child_to_parents: mapping from child to its parents (upstream dependencies)
+topological_sort <- function(child_to_parents) {
+  # depth-first search from children to parents, then output nodes in the order of finishing times
+  ordering <- c()
+
+  treat_node <- function(node) {
+    # cat("Treating node '", node, "'")
+    # Sys.sleep(1)
+    for (parent in setdiff(child_to_parents[[node]], ordering)) {
+      treat_node(parent)
+    }
+    ordering <<- c(ordering, node)
+  }
+
+  nodes_to_process <- names(child_to_parents)
+  while (length(nodes_to_process) > 0) {
+    treat_node(nodes_to_process[[1]])
+    nodes_to_process <- setdiff(nodes_to_process, ordering)
+  }
+
+  ordering
+}
+# all(topological_sort(list(n1 = c(), n2 = c("n1"), n3 = c("n2"), n4 = c("n2", "n3"))) == c("n1", "n2", "n3", "n4"))
+# is.null(topological_sort(list()))
+
+child_to_parents <- list(n1 = c(), n2 = c("n1"), n3 = c("n2"), n4 = c("n2", "n3"))
+target <- "feature1/devel"
+repo <- "Roche/rtables"
+host <- "https://github.com"
+
+
 
 #' Implement Staging Rules
 #'
