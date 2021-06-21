@@ -17,6 +17,9 @@ A target consists of branches separated by slashes of the form `name1/name2/.../
 Among the available branches, it searches in the order
 `name1/name2/.../nameN`, `name2/name3/.../nameN`, `name3/name4/.../nameN`, ..., `nameN`.
 }
+\details{
+Use case: See vignette
+}
 \examples{
 determine_branch("feature1", c("main", "feature1")) == "feature1"
 determine_branch("feature1/devel", c("main", "devel", "feature1")) == "devel"

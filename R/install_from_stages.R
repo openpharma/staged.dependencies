@@ -1,45 +1,55 @@
 # todo: into package.R
 CACHE_DIR <- path.expand("~/.staged.dependencies")
 # unlink(CACHE_DIR, recursive = TRUE)
-if (!dir.exists(CACHE_DIR)) {
-  dir.create(CACHE_DIR)
-}
+
 STAGEDDEPS_FILENAME <- "staged_dependencies.yaml"
 
-# todo: function to clean cache
-# todo: add auth tokens?
-# todo: check_downstream
+# DISCUSSION POINTS:
+# todo: clear_cache: arg to only remove some repos from cache
+# todo: function to change cache_dir, delete old cache dir or not?
+# todo: package option for CACHE_DIR
+# todo: add auth tokens envvar to yaml file?
 # todo: allow local source (rather than remote git)
-# todo: rstudio addin
-# use gert instead of git2r to handle credentials smoothly
 # todo: check verbose arg
-# todo: clean up functions
+# todo: enable ssh? currently assumes auth_token is provided: use gert instead of git2r to handle credentials smoothly; git2r by default does not have ssh not enabled, see https://github.com/ropensci/git2r/issues/415
+# todo: Install downstream dependencies into temporary path
+# todo: use R package collections?
+
+# todo: rstudio addin
 
 cat_nl <- function(...) cat(paste0(paste(...), "\n"))
 
+# directory where repo is cached locally
 get_repo_cache_dir <- function(repo, host) {
+  # the host can be rather long, so we hash it
+  # a repo is uniquely identified by the pair (repo, host)
   file.path(CACHE_DIR, paste0(gsub("/", "_", repo, fixed = TRUE), "_", digest::digest(paste0(repo, "/", host))))
 }
 
+# url for `git clone`
 get_repo_url <- function(repo, host) {
-  # todo
   file.path(host, repo)
-  # if (host == "https://code.roche.com") {
-  #   paste0("git@ssh.code.roche.com:", repo, ".git")
-  # } else {
-  #   stop("host ", host, " not yet supported")
-  # }
 }
 
-# todo: via environment vars
-# Returns the auth token from environment variable
+# Returns the environment variable that stores the auth token
 get_authtoken_envvar <- function(host) {
   switch(
     host,
     "https://api.github.com" = "PUBLIC_GITHUB_PAT",
-    "https://github.roche.com/api/v3" = "ROCHE_GITHUB_PAT", # todo
-    "https://code.roche.com" = "ROCHE_GITLAB_PAT" # todo: add to config file
+    "https://github.roche.com/api/v3" = "ROCHE_GITHUB_PAT",
+    "https://code.roche.com" = "ROCHE_GITLAB_PAT"
   )
+}
+
+#' Clear the repository cache
+#'
+#' @export
+clear_cache <- function() {
+  if (dir.exists(CACHE_DIR)) {
+    # CACHE_DIR may not have existed, so it may have failed to create it
+    unlink(CACHE_DIR, recursive = TRUE)
+  }
+  dir.create(new_cache_dir)
 }
 
 # checks out the correct branch (corresponding to target) in the repo, clones the repo if necessary
@@ -50,12 +60,8 @@ checkout_repo <- function(repo, host, target, verbose = 0) {
     git_repo <- git2r::clone(
       url = get_repo_url(repo, host), local_path = repo_dir, credentials = creds, progress = verbose >= 2
     )
-    # ssh not enabled, see https://github.com/ropensci/git2r/issues/415
-    # gert::git_clone(get_repo_url(repo, host), path = repo_dir, verbose = verbose)
-    # git_repo <- git2r::repository(repo_dir)
   } else {
     git_repo <- git2r::repository(repo_dir)
-    # gert::git_pull(repo = repo_dir)
     git2r::pull(git_repo, credentials = creds)
   }
   # this directory should only contain remote branches (+ 1 local master branch)
@@ -133,15 +139,13 @@ get_current_branch <- function(repo_dir) {
 
 warn_if_stageddeps_inexistent <- function(project) {
   fpath <- normalizePath(
-    file.path(project, STAGEDDEPS_FILENAME), #todo: yaml name into variable
+    file.path(project, STAGEDDEPS_FILENAME),
     winslash = "/", mustWork = FALSE # output error, see below
   )
   if (!file.exists(fpath)) {
     warning("file staged_dependencies.yaml does not exist in project folder: not restoring anything")
   }
 }
-
-# todo: Install downstream dependencies into temporary path
 
 #' Check downstream dependencies
 #'
@@ -191,13 +195,13 @@ check_downstream <- function(target = NULL, project = ".", downstream_repos = NU
 #' on the target.
 #'
 #' @md
+#' @inheritParams determine_branch
 #' @param project directory of project (for which to restore the dependencies according to target)
 #'   must be a git repository; currently checked out branch must be a local branch (not a remote branch)
 #' @param install_project whether to also install the current package (project)
-#' @param verbose verbosity level (0: None, 1: more, 2: includes git checkout)
 #' @param dry_install whether to install or just print (useful for dry-runs, but still
 #'   checks out the git repos)
-#' @inheritParams install_staged_dependency
+#' @param verbose verbosity level (0: None, 1: more, 2: includes git checkout)
 #'
 #' @return installed packages in installation order
 #'
@@ -300,7 +304,7 @@ install_repo_add_sha <- function(repo_dir) {
     return(invisible(NULL))
   }
 
-  install.packages(repo_dir, repos = NULL, type = "source")
+  install.packages(repo_dir, repos = NULL, type = "source")  # returns NULL
 }
 
 #' Topologically sorts nodes so that parents are listed before all their children
@@ -343,7 +347,8 @@ topological_sort <- function(child_to_parents) {
 #' Among the available branches, it searches in the order
 #' `name1/name2/.../nameN`, `name2/name3/.../nameN`, `name3/name4/.../nameN`, ..., `nameN`.
 #'
-#' # todo: document
+#' Use case: See vignette
+#'
 #'
 #' @param target feature branch we want to build, includes fallbacks
 #' @param available_branches branches that are available
