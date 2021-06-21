@@ -9,7 +9,7 @@ install_upstream_deps(
   feature = NULL,
   install_project = TRUE,
   dry_install = FALSE,
-  verbose = FALSE
+  verbose = 0
 )
 }
 \arguments{

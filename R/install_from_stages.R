@@ -181,7 +181,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     downstream_repos <- get_deps_info(project)$downstream_repos
   }
   stopifnot(all(vapply(downstream_repos, function(x) {
-    all(c("upstream_repos", "downstream_repos") %in% names(x))
+    all(c("repo", "host") %in% names(x))
   }, logical(1))))
 
   install_order <- rec_checkout_repos(downstream_repos, feature, verbose = verbose)
@@ -189,7 +189,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host)
     if (hash_repo_and_host(repo_and_host) %in% lapply(downstream_repos, hash_repo_and_host)) {
       if (!dry_install_and_check) {
-        rcmdcheck::rcmdcheck(repo_dir, error_on = "warning")
+        rcmdcheck::rcmdcheck(repo_dir, error_on = "warning", args = Sys.getenv("RCMDCHECK_ARGS")) #todo: make an option
       } else if (verbose >= 1) {
         cat_nl("Skipping check of", repo_dir)
       }
@@ -232,7 +232,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 #' }
 #'
 install_upstream_deps <- function(project = ".", feature = NULL,
-                                  install_project = TRUE, dry_install = FALSE, verbose = FALSE) {
+                                  install_project = TRUE, dry_install = FALSE, verbose = 0) {
   warn_if_stageddeps_inexistent(project)
 
   project_branch <- get_current_branch(project)

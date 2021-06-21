@@ -42,3 +42,32 @@ Sys.setenv(ROCHE_GITLAB_PAT = "######")
 library(staged.dependencies)
 ```
 Then go on addins and select one of the two that come with this package.
+
+```
+Sys.setenv(RCMDCHECK_ARGS = "--no-manual")
+
+check_downstream(
+  project = "../stageddeps.electricity"
+)
+
+install_upstream_deps(project = "../stageddeps.electricity", verbose = 1)
+
+check_downstream(
+  project = "../stageddeps.electricity", 
+  downstream_repos = list(list(repo = "maximilian_oliver.mordig/stageddeps.house", host = "https://code.roche.com"))
+)
+
+install_upstream_deps(project = "../stageddeps.house", feature = "fix1/feature1/master", verbose = 1)
+```
+
+Check with
+```
+stageddeps.house::get_house()
+stageddeps.water::get_water()
+stageddeps.garden::get_garden()
+stageddeps.food::get_food()
+stageddeps.elecinfra::get_elecinfra()
+stageddeps.electricity::get_electricity()
+```
+
+Remember to restart the R session after installing packages that were already loaded.
