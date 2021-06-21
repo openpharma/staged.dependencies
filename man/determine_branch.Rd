@@ -2,30 +2,38 @@
 % Please edit documentation in R/install_from_stages.R
 \name{determine_branch}
 \alias{determine_branch}
-\title{Implement Staging Rules}
+\title{Determine the branch to install based on feature (staging rules)}
 \usage{
-determine_branch(target, available_branches)
+determine_branch(feature, available_branches)
 }
 \arguments{
-\item{target}{feature branch we want to build, includes fallbacks}
+\item{feature}{feature we want to build, includes fallbacks}
 
-\item{available_branches}{branches that are available}
+\item{available_branches}{branches to search in}
 }
 \description{
-Given a feature branch (target), return the branch to build the target, given the available branches.
-A target consists of branches separated by slashes of the form `name1/name2/.../nameN`.
+Return the branch to build the feature, given the available branches.
+A feature consists of branches separated by slashes of the form \code{name1/name2/.../nameN}.
 Among the available branches, it searches in the order
-`name1/name2/.../nameN`, `name2/name3/.../nameN`, `name3/name4/.../nameN`, ..., `nameN`.
+\code{name1/name2/.../nameN}, \code{name2/name3/.../nameN}, \code{name3/name4/.../nameN}, ..., \code{nameN}.
 }
 \details{
 Use case: See vignette
 }
 \examples{
+determine_branch <- staged.dependencies:::determine_branch
+
 determine_branch("feature1", c("main", "feature1")) == "feature1"
 determine_branch("feature1/devel", c("main", "devel", "feature1")) == "devel"
-determine_branch("fix1/feature1/devel", c("main", "devel", "feature1", "feature1/devel", "fix1/feature1/devel", "fix1")) == "fix1/feature1/devel"
-determine_branch("fix1/feature1/devel", c("main", "devel", "feature1", "feature1/devel", "fix1")) == "feature1/devel"
-determine_branch("fix1/feature1/devel", c("main", "devel", "feature1", "fix1")) == "devel"
-# determine_branch("feature1/release", c("main", "devel"))  # error because neither `feature1/release` nor `release` branch exists
+determine_branch("fix1/feature1/devel",
+c("main", "devel", "feature1", "feature1/devel", "fix1/feature1/devel", "fix1")
+) == "fix1/feature1/devel"
+determine_branch("fix1/feature1/devel",
+c("main", "devel", "feature1", "feature1/devel", "fix1")
+) == "feature1/devel"
+determine_branch("fix1/feature1/devel",
+c("main", "devel", "feature1", "fix1")) == "devel"
 
+# error because neither `feature1/release` nor `release` branch exists
+# determine_branch("feature1/release", c("main", "devel"))
 }

@@ -5,25 +5,32 @@
 \title{Check downstream dependencies}
 \usage{
 check_downstream(
-  target = NULL,
   project = ".",
+  feature = NULL,
   downstream_repos = NULL,
   dry_install_and_check = FALSE,
   verbose = 0
 )
 }
 \arguments{
-\item{target}{feature branch we want to build, includes fallbacks}
+\item{project}{directory of project (for which to restore the dependencies according to feature);
+must be a git repository.}
 
-\item{project}{directory of project (for which to restore the dependencies according to target)
-must be a git repository; currently checked out branch must be a local branch (not a remote branch)}
+\item{feature}{feature we want to build; inferred from the branch of the project if not provided}
+
+\item{downstream_repos}{to overwrite the downstream repos to check}
 
 \item{dry_install_and_check}{whether to install upstream dependencies and run the checks;
 useful to see a dry-run (it however updates the cached repos!)}
 
-\item{verbose}{verbosity level (0: None, 1: more, 2: includes git checkout)}
+\item{verbose}{verbosity level, incremental;
+(0: None, 1: packages that get installed, 2: includes git checkout)}
 }
 \description{
 It installs the downstream dependencies and their upstream dependencies,
 and then runs \code{rcmdcheck} (\verb{R CMD check}) on the downstream dependencies.
+}
+\details{
+Note: It runs against the remote version of project, so the project must have
+been pushed before.
 }

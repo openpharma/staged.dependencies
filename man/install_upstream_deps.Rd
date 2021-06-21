@@ -2,35 +2,41 @@
 % Please edit documentation in R/install_from_stages.R
 \name{install_upstream_deps}
 \alias{install_upstream_deps}
-\title{Install upstream dependencies of project corresponding to target}
+\title{Install upstream dependencies of project corresponding to feature}
 \usage{
 install_upstream_deps(
-  target = NULL,
   project = ".",
+  feature = NULL,
   install_project = TRUE,
   dry_install = FALSE,
   verbose = FALSE
 )
 }
 \arguments{
-\item{target}{feature branch we want to build, includes fallbacks}
+\item{project}{directory of project (for which to restore the dependencies according to feature);
+must be a git repository.}
 
-\item{project}{directory of project (for which to restore the dependencies according to target)
-must be a git repository; currently checked out branch must be a local branch (not a remote branch)}
+\item{feature}{feature we want to build; inferred from the branch of the project if not provided}
 
-\item{install_project}{whether to also install the current package (project)}
+\item{install_project}{whether to also install the current package (\code{project})}
 
 \item{dry_install}{whether to install or just print (useful for dry-runs, but still
 checks out the git repos)}
 
-\item{verbose}{verbosity level (0: None, 1: more, 2: includes git checkout)}
+\item{verbose}{verbosity level, incremental;
+(0: None, 1: packages that get installed, 2: includes git checkout)}
 }
 \value{
 installed packages in installation order
 }
 \description{
-This reads the upstream dependencies for the project and installs the right branches based
-on the target.
+This reads the upstream dependencies for the project (recursively) and
+installs the right branches based on the feature.
+}
+\details{
+It throws a warning if the currently checked out branch in the project
+is not the one that would be taken based on \code{feature}. In particular,
+the checked out branch should not be a remote branch.
 }
 \examples{
 \dontrun{

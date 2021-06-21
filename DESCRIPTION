@@ -7,13 +7,17 @@ Authors@R: c(
   person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = "aut")
   )
 Imports:
-  httr,
+  digest,
   gh,
+  git2r,
+  httr,
+  rcmdcheck,
   remotes,
+  utils,
   yaml
-Description: When developing multiple dependent packages it is often useful to introduce development
-  stages (devel, pre-release, release). This package provides an implenetation of development stages
-  via branch naming rules
+Description: When developing multiple dependent packages, it is often useful to introduce development
+  stages (devel, pre-release, release) that synchronize these packages. 
+  This package provides an implementation of development stages via branch naming rules.
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true

@@ -16,7 +16,12 @@ vector listing parents before children
 Topologically sorts nodes so that parents are listed before all their children
 }
 \examples{
-all(topological_sort(list(n1 = c(), n2 = c("n1"), n3 = c("n2"), n4 = c("n2", "n3"))) == c("n1", "n2", "n3", "n4"))
+topological_sort <- staged.dependencies:::topological_sort
+
+all(topological_sort(list(
+n1 = c(), n2 = c("n1"), n3 = c("n2"),
+n4 = c("n2", "n3"))) == c("n1", "n2", "n3", "n4")
+)
 is.null(topological_sort(list()))
 
 }

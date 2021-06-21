@@ -1,6 +1,9 @@
 # todo: into package.R
 CACHE_DIR <- path.expand("~/.staged.dependencies")
 # unlink(CACHE_DIR, recursive = TRUE)
+if (!dir.exists(CACHE_DIR)) {
+  dir.create(CACHE_DIR)
+}
 
 STAGEDDEPS_FILENAME <- "staged_dependencies.yaml"
 
@@ -14,8 +17,9 @@ STAGEDDEPS_FILENAME <- "staged_dependencies.yaml"
 # todo: enable ssh? currently assumes auth_token is provided: use gert instead of git2r to handle credentials smoothly; git2r by default does not have ssh not enabled, see https://github.com/ropensci/git2r/issues/415
 # todo: Install downstream dependencies into temporary path
 # todo: use R package collections?
-
-# todo: rstudio addin
+# todo: check_downstream runs against remote
+# some other todos below
+# todo: rstudio addin interactive with Shiny
 
 cat_nl <- function(...) cat(paste0(paste(...), "\n"))
 
@@ -49,11 +53,11 @@ clear_cache <- function() {
     # CACHE_DIR may not have existed, so it may have failed to create it
     unlink(CACHE_DIR, recursive = TRUE)
   }
-  dir.create(new_cache_dir)
+  dir.create(CACHE_DIR)
 }
 
-# checks out the correct branch (corresponding to target) in the repo, clones the repo if necessary
-checkout_repo <- function(repo, host, target, verbose = 0) {
+# checks out the correct branch (corresponding to feature) in the repo, clones the repo if necessary
+checkout_repo <- function(repo, host, feature, verbose = 0) {
   repo_dir <- get_repo_cache_dir(repo, host)
   creds <- git2r::cred_token(token = get_authtoken_envvar(host))
   if (!dir.exists(repo_dir)) {
@@ -67,7 +71,7 @@ checkout_repo <- function(repo, host, target, verbose = 0) {
   # this directory should only contain remote branches (+ 1 local master branch)
   available_branches <- names(git2r::branches(git_repo, flags = "remote"))
   available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
-  branch <- determine_branch(target, available_branches)
+  branch <- determine_branch(feature, available_branches)
   git2r::checkout(git_repo, branch = branch, force = TRUE) # force = TRUE to discard any changes (which should not happen)
   if (verbose >= 1) {
     cat_nl("Checked out branch", branch, "from repo in directory", repo_dir)
@@ -103,10 +107,10 @@ unhash_repo_and_host <- function(hashed_repo_and_host) {
   list(repo = repo_and_host[[1]], host = repo_and_host[[2]])
 }
 
-# checks out all repos to match branch determined by target,
+# checks out all repos to match branch determined by feature,
 # starting from repos_to_process and including all upstream repos recursively
 # returns the order in which the repos must be installed
-rec_checkout_repos <- function(repos_to_process, target, verbose = 0) {
+rec_checkout_repos <- function(repos_to_process, feature, verbose = 0) {
   hashed_repos_to_process <- lapply(repos_to_process, hash_repo_and_host)
   rm(repos_to_process)
 
@@ -119,7 +123,7 @@ rec_checkout_repos <- function(repos_to_process, target, verbose = 0) {
     stopifnot(!is.null(repo_and_host$repo))
     stopifnot(!is.null(repo_and_host$host))
 
-    repo_dir <- checkout_repo(repo_and_host$repo, repo_and_host$host, target, verbose = verbose)
+    repo_dir <- checkout_repo(repo_and_host$repo, repo_and_host$host, feature, verbose = verbose)
 
     hashed_upstream_deps <- lapply(get_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
     hashed_processed_repos <- names(upstream_deps_graph)
@@ -152,26 +156,34 @@ warn_if_stageddeps_inexistent <- function(project) {
 #' It installs the downstream dependencies and their upstream dependencies,
 #' and then runs `rcmdcheck` (`R CMD check`) on the downstream dependencies.
 #'
+#' Note: It runs against the remote version of project, so the project must have
+#' been pushed before.
+#'
 #' @md
 #' @param dry_install_and_check whether to install upstream dependencies and run the checks;
 #'   useful to see a dry-run (it however updates the cached repos!)
+#' @param downstream_repos to overwrite the downstream repos to check
 #' @inheritParams install_upstream_deps
 #' @export
 #'
 #'
-check_downstream <- function(target = NULL, project = ".", downstream_repos = NULL, dry_install_and_check = FALSE, verbose = 0) {
+check_downstream <- function(project = ".", feature = NULL, downstream_repos = NULL,
+                             dry_install_and_check = FALSE, verbose = 0) {
   warn_if_stageddeps_inexistent(project)
 
   project_branch <- get_current_branch(project)
-  if (is.null(target)) {
-    target <- project_branch
+  if (is.null(feature)) {
+    feature <- project_branch
   }
 
   if (is.null(downstream_repos)) {
     downstream_repos <- get_deps_info(project)$downstream_repos
   }
+  stopifnot(all(vapply(downstream_repos, function(x) {
+    all(c("upstream_repos", "downstream_repos") %in% names(x))
+  }, logical(1))))
 
-  install_order <- rec_checkout_repos(downstream_repos, target, verbose = verbose)
+  install_order <- rec_checkout_repos(downstream_repos, feature, verbose = verbose)
   for (repo_and_host in install_order) {
     repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host)
     if (hash_repo_and_host(repo_and_host) %in% lapply(downstream_repos, hash_repo_and_host)) {
@@ -189,19 +201,24 @@ check_downstream <- function(target = NULL, project = ".", downstream_repos = NU
   }
 }
 
-#' Install upstream dependencies of project corresponding to target
+#' Install upstream dependencies of project corresponding to feature
 #'
-#' This reads the upstream dependencies for the project and installs the right branches based
-#' on the target.
+#' This reads the upstream dependencies for the project (recursively) and
+#' installs the right branches based on the feature.
+#'
+#' It throws a warning if the currently checked out branch in the project
+#' is not the one that would be taken based on `feature`. In particular,
+#' the checked out branch should not be a remote branch.
 #'
 #' @md
-#' @inheritParams determine_branch
-#' @param project directory of project (for which to restore the dependencies according to target)
-#'   must be a git repository; currently checked out branch must be a local branch (not a remote branch)
-#' @param install_project whether to also install the current package (project)
+#' @param project directory of project (for which to restore the dependencies according to feature);
+#'   must be a git repository.
+#' @param feature feature we want to build; inferred from the branch of the project if not provided
+#' @param install_project whether to also install the current package (`project`)
 #' @param dry_install whether to install or just print (useful for dry-runs, but still
 #'   checks out the git repos)
-#' @param verbose verbosity level (0: None, 1: more, 2: includes git checkout)
+#' @param verbose verbosity level, incremental;
+#'   (0: None, 1: packages that get installed, 2: includes git checkout)
 #'
 #' @return installed packages in installation order
 #'
@@ -213,25 +230,25 @@ check_downstream <- function(target = NULL, project = ".", downstream_repos = NU
 #' install_upstream_deps()
 #' }
 #'
-install_upstream_deps <- function(target = NULL, project = ".",
+install_upstream_deps <- function(project = ".", feature = NULL,
                                   install_project = TRUE, dry_install = FALSE, verbose = FALSE) {
   warn_if_stageddeps_inexistent(project)
 
   project_branch <- get_current_branch(project)
-  if (is.null(target)) {
-    target <- project_branch
+  if (is.null(feature)) {
+    feature <- project_branch
   }
 
   expected_project_branch <- determine_branch(
-    target, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
+    feature, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
   )
   if (project_branch != expected_project_branch) {
-    warning("target ", target, " would match ", expected_project_branch,
+    warning("feature ", feature, " would match ", expected_project_branch,
             ", but currently checked out branch is ", project_branch)
   }
 
   repos_to_process <- get_deps_info(project)$upstream_repos
-  install_order <- rec_checkout_repos(repos_to_process, target, verbose = verbose)
+  install_order <- rec_checkout_repos(repos_to_process, feature, verbose = verbose)
 
   if (verbose) {
     cat_nl("Installing upstream packages: ", toString(install_order))
@@ -249,7 +266,8 @@ install_upstream_deps <- function(target = NULL, project = ".",
       cat_nl("Installing current package from directory ", project)
     }
     if (!dry_install) {
-      install_repo_add_sha(project)
+      # copy project to cache dir, compute git hash to install it from there, todo, e.g. via git commit
+      utils::install.packages(project, repos = NULL, type = "source")
     }
     installed_pkgs <- c(installed_pkgs, project)
   }
@@ -291,6 +309,11 @@ install_repo_add_sha <- function(repo_dir) {
   }
 
   commit_sha <- git2r::sha(git2r::repository_head(git2r::repository(repo_dir)))
+  git_status <- git2r::status(repo_dir)
+  if ((length(git_status$staged) > 0) || (length(git_status$unstaged) > 0) || (length(git_status$untracked) > 0)) {
+    # check that there are no changes (so that sha is correct)
+    stop("The git directory ", repo_dir, " contains changes.")
+  }
 
   # see remotes:::add_metadata
   source_desc <- file.path(repo_dir, "DESCRIPTION")
@@ -304,7 +327,7 @@ install_repo_add_sha <- function(repo_dir) {
     return(invisible(NULL))
   }
 
-  install.packages(repo_dir, repos = NULL, type = "source")  # returns NULL
+  utils::install.packages(repo_dir, repos = NULL, type = "source")  # returns NULL
 }
 
 #' Topologically sorts nodes so that parents are listed before all their children
@@ -314,7 +337,12 @@ install_repo_add_sha <- function(repo_dir) {
 #' @return vector listing parents before children
 #'
 #' @examples
-#' all(topological_sort(list(n1 = c(), n2 = c("n1"), n3 = c("n2"), n4 = c("n2", "n3"))) == c("n1", "n2", "n3", "n4"))
+#' topological_sort <- staged.dependencies:::topological_sort
+#'
+#' all(topological_sort(list(
+#' n1 = c(), n2 = c("n1"), n3 = c("n2"),
+#' n4 = c("n2", "n3"))) == c("n1", "n2", "n3", "n4")
+#' )
 #' is.null(topological_sort(list()))
 #'
 topological_sort <- function(child_to_parents) {
@@ -340,29 +368,37 @@ topological_sort <- function(child_to_parents) {
 }
 
 
-#' Implement Staging Rules
+#' Determine the branch to install based on feature (staging rules)
 #'
-#' Given a feature branch (target), return the branch to build the target, given the available branches.
-#' A target consists of branches separated by slashes of the form `name1/name2/.../nameN`.
+#' Return the branch to build the feature, given the available branches.
+#' A feature consists of branches separated by slashes of the form `name1/name2/.../nameN`.
 #' Among the available branches, it searches in the order
 #' `name1/name2/.../nameN`, `name2/name3/.../nameN`, `name3/name4/.../nameN`, ..., `nameN`.
 #'
 #' Use case: See vignette
 #'
-#'
-#' @param target feature branch we want to build, includes fallbacks
-#' @param available_branches branches that are available
+#' @md
+#' @param feature feature we want to build, includes fallbacks
+#' @param available_branches branches to search in
 #'
 #' @examples
+#' determine_branch <- staged.dependencies:::determine_branch
+#'
 #' determine_branch("feature1", c("main", "feature1")) == "feature1"
 #' determine_branch("feature1/devel", c("main", "devel", "feature1")) == "devel"
-#' determine_branch("fix1/feature1/devel", c("main", "devel", "feature1", "feature1/devel", "fix1/feature1/devel", "fix1")) == "fix1/feature1/devel"
-#' determine_branch("fix1/feature1/devel", c("main", "devel", "feature1", "feature1/devel", "fix1")) == "feature1/devel"
-#' determine_branch("fix1/feature1/devel", c("main", "devel", "feature1", "fix1")) == "devel"
-#' # determine_branch("feature1/release", c("main", "devel"))  # error because neither `feature1/release` nor `release` branch exists
+#' determine_branch("fix1/feature1/devel",
+#' c("main", "devel", "feature1", "feature1/devel", "fix1/feature1/devel", "fix1")
+#' ) == "fix1/feature1/devel"
+#' determine_branch("fix1/feature1/devel",
+#' c("main", "devel", "feature1", "feature1/devel", "fix1")
+#' ) == "feature1/devel"
+#' determine_branch("fix1/feature1/devel",
+#' c("main", "devel", "feature1", "fix1")) == "devel"
 #'
-determine_branch <- function(target, available_branches) {
-  els <- unlist(strsplit(target, "/", fixed = TRUE))
+#' # error because neither `feature1/release` nor `release` branch exists
+#' # determine_branch("feature1/release", c("main", "devel"))
+determine_branch <- function(feature, available_branches) {
+  els <- unlist(strsplit(feature, "/", fixed = TRUE))
   branches_to_check <- rev(Reduce(function(x, y) paste0(y, "/", x), rev(els), accumulate = TRUE))
 
   for (branch in branches_to_check) {
