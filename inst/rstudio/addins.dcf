@@ -1,5 +1,5 @@
-Name: Install Upstream Dependencies
-Description: Installs upstream dependencies from particular branches to match feature branch
+Name: Install Upstream Dependencies and this Package (from remote)
+Description: Installs upstream dependencies from particular branches to match feature branch + remote version of this package
 Binding: install_upstream_deps
 Interactive: false
 

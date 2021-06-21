@@ -20,6 +20,7 @@ STAGEDDEPS_FILENAME <- "staged_dependencies.yaml"
 # todo: check_downstream runs against remote
 # some other todos below
 # todo: rstudio addin interactive with Shiny
+# todo: how to run rcmdcheck without latex?
 
 cat_nl <- function(...) cat(paste0(paste(...), "\n"))
 

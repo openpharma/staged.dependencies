@@ -33,3 +33,12 @@ The PR on `repoB` and  `repoC` `feature1/devel --> devel` takes `repoB:feature1/
 
 This package can be tested on the following setup of packages.
 ![Dependencies. Arrow point from upstream to downstream packages](StagedDepsExample.png)
+
+See https://code.roche.com/maximilian_oliver.mordig/stageddeps.water and the related packages.
+
+Set the access token do download from Gitlab with read privilege for the repositories in question.
+```
+Sys.setenv(ROCHE_GITLAB_PAT = "######")
+library(staged.dependencies)
+```
+Then go on addins and select one of the two that come with this package.
