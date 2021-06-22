@@ -38,15 +38,13 @@ get_repo_url <- function(repo, host) {
 
 # Returns the environment variable that stores the auth token
 get_authtoken_envvar <- function(host) {
-  envvar <- switch(
+  switch(
     host,
     "https://github.com" = "PUBLIC_GITHUB_PAT",
     "https://github.roche.com" = "ROCHE_GITHUB_PAT",
     "https://code.roche.com" = "ROCHE_GITLAB_PAT",
     stop("host not known:", host)
   )
-
-  Sys.getenv(envvar)
 }
 
 #' Clear the repository cache

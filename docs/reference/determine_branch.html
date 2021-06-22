@@ -87,18 +87,6 @@ name1/name2/.../nameN, name2/name3/.../nameN, name3/name4/.../nameN, ..., nameN.
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/branch_workflow.html">branch_workflow</a>
-    </li>
-  </ul>
-</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -147,8 +135,16 @@ Among the available branches, it searches in the order
     <p>Use case: See vignette</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"feature1"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"feature1"</span>)) <span class='kw'>==</span> <span class='st'>"feature1"</span></div><div class='output co'>#&gt; <span class='error'>Error in determine_branch("feature1", c("main", "feature1")): could not find function "determine_branch"</span></div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"feature1/devel"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>)) <span class='kw'>==</span> <span class='st'>"devel"</span></div><div class='output co'>#&gt; <span class='error'>Error in determine_branch("feature1/devel", c("main", "devel", "feature1")): could not find function "determine_branch"</span></div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"fix1/feature1/devel"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>, <span class='st'>"feature1/devel"</span>, <span class='st'>"fix1/feature1/devel"</span>, <span class='st'>"fix1"</span>)) <span class='kw'>==</span> <span class='st'>"fix1/feature1/devel"</span></div><div class='output co'>#&gt; <span class='error'>Error in determine_branch("fix1/feature1/devel", c("main", "devel", "feature1",     "feature1/devel", "fix1/feature1/devel", "fix1")): could not find function "determine_branch"</span></div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"fix1/feature1/devel"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>, <span class='st'>"feature1/devel"</span>, <span class='st'>"fix1"</span>)) <span class='kw'>==</span> <span class='st'>"feature1/devel"</span></div><div class='output co'>#&gt; <span class='error'>Error in determine_branch("fix1/feature1/devel", c("main", "devel", "feature1",     "feature1/devel", "fix1")): could not find function "determine_branch"</span></div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"fix1/feature1/devel"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>, <span class='st'>"fix1"</span>)) <span class='kw'>==</span> <span class='st'>"devel"</span></div><div class='output co'>#&gt; <span class='error'>Error in determine_branch("fix1/feature1/devel", c("main", "devel", "feature1",     "fix1")): could not find function "determine_branch"</span></div><div class='input'># determine_branch("feature1/release", c("main", "devel"))  # error because neither `feature1/release` nor `release` branch exists
+    <pre class="examples"><div class='input'><span class='no'>determine_branch</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>staged.dependencies</span><span class='kw ns'>:::</span><span class='no'><a href='https://rdrr.io/pkg/staged.dependencies/man/determine_branch.html'>determine_branch</a></span>
 
+<span class='fu'>determine_branch</span>(<span class='st'>"feature1"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"feature1"</span>)) <span class='kw'>==</span> <span class='st'>"feature1"</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"feature1/devel"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>)) <span class='kw'>==</span> <span class='st'>"devel"</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"fix1/feature1/devel"</span>,
+<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>, <span class='st'>"feature1/devel"</span>, <span class='st'>"fix1/feature1/devel"</span>, <span class='st'>"fix1"</span>)
+) <span class='kw'>==</span> <span class='st'>"fix1/feature1/devel"</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"fix1/feature1/devel"</span>,
+<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>, <span class='st'>"feature1/devel"</span>, <span class='st'>"fix1"</span>)
+) <span class='kw'>==</span> <span class='st'>"feature1/devel"</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"fix1/feature1/devel"</span>,
+<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>, <span class='st'>"fix1"</span>)) <span class='kw'>==</span> <span class='st'>"devel"</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
+# error because neither `feature1/release` nor `release` branch exists
+# determine_branch("feature1/release", c("main", "devel"))
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
