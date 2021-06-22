@@ -415,6 +415,7 @@ determine_branch <- function(feature, available_branches, branch_sep = "@") {
     }
   }
 
-  stop("Available branches ", toString(available_branches), " must include at least one of ", toString(branches_to_check))
+  stop("Available branches '", toString(available_branches), "' must include at least one of '",
+       toString(branches_to_check), "'")
 }
 
