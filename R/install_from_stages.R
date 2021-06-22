@@ -38,12 +38,15 @@ get_repo_url <- function(repo, host) {
 
 # Returns the environment variable that stores the auth token
 get_authtoken_envvar <- function(host) {
-  switch(
+  envvar <- switch(
     host,
-    "https://api.github.com" = "PUBLIC_GITHUB_PAT",
-    "https://github.roche.com/api/v3" = "ROCHE_GITHUB_PAT",
-    "https://code.roche.com" = "ROCHE_GITLAB_PAT"
+    "https://github.com" = "PUBLIC_GITHUB_PAT",
+    "https://github.roche.com" = "ROCHE_GITHUB_PAT",
+    "https://code.roche.com" = "ROCHE_GITLAB_PAT",
+    stop("host not known:", host)
   )
+
+  Sys.getenv(envvar)
 }
 
 #' Clear the repository cache
@@ -62,10 +65,14 @@ checkout_repo <- function(repo, host, feature, verbose = 0) {
   repo_dir <- get_repo_cache_dir(repo, host)
   creds <- git2r::cred_token(token = get_authtoken_envvar(host))
   if (!dir.exists(repo_dir)) {
+    message(paste("checkout", get_repo_url(repo, host)))
+
     git_repo <- git2r::clone(
       url = get_repo_url(repo, host), local_path = repo_dir, credentials = creds, progress = verbose >= 2
     )
   } else {
+    message(paste("pull", get_repo_url(repo, host)))
+
     git_repo <- git2r::repository(repo_dir)
     git2r::pull(git_repo, credentials = creds)
   }

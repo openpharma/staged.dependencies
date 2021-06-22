@@ -9,12 +9,12 @@ upstream_repos:
   host: https://github.com
 - repo: NEST/utils.nest
   host: https://github.roche.com
-- repo: nest/scda.2021
+- repo: nest/tlg.standards
   host: https://code.roche.com
 
 downstream_repos:
 - repo: openpharma/staged.dependencies
-  host: https://github.com
+  host: https://api.github.com
 # these repos are also tested by CI/CD to check they didn't break
 
 #todo: add mapping from host to env var name that contains auth token
