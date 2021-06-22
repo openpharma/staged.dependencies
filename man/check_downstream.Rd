@@ -29,8 +29,18 @@ useful to see a dry-run (it however updates the cached repos!)}
 \description{
 It installs the downstream dependencies and their upstream dependencies,
 and then runs \code{rcmdcheck} (\verb{R CMD check}) on the downstream dependencies.
+It does not run recursively on the downstream dependencies.
 }
 \details{
 Note: It runs against the remote version of project, so the project must have
 been pushed before.
+}
+\examples{
+\dontrun{
+check_downstream(project = ".", verbose = 1)
+
+check_downstream(
+  project = "../stageddeps.electricity"
+)
+}
 }

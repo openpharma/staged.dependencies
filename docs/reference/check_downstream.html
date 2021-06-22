@@ -37,7 +37,8 @@
 
 <meta property="og:title" content="Check downstream dependencies — check_downstream" />
 <meta property="og:description" content="It installs the downstream dependencies and their upstream dependencies,
-and then runs rcmdcheck (R CMD check) on the downstream dependencies." />
+and then runs rcmdcheck (R CMD check) on the downstream dependencies.
+It does not run recursively on the downstream dependencies." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -108,7 +109,8 @@ and then runs rcmdcheck (R CMD check) on the downstream dependencies." />
 
     <div class="ref-description">
     <p>It installs the downstream dependencies and their upstream dependencies,
-and then runs <code>rcmdcheck</code> (<code>R CMD check</code>) on the downstream dependencies.</p>
+and then runs <code>rcmdcheck</code> (<code>R CMD check</code>) on the downstream dependencies.
+It does not run recursively on the downstream dependencies.</p>
     </div>
 
     <pre class="usage"><span class='fu'>check_downstream</span>(
@@ -152,12 +154,21 @@ useful to see a dry-run (it however updates the cached repos!)</p></td>
     <p>Note: It runs against the remote version of project, so the project must have
 been pushed before.</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+<span class='fu'>check_downstream</span>(<span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>1</span>)
+
+<span class='fu'>check_downstream</span>(
+  <span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"../stageddeps.electricity"</span>
+)
+}</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#details">Details</a></li>
+      <li><a href="#examples">Examples</a></li>
     </ul>
 
   </div>

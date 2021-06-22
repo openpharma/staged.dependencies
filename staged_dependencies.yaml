@@ -8,7 +8,7 @@ upstream_repos:
   host: https://github.com
 
 downstream_repos:
-- repo: NEST/utils.nest
+- repo: NEST/test.nest
   host: https://github.roche.com
 - repo: nest/tlg.standards
   host: https://code.roche.com

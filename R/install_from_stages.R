@@ -161,6 +161,7 @@ warn_if_stageddeps_inexistent <- function(project) {
 #'
 #' It installs the downstream dependencies and their upstream dependencies,
 #' and then runs `rcmdcheck` (`R CMD check`) on the downstream dependencies.
+#' It does not run recursively on the downstream dependencies.
 #'
 #' Note: It runs against the remote version of project, so the project must have
 #' been pushed before.
@@ -172,7 +173,14 @@ warn_if_stageddeps_inexistent <- function(project) {
 #' @inheritParams install_upstream_deps
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#' check_downstream(project = ".", verbose = 1)
 #'
+#' check_downstream(
+#'   project = "../stageddeps.electricity"
+#' )
+#' }
 check_downstream <- function(project = ".", feature = NULL, downstream_repos = NULL,
                              dry_install_and_check = FALSE, verbose = 0) {
   warn_if_stageddeps_inexistent(project)
