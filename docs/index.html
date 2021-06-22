@@ -87,7 +87,7 @@ check_downstream(
   downstream_repos = list(list(repo = "maximilian_oliver.mordig/stageddeps.house", host = "https://code.roche.com"))
 )
 
-install_upstream_deps(project = "../stageddeps.house", feature = "fix1/feature1/master", verbose = 1)</a></code></pre>
+install_upstream_deps(project = "../stageddeps.house", feature = "fix1@feature1@master", verbose = 1)</a></code></pre>
 <p>Remember to restart the R session after installing packages that were already loaded.</p>
 </div>
 <div id="example-setup" class="section level2">
@@ -106,11 +106,11 @@ stageddeps.electricity::get_electricity()</a></code></pre>
 <div id="workflow" class="section level2">
 <h2 class="hasAnchor">
 <a href="#workflow" class="anchor"></a>Workflow</h2>
-<p>Suppose one implements a new feature called <code>feature1</code> that involves <code>repoB, repoC</code> with the dependency graph <code>repoA --&gt; repoB --&gt; repoC</code>, where <code>repoA</code> is an additional upstream dependency. One then notices that <code>feature1</code> requires a fix in <code>repoB</code>, so one creates a new branch <code>fix1/feature1/devel</code> on <code>repoB</code>. The setup can be summarized as follows:</p>
-<pre><code>repoB: fix1/feature1/devel, feature1/devel, devel
-repoC: feature1/devel, devel
+<p>Suppose one implements a new feature called <code>feature1</code> that involves <code>repoB, repoC</code> with the dependency graph <code>repoA --&gt; repoB --&gt; repoC</code>, where <code>repoA</code> is an additional upstream dependency. One then notices that <code>feature1</code> requires a fix in <code>repoB</code>, so one creates a new branch <code>fix1@feature1@devel</code> on <code>repoB</code>. The setup can be summarized as follows:</p>
+<pre><code>repoB: fix1@feature1@devel, feature1@devel, devel
+repoC: feature1@devel, devel
 repoA: devel</code></pre>
-<p>A PR on repoB <code>fix1/feature1/devel --&gt; feature1/devel</code> takes <code>repoB:fix1/feature1/devel, repoC: feature1/devel, repoA: devel</code>. This can be checked by setting <code>feature = fix1/feature1/devel</code> and running <code>R CMD check</code> on <code>repoC</code>, or <code>check_downstream</code> on <code>repoB</code> (adding <code>repoC</code> to its downstream dependencies). The PR on <code>repoB</code> and <code>repoC</code> <code>feature1/devel --&gt; devel</code> takes <code>repoB:feature1/devel, repoC: feature1/devel, repoA: devel</code>, setting <code>feature = feature1/devel</code>.</p>
+<p>A PR on repoB <code>fix1@feature1@devel --&gt; feature1@devel</code> takes <code>repoB:fix1@feature1@devel, repoC: feature1@devel, repoA: devel</code>. This can be checked by setting <code>feature = fix1@feature1@devel</code> and running <code>R CMD check</code> on <code>repoC</code>, or <code>check_downstream</code> on <code>repoB</code> (adding <code>repoC</code> to its downstream dependencies). The PR on <code>repoB</code> and <code>repoC</code> <code>feature1@devel --&gt; devel</code> takes <code>repoB:feature1@devel, repoC: feature1@devel, repoA: devel</code>, setting <code>feature = feature1@devel</code>.</p>
 </div>
 <div id="troubleshooting" class="section level2">
 <h2 class="hasAnchor">

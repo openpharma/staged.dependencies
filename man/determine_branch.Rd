@@ -4,36 +4,39 @@
 \alias{determine_branch}
 \title{Determine the branch to install based on feature (staging rules)}
 \usage{
-determine_branch(feature, available_branches)
+determine_branch(feature, available_branches, branch_sep = "@")
 }
 \arguments{
 \item{feature}{feature we want to build, includes fallbacks}
 
 \item{available_branches}{branches to search in}
+
+\item{branch_sep}{separator between branches in \code{feature}, \code{/} does not
+work well with \code{git} because it clashes with the filesystem paths}
 }
 \description{
 Return the branch to build the feature, given the available branches.
-A feature consists of branches separated by slashes of the form \code{name1/name2/.../nameN}.
+A feature consists of branches separated by slashes of the form \code{name1@name2@...@nameN}.
 Among the available branches, it searches in the order
-\code{name1/name2/.../nameN}, \code{name2/name3/.../nameN}, \code{name3/name4/.../nameN}, ..., \code{nameN}.
+\code{name1@name2@...@nameN}, \code{name2@name3@...@nameN}, \code{name3@name4@...@nameN}, ..., \code{nameN}.
 }
 \details{
-Use case: See vignette
+Use case: See readme.
 }
 \examples{
 determine_branch <- staged.dependencies:::determine_branch
 
 determine_branch("feature1", c("main", "feature1")) == "feature1"
-determine_branch("feature1/devel", c("main", "devel", "feature1")) == "devel"
-determine_branch("fix1/feature1/devel",
-c("main", "devel", "feature1", "feature1/devel", "fix1/feature1/devel", "fix1")
-) == "fix1/feature1/devel"
-determine_branch("fix1/feature1/devel",
-c("main", "devel", "feature1", "feature1/devel", "fix1")
-) == "feature1/devel"
-determine_branch("fix1/feature1/devel",
+determine_branch("feature1@devel", c("main", "devel", "feature1")) == "devel"
+determine_branch("fix1@feature1@devel",
+c("main", "devel", "feature1", "feature1@devel", "fix1@feature1@devel", "fix1")
+) == "fix1@feature1@devel"
+determine_branch("fix1@feature1@devel",
+c("main", "devel", "feature1", "feature1@devel", "fix1")
+) == "feature1@devel"
+determine_branch("fix1@feature1@devel",
 c("main", "devel", "feature1", "fix1")) == "devel"
 
-# error because neither `feature1/release` nor `release` branch exists
-# determine_branch("feature1/release", c("main", "devel"))
+# error because neither `feature1@release` nor `release` branch exists
+# determine_branch("feature1@release", c("main", "devel"))
 }
