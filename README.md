@@ -3,15 +3,24 @@
 ## Usage
 
 Set the access tokens to download from the git hubs (GitHub, Gitlab) with read privilege for the repositories in question.
-```{r}
-Sys.setenv("PUBLIC_GITHUB_PAT" = "######")
-Sys.setenv("ROCHE_GITHUB_PAT" = "######")
-Sys.setenv("ROCHE_GITLAB_PAT" = "######")
+
 ```
-A good idea is to put this into your `.Rprofile`, e.g. by calling `usethis::edit_r_profile()`.
+Sys.setenv("PUBLIC_GITHUB_PAT" = "<token>")
+Sys.setenv("ROCHE_GITHUB_PAT" = "<token>")
+Sys.setenv("ROCHE_GITLAB_PAT" = "<token>")
+```
+
+You can have these tokens set permanently by putting the information into the `~/.Renviron` file, e.g. by calling `usethis::edit_r_environ()`:
+
+```
+PUBLIC_GITHUB_PAT=<token>
+ROCHE_GITHUB_PAT=<token>
+ROCHE_GITLAB_PAT=<token>
+```
 
 Load the addins with `library(staged.dependencies)`, then search for them in the addins menu.
 Alternatively, you can run them explicitly and change the default arguments:
+
 ```{r}
 # latex may not be installed, so `R CMD check` does not fail because of it
 Sys.setenv(RCMDCHECK_ARGS = "--no-manual")
@@ -40,6 +49,7 @@ This package can be tested on the following setup of packages.
 See https://code.roche.com/maximilian_oliver.mordig/stageddeps.water and the related packages.
 
 You can check that the right branches of the packages are installed with:
+
 ```{r}
 stageddeps.house::get_house()
 stageddeps.water::get_water()
