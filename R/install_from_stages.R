@@ -78,6 +78,9 @@ checkout_repo <- function(repo, host, feature, verbose = 0) {
   available_branches <- names(git2r::branches(git_repo, flags = "remote"))
   available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
   branch <- determine_branch(feature, available_branches)
+
+  message(paste("   - branch:", branch))
+
   git2r::checkout(git_repo, branch = branch, force = TRUE) # force = TRUE to discard any changes (which should not happen)
   if (verbose >= 1) {
     cat_nl("Checked out branch", branch, "from repo in directory", repo_dir)
@@ -167,6 +170,9 @@ warn_if_stageddeps_inexistent <- function(project) {
 #' been pushed before.
 #'
 #' @md
+#'
+#' @export
+#'
 #' @param dry_install_and_check whether to install upstream dependencies and run the checks;
 #'   useful to see a dry-run (it however updates the cached repos!)
 #' @param downstream_repos to overwrite the downstream repos to check
