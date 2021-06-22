@@ -27,7 +27,7 @@ check_downstream(
   downstream_repos = list(list(repo = "maximilian_oliver.mordig/stageddeps.house", host = "https://code.roche.com"))
 )
 
-install_upstream_deps(project = "../stageddeps.house", feature = "fix1/feature1/master", verbose = 1)
+install_upstream_deps(project = "../stageddeps.house", feature = "fix1@feature1@master", verbose = 1)
 ```
 
 Remember to restart the R session after installing packages that were already loaded.
@@ -51,14 +51,14 @@ stageddeps.electricity::get_electricity()
 
 ## Workflow
 
-Suppose one implements a new feature called `feature1` that involves `repoB, repoC` with the dependency graph `repoA --> repoB --> repoC`, where `repoA` is an additional upstream dependency. One then notices that `feature1` requires a fix in `repoB`, so one creates a new branch `fix1/feature1/devel` on `repoB`. The setup can be summarized as follows:
+Suppose one implements a new feature called `feature1` that involves `repoB, repoC` with the dependency graph `repoA --> repoB --> repoC`, where `repoA` is an additional upstream dependency. One then notices that `feature1` requires a fix in `repoB`, so one creates a new branch `fix1@feature1@devel` on `repoB`. The setup can be summarized as follows:
 ```
-repoB: fix1/feature1/devel, feature1/devel, devel
-repoC: feature1/devel, devel
+repoB: fix1@feature1@devel, feature1@devel, devel
+repoC: feature1@devel, devel
 repoA: devel
 ```
-A PR on repoB `fix1/feature1/devel --> feature1/devel` takes `repoB:fix1/feature1/devel, repoC: feature1/devel, repoA: devel`. This can be checked by setting `feature = fix1/feature1/devel` and running `R CMD check` on `repoC`, or `check_downstream` on `repoB` (adding `repoC` to its downstream dependencies).
-The PR on `repoB` and  `repoC` `feature1/devel --> devel` takes `repoB:feature1/devel, repoC: feature1/devel, repoA: devel`, setting `feature = feature1/devel`.
+A PR on repoB `fix1@feature1@devel --> feature1@devel` takes `repoB:fix1@feature1@devel, repoC: feature1@devel, repoA: devel`. This can be checked by setting `feature = fix1@feature1@devel` and running `R CMD check` on `repoC`, or `check_downstream` on `repoB` (adding `repoC` to its downstream dependencies).
+The PR on `repoB` and  `repoC` `feature1@devel --> devel` takes `repoB:feature1@devel, repoC: feature1@devel, repoA: devel`, setting `feature = feature1@devel`.
 
 ## Troubleshooting
 

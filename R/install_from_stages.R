@@ -377,35 +377,37 @@ topological_sort <- function(child_to_parents) {
 #' Determine the branch to install based on feature (staging rules)
 #'
 #' Return the branch to build the feature, given the available branches.
-#' A feature consists of branches separated by slashes of the form `name1/name2/.../nameN`.
+#' A feature consists of branches separated by slashes of the form `name1@name2@...@nameN`.
 #' Among the available branches, it searches in the order
-#' `name1/name2/.../nameN`, `name2/name3/.../nameN`, `name3/name4/.../nameN`, ..., `nameN`.
+#' `name1@name2@...@nameN`, `name2@name3@...@nameN`, `name3@name4@...@nameN`, ..., `nameN`.
 #'
-#' Use case: See vignette
+#' Use case: See readme.
 #'
 #' @md
 #' @param feature feature we want to build, includes fallbacks
 #' @param available_branches branches to search in
+#' @param branch_sep separator between branches in `feature`, `/` does not
+#'   work well with `git` because it clashes with the filesystem paths
 #'
 #' @examples
 #' determine_branch <- staged.dependencies:::determine_branch
 #'
 #' determine_branch("feature1", c("main", "feature1")) == "feature1"
-#' determine_branch("feature1/devel", c("main", "devel", "feature1")) == "devel"
-#' determine_branch("fix1/feature1/devel",
-#' c("main", "devel", "feature1", "feature1/devel", "fix1/feature1/devel", "fix1")
-#' ) == "fix1/feature1/devel"
-#' determine_branch("fix1/feature1/devel",
-#' c("main", "devel", "feature1", "feature1/devel", "fix1")
-#' ) == "feature1/devel"
-#' determine_branch("fix1/feature1/devel",
+#' determine_branch("feature1@devel", c("main", "devel", "feature1")) == "devel"
+#' determine_branch("fix1@feature1@devel",
+#' c("main", "devel", "feature1", "feature1@devel", "fix1@feature1@devel", "fix1")
+#' ) == "fix1@feature1@devel"
+#' determine_branch("fix1@feature1@devel",
+#' c("main", "devel", "feature1", "feature1@devel", "fix1")
+#' ) == "feature1@devel"
+#' determine_branch("fix1@feature1@devel",
 #' c("main", "devel", "feature1", "fix1")) == "devel"
 #'
-#' # error because neither `feature1/release` nor `release` branch exists
-#' # determine_branch("feature1/release", c("main", "devel"))
-determine_branch <- function(feature, available_branches) {
-  els <- unlist(strsplit(feature, "/", fixed = TRUE))
-  branches_to_check <- rev(Reduce(function(x, y) paste0(y, "/", x), rev(els), accumulate = TRUE))
+#' # error because neither `feature1@release` nor `release` branch exists
+#' # determine_branch("feature1@release", c("main", "devel"))
+determine_branch <- function(feature, available_branches, branch_sep = "@") {
+  els <- unlist(strsplit(feature, branch_sep, fixed = TRUE))
+  branches_to_check <- rev(Reduce(function(x, y) paste0(y, branch_sep, x), rev(els), accumulate = TRUE))
 
   for (branch in branches_to_check) {
     if (branch %in% available_branches) {
