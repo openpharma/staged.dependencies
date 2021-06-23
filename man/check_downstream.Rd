@@ -8,6 +8,7 @@ check_downstream(
   project = ".",
   feature = NULL,
   downstream_repos = NULL,
+  recursive = TRUE,
   dry_install_and_check = FALSE,
   verbose = 0
 )
@@ -20,6 +21,9 @@ must be a git repository.}
 
 \item{downstream_repos}{to overwrite the downstream repos to check}
 
+\item{recursive}{whether to recursively check downstream dependencies of the
+downstream dependencies}
+
 \item{dry_install_and_check}{whether to install upstream dependencies and run the checks;
 useful to see a dry-run (it however updates the cached repos!)}
 
@@ -29,7 +33,7 @@ useful to see a dry-run (it however updates the cached repos!)}
 \description{
 It installs the downstream dependencies and their upstream dependencies,
 and then runs \code{rcmdcheck} (\verb{R CMD check}) on the downstream dependencies.
-It does not run recursively on the downstream dependencies.
+It runs recursively on the downstream dependencies, but this can be disabled.
 }
 \details{
 Note: It runs against the remote version of project, so the project must have
@@ -43,4 +47,7 @@ check_downstream(
   project = "../stageddeps.electricity"
 )
 }
+}
+\seealso{
+determine_branch
 }

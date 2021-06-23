@@ -14,6 +14,9 @@ determine_branch(feature, available_branches, branch_sep = "@")
 \item{branch_sep}{separator between branches in \code{feature}, \code{/} does not
 work well with \code{git} because it clashes with the filesystem paths}
 }
+\value{
+branch to choose to match feature, error if no suitable branch was provided
+}
 \description{
 Return the branch to build the feature, given the available branches.
 A feature consists of branches separated by slashes of the form \code{name1@name2@...@nameN}.
@@ -21,10 +24,9 @@ Among the available branches, it searches in the order
 \code{name1@name2@...@nameN}, \code{name2@name3@...@nameN}, \code{name3@name4@...@nameN}, ..., \code{nameN}.
 }
 \details{
-Use case: See readme.
+Use case: See the readme.
 }
 \examples{
-determine_branch <- staged.dependencies:::determine_branch
 
 determine_branch("feature1", c("main", "feature1")) == "feature1"
 determine_branch("feature1@devel", c("main", "devel", "feature1")) == "devel"

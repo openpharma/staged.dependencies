@@ -2,4 +2,5 @@
 
 export(check_downstream)
 export(clear_cache)
+export(determine_branch)
 export(install_upstream_deps)

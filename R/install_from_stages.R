@@ -66,7 +66,7 @@ checkout_repo <- function(repo, host, feature, verbose = 0) {
       url = get_repo_url(repo, host), local_path = repo_dir, credentials = creds, progress = verbose >= 2
     )
   } else {
-    message(paste("pull", get_repo_url(repo, host)))
+    message(paste("pull", get_repo_url(repo, host), "to directory", repo_dir))
 
     git_repo <- git2r::repository(repo_dir)
     git2r::pull(git_repo, credentials = creds)
@@ -113,10 +113,12 @@ unhash_repo_and_host <- function(hashed_repo_and_host) {
   list(repo = repo_and_host[[1]], host = repo_and_host[[2]])
 }
 
-# checks out all repos to match branch determined by feature,
+# Checks out all upstream repos to match branch determined by feature,
 # starting from repos_to_process and including all upstream repos recursively
+# If include_downstream is TRUE, it also checks out the downstream repos
+# recursively (as well as their dependencies).
 # returns the order in which the repos must be installed
-rec_checkout_repos <- function(repos_to_process, feature, verbose = 0) {
+rec_checkout_repos <- function(repos_to_process, feature, include_downstream = FALSE, verbose = 0) {
   hashed_repos_to_process <- lapply(repos_to_process, hash_repo_and_host)
   rm(repos_to_process)
 
@@ -131,10 +133,15 @@ rec_checkout_repos <- function(repos_to_process, feature, verbose = 0) {
 
     repo_dir <- checkout_repo(repo_and_host$repo, repo_and_host$host, feature, verbose = verbose)
 
-    hashed_upstream_deps <- lapply(get_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
+    new_repos <- if (include_downstream) {
+      get_deps_info(repo_dir)$upstream_repos
+    } else {
+      c(get_deps_info(repo_dir)$upstream_repos, get_deps_info(repo_dir)$downstream_repos)
+    }
+    hashed_new_repos <- lapply(new_repos, hash_repo_and_host)
     hashed_processed_repos <- names(upstream_deps_graph)
-    hashed_repos_to_process <- union(hashed_repos_to_process, setdiff(hashed_upstream_deps, hashed_processed_repos))
-    upstream_deps_graph[[hashed_repo_and_host]] <- hashed_upstream_deps
+    hashed_repos_to_process <- union(hashed_repos_to_process, setdiff(hashed_new_repos, hashed_processed_repos))
+    upstream_deps_graph[[hashed_repo_and_host]] <- hashed_new_repos
   }
 
   install_order <- topological_sort(upstream_deps_graph)
@@ -161,7 +168,7 @@ warn_if_stageddeps_inexistent <- function(project) {
 #'
 #' It installs the downstream dependencies and their upstream dependencies,
 #' and then runs `rcmdcheck` (`R CMD check`) on the downstream dependencies.
-#' It does not run recursively on the downstream dependencies.
+#' It runs recursively on the downstream dependencies, but this can be disabled.
 #'
 #' Note: It runs against the remote version of project, so the project must have
 #' been pushed before.
@@ -173,8 +180,11 @@ warn_if_stageddeps_inexistent <- function(project) {
 #' @param dry_install_and_check whether to install upstream dependencies and run the checks;
 #'   useful to see a dry-run (it however updates the cached repos!)
 #' @param downstream_repos to overwrite the downstream repos to check
+#' @param recursive whether to recursively check downstream dependencies of the
+#'   downstream dependencies
 #' @inheritParams install_upstream_deps
 #' @export
+#' @seealso determine_branch
 #'
 #' @examples
 #' \dontrun{
@@ -185,7 +195,7 @@ warn_if_stageddeps_inexistent <- function(project) {
 #' )
 #' }
 check_downstream <- function(project = ".", feature = NULL, downstream_repos = NULL,
-                             dry_install_and_check = FALSE, verbose = 0) {
+                             recursive = TRUE, dry_install_and_check = FALSE, verbose = 0) {
   warn_if_stageddeps_inexistent(project)
 
   project_branch <- get_current_branch(project)
@@ -200,7 +210,8 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     all(c("repo", "host") %in% names(x))
   }, logical(1))))
 
-  install_order <- rec_checkout_repos(downstream_repos, feature, verbose = verbose)
+  install_order <- rec_checkout_repos(downstream_repos, feature, verbose = verbose,
+                                      include_downstream = recursive)
   for (repo_and_host in install_order) {
     repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host)
     if (hash_repo_and_host(repo_and_host) %in% lapply(downstream_repos, hash_repo_and_host)) {
@@ -240,7 +251,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 #' @return installed packages in installation order
 #'
 #' @export
-#'
+#' @seealso determine_branch
 #'
 #' @examples
 #' \dontrun{
@@ -392,7 +403,7 @@ topological_sort <- function(child_to_parents) {
 #' Among the available branches, it searches in the order
 #' `name1@name2@...@nameN`, `name2@name3@...@nameN`, `name3@name4@...@nameN`, ..., `nameN`.
 #'
-#' Use case: See readme.
+#' Use case: See the readme.
 #'
 #' @md
 #' @param feature feature we want to build, includes fallbacks
@@ -400,8 +411,10 @@ topological_sort <- function(child_to_parents) {
 #' @param branch_sep separator between branches in `feature`, `/` does not
 #'   work well with `git` because it clashes with the filesystem paths
 #'
+#' @return branch to choose to match feature, error if no suitable branch was provided
+#' @export
+#'
 #' @examples
-#' determine_branch <- staged.dependencies:::determine_branch
 #'
 #' determine_branch("feature1", c("main", "feature1")) == "feature1"
 #' determine_branch("feature1@devel", c("main", "devel", "feature1")) == "devel"

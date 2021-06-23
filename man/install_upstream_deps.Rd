@@ -44,3 +44,6 @@ install_upstream_deps()
 }
 
 }
+\seealso{
+determine_branch
+}
