@@ -5,7 +5,7 @@
 Set the access tokens to download from the git hubs (GitHub, Gitlab) with read privilege for the repositories in question.
 
 ```
-Sys.setenv("PUBLIC_GITHUB_PAT" = "<token>")
+Sys.setenv("GITHUB_PAT" = "<token>")
 Sys.setenv("ROCHE_GITHUB_PAT" = "<token>")
 Sys.setenv("ROCHE_GITLAB_PAT" = "<token>")
 ```
@@ -13,10 +13,23 @@ Sys.setenv("ROCHE_GITLAB_PAT" = "<token>")
 You can have these tokens set permanently by putting the information into the `~/.Renviron` file, e.g. by calling `usethis::edit_r_environ()`:
 
 ```
-PUBLIC_GITHUB_PAT=<token>
+GITHUB_PAT=<token>
 ROCHE_GITHUB_PAT=<token>
 ROCHE_GITLAB_PAT=<token>
 ```
+
+Roche specific: Put this into your `~/.Rprofile` (by calling `usethis::edit_r_profile()`):
+```
+options(
+  staged.dependencies.token_mapping = c(
+    "https://github.com" = "GITHUB_PAT",
+    "https://gitlab.com" = "GITLAB_PAT",
+    "https://github.roche.com" = "ROCHE_GITHUB_PAT",
+    "https://code.roche.com" = "ROCHE_GITLAB_PAT"
+  )
+)
+```
+You can also call this later once the package is loaded.
 
 Load the addins with `library(staged.dependencies)`, then search for them in the addins menu.
 Alternatively, you can run them explicitly and change the default arguments:
