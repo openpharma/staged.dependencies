@@ -10,10 +10,8 @@ STAGEDDEPS_FILENAME <- "staged_dependencies.yaml"
 # DISCUSSION POINTS:
 # todo: clear_cache: arg to only remove some repos from cache
 # todo: function to change cache_dir, delete old cache dir or not?
-# todo: add tokenmapping
 # todo: allow local source (rather than remote git)
 # todo: check verbose arg
-# todo: enable ssh? currently assumes auth_token is provided: use gert instead of git2r to handle credentials smoothly; git2r by default does not have ssh not enabled, see https://github.com/ropensci/git2r/issues/415
 # todo: Install downstream dependencies into temporary path
 # todo: use R package collections?
 # todo: check_downstream runs against remote
@@ -58,27 +56,26 @@ clear_cache <- function() {
 # checks out the correct branch (corresponding to feature) in the repo, clones the repo if necessary
 checkout_repo <- function(repo, host, feature, verbose = 0) {
   repo_dir <- get_repo_cache_dir(repo, host)
-  creds <- git2r::cred_token(token = get_authtoken_envvar(host))
+  password <- Sys.getenv(get_authtoken_envvar(host))
   if (!dir.exists(repo_dir)) {
-    message(paste("checkout", get_repo_url(repo, host)))
+    message(paste("clone", get_repo_url(repo, host), "to directory", repo_dir))
 
-    git_repo <- git2r::clone(
-      url = get_repo_url(repo, host), local_path = repo_dir, credentials = creds, progress = verbose >= 2
+    gert::git_clone(
+      url = get_repo_url(repo, host), path = repo_dir, password = password, verbose = verbose >= 2
     )
   } else {
     message(paste("pull", get_repo_url(repo, host), "to directory", repo_dir))
 
-    git_repo <- git2r::repository(repo_dir)
-    git2r::pull(git_repo, credentials = creds)
+    # prune = TRUE to remove branches that were deleted on remote
+    gert::git_pull(prune = TRUE, password = password, repo = repo_dir)
   }
-  # this directory should only contain remote branches (+ 1 local master branch)
-  available_branches <- names(git2r::branches(git_repo, flags = "remote"))
-  available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
+  available_branches <- unique(gsub("origin/", "", gert::git_branch_list(repo = repo_dir)$name, fixed = TRUE))
   branch <- determine_branch(feature, available_branches)
 
   message(paste("   - branch:", branch))
 
-  git2r::checkout(git_repo, branch = branch, force = TRUE) # force = TRUE to discard any changes (which should not happen)
+  # force = TRUE to discard any changes (which should not happen)
+  gert::git_branch_checkout(branch, force = TRUE, repo = repo_dir)
   if (verbose >= 1) {
     cat_nl("Checked out branch", branch, "from repo in directory", repo_dir)
   }
@@ -151,7 +148,7 @@ rec_checkout_repos <- function(repos_to_process, feature, include_downstream = F
 
 # gets the currently checked out branch
 get_current_branch <- function(repo_dir) {
-  git2r::repository_head(git2r::repository(repo_dir))$name
+  gert::git_branch(repo_dir)
 }
 
 warn_if_stageddeps_inexistent <- function(project) {
@@ -268,7 +265,7 @@ install_upstream_deps <- function(project = ".", feature = NULL,
   }
 
   expected_project_branch <- determine_branch(
-    feature, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
+    feature, available_branches = unique(gsub("origin/", "", gert::git_branch_list(repo = repo_dir)$name, fixed = TRUE))
   )
   if (project_branch != expected_project_branch) {
     warning("feature ", feature, " would match ", expected_project_branch,
@@ -336,12 +333,11 @@ install_repo_add_sha <- function(repo_dir) {
     pkg_desc$RemoteSha
   }
 
-  commit_sha <- git2r::sha(git2r::repository_head(git2r::repository(repo_dir)))
-  git_status <- git2r::status(repo_dir)
-  if ((length(git_status$staged) > 0) || (length(git_status$unstaged) > 0) || (length(git_status$untracked) > 0)) {
+  if (nrow(gert::git_status(repo = repo_dir)) > 0) {
     # check that there are no changes (so that sha is correct)
     stop("The git directory ", repo_dir, " contains changes.")
   }
+  commit_sha <- gert::git_info(repo = repo_dir)$commit
 
   # see remotes:::add_metadata
   source_desc <- file.path(repo_dir, "DESCRIPTION")
