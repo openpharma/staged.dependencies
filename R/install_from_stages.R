@@ -1,3 +1,13 @@
+# remotes default
+if (is.null(getOption("staged.dependencies.token_mapping"))) {
+  options(
+    staged.dependencies.token_mapping = c(
+      "https://github.com" = "GITHUB_PAT",
+      "https://gitlab.com" = "GITLAB_PAT"
+    )
+  )
+}
+
 # todo: into package.R
 CACHE_DIR <- path.expand("~/.staged.dependencies")
 # unlink(CACHE_DIR, recursive = TRUE)
@@ -10,7 +20,6 @@ STAGEDDEPS_FILENAME <- "staged_dependencies.yaml"
 # DISCUSSION POINTS:
 # todo: clear_cache: arg to only remove some repos from cache
 # todo: function to change cache_dir, delete old cache dir or not?
-# todo: add tokenmapping
 # todo: allow local source (rather than remote git)
 # todo: check verbose arg
 # todo: enable ssh? currently assumes auth_token is provided: use gert instead of git2r to handle credentials smoothly; git2r by default does not have ssh not enabled, see https://github.com/ropensci/git2r/issues/415
