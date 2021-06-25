@@ -8,26 +8,34 @@ if (!dir.exists(CACHE_DIR)) {
 STAGEDDEPS_FILENAME <- "staged_dependencies.yaml"
 
 # DISCUSSION POINTS:
-# todo: clear_cache: arg to only remove some repos from cache
-# todo: function to change cache_dir, delete old cache dir or not?
-# todo: add tokenmapping
-# todo: allow local source (rather than remote git)
 # todo: check verbose arg
-# todo: enable ssh? currently assumes auth_token is provided: use gert instead of git2r to handle credentials smoothly; git2r by default does not have ssh not enabled, see https://github.com/ropensci/git2r/issues/415
-# todo: Install downstream dependencies into temporary path
-# todo: use R package collections?
-# todo: check_downstream runs against remote
+# todo: replace git2r by gert
 # some other todos below
 # todo: rstudio addin interactive with Shiny
 # todo: how to run rcmdcheck without latex?
 
 cat_nl <- function(...) cat(paste0(paste(...), "\n"))
 
+is_non_empty_char <- function(x) {
+  length(x) == 1 && nchar(x) > 0 && is.character(x)
+}
 # directory where repo is cached locally
-get_repo_cache_dir <- function(repo, host) {
+get_repo_cache_dir <- function(repo, host, local = FALSE) {
+  stopifnot(
+    is_non_empty_char(repo),
+    is_non_empty_char(host),
+    is.logical(local)
+  )
   # the host can be rather long, so we hash it
   # a repo is uniquely identified by the pair (repo, host)
-  file.path(CACHE_DIR, paste0(gsub("/", "_", repo, fixed = TRUE), "_", digest::digest(paste0(repo, "/", host))))
+  prefix <- if (local) "local_" else ""
+  file.path(CACHE_DIR, paste0(prefix, gsub("/", "_", repo, fixed = TRUE),
+                              "_", digest::digest(paste0(repo, "/", host))))
+}
+
+# get currently active branch of repo in cache
+get_active_branch_in_cache <- function(repo, host, local = FALSE) {
+  get_current_branch(get_repo_cache_dir(repo, host, local))
 }
 
 # url for `git clone`
@@ -46,21 +54,20 @@ get_authtoken_envvar <- function(host) {
 
 #' Clear the repository cache
 #'
+#' @md
+#' @param pattern files to remove, see `unlink` (wildcards `*` and `?` allowed)
 #' @export
-clear_cache <- function() {
-  if (dir.exists(CACHE_DIR)) {
-    # CACHE_DIR may not have existed, so it may have failed to create it
-    unlink(CACHE_DIR, recursive = TRUE)
-  }
-  dir.create(CACHE_DIR)
+clear_cache <- function(pattern = "*") {
+  unlink(file.path(CACHE_DIR, pattern), recursive = TRUE)
 }
 
-# checks out the correct branch (corresponding to feature) in the repo, clones the repo if necessary
+# checks out the correct branch (corresponding to feature) in the repo from the remote,
+# clones the repo if necessary
 checkout_repo <- function(repo, host, feature, verbose = 0) {
   repo_dir <- get_repo_cache_dir(repo, host)
   creds <- git2r::cred_token(token = get_authtoken_envvar(host))
   if (!dir.exists(repo_dir)) {
-    message(paste("checkout", get_repo_url(repo, host)))
+    message(paste("clone", get_repo_url(repo, host), "to directory", repo_dir))
 
     git_repo <- git2r::clone(
       url = get_repo_url(repo, host), local_path = repo_dir, credentials = creds, progress = verbose >= 2
@@ -69,6 +76,8 @@ checkout_repo <- function(repo, host, feature, verbose = 0) {
     message(paste("pull", get_repo_url(repo, host), "to directory", repo_dir))
 
     git_repo <- git2r::repository(repo_dir)
+    # todo: checkout dummy branch, then prune branches that were deleted from remote
+    # (by setting fetch.prune = TRUE with git2r::config)
     git2r::pull(git_repo, credentials = creds)
   }
   # this directory should only contain remote branches (+ 1 local master branch)
@@ -76,12 +85,32 @@ checkout_repo <- function(repo, host, feature, verbose = 0) {
   available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
   branch <- determine_branch(feature, available_branches)
 
-  message(paste("   - branch:", branch))
+  message(paste("   - checkout branch:", branch))
 
   git2r::checkout(git_repo, branch = branch, force = TRUE) # force = TRUE to discard any changes (which should not happen)
   if (verbose >= 1) {
-    cat_nl("Checked out branch", branch, "from repo in directory", repo_dir)
+    cat_nl("Checked out branch", branch, "from repo in directory", repo_dir) #todo: message()
   }
+  repo_dir
+}
+
+# copies a local directory to the cache dir and commits the current state in
+# that cache dir, so the SHA can be added to the DESCRIPTION file
+# note: files in .gitignore are also available to the package locally
+copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
+  repo_dir <- get_repo_cache_dir(repo, host, local = TRUE)
+  if (dir.exists(repo_dir)) {
+    unlink(repo_dir, recursive = TRUE)
+  }
+  # file.copy copies a directory inside an existing directory
+  if (verbose >= 1) {
+    message(paste("Copying local dir", local_dir, "to cache dir", repo_dir))
+  }
+  fs::dir_copy(local_dir, repo_dir)
+  if ((length(git2r::status(repo_dir)$staged) > 0) || length(git2r::status(repo_dir)$unstaged) > 0) {
+    git2r::commit(repo_dir, paste0("committing everything for installation, copied from ", local_dir), all = TRUE)
+  }
+
   repo_dir
 }
 
@@ -92,9 +121,9 @@ get_deps_info <- function(repo_dir) {
   yaml_file <- file.path(repo_dir, STAGEDDEPS_FILENAME)
   if (file.exists(yaml_file)) {
     content <- yaml::read_yaml(yaml_file)
-    required_fields <- c("upstream_repos", "downstream_repos")
+    required_fields <- c("upstream_repos", "downstream_repos", "current_repo")
     if (!all(required_fields %in% names(content))) {
-      stop("File ", yaml_file, " must contain fields ", toString(required_fields))
+      stop("File ", yaml_file, "invalid, it must contain fields ", toString(required_fields))
     }
     content
   } else {
@@ -106,23 +135,57 @@ get_deps_info <- function(repo_dir) {
 # e.g. lst[[c(host=.., repo=..)]] is not possible
 # todo: use R package collections?
 hash_repo_and_host <- function(repo_and_host) {
-  paste0(repo_and_host$repo, " @ ", repo_and_host$host)
+  if (length(repo_and_host) == 0) {
+    c()
+  } else {
+    paste0(repo_and_host$repo, " @ ", repo_and_host$host)
+  }
 }
+# hash_repo_and_host(list())
+# hash_repo_and_host(list(repo = "repo1", host = "host1"))
+# hash_repo_and_host(list(repo = c("repo1", "repo2"), host = c("host1", "host2")))
 unhash_repo_and_host <- function(hashed_repo_and_host) {
-  repo_and_host <- strsplit(hashed_repo_and_host, " @ ", fixed = TRUE)[[1]]
-  list(repo = repo_and_host[[1]], host = repo_and_host[[2]])
+  repo_and_host <- strsplit(hashed_repo_and_host, " @ ", fixed = TRUE)
+  list(
+    repo = vapply(repo_and_host, `[[`, character(1), 1),
+    host = vapply(repo_and_host, `[[`, character(1), 2)
+  )
+}
+# unhash_repo_and_host(character(0))
+# unhash_repo_and_host("repo1 @ host1")
+# unhash_repo_and_host(c("repo1 @ host1", "repo2 @ host2"))
+
+get_local_repo_to_dir_mapping <- function(local_repos) {
+  stopifnot(is.data.frame(local_repos))
+  if (nrow(local_repos) == 0) {
+    list()
+  } else {
+    setNames(local_repos$directory, hash_repo_and_host(local_repos))
+  }
 }
 
-# Checks out all upstream repos to match branch determined by feature,
-# starting from repos_to_process and including all upstream repos recursively
-# If include_downstream is TRUE, it also checks out the downstream repos
-# recursively (as well as their dependencies).
-# returns the order in which the repos must be installed
-rec_checkout_repos <- function(repos_to_process, feature, include_downstream = FALSE, verbose = 0) {
-  hashed_repos_to_process <- lapply(repos_to_process, hash_repo_and_host)
+# Recursively check out all repos to match branch determined by feature,
+# starting from repos_to_process.
+# When direction is upstream, it includes upstream repos
+# returns the upstream and/or downstream dependency graphs
+rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstream"),
+                               local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)), verbose = 0) {
+  stopifnot(
+    is.list(repos_to_process)
+  )
+  stopifnot(all(direction %in% c("upstream", "downstream")), length(direction) >= 1)
+  stopifnot(is.data.frame(local_repos), setequal(colnames(local_repos), c("repo", "host", "directory")))
+
+  local_repo_to_dir <- get_local_repo_to_dir_mapping(local_repos)
+  rm(local_repos)
+
+  hashed_repos_to_process <- vapply(repos_to_process, hash_repo_and_host, character(1))
   rm(repos_to_process)
 
-  upstream_deps_graph <- list()
+  # only one of them may be filled depending on the direction
+  upstream_deps_graph <- c()
+  downstream_deps_graph <- c()
+
   while (length(hashed_repos_to_process) > 0) {
     hashed_repo_and_host <- hashed_repos_to_process[[1]]
     hashed_repos_to_process <- hashed_repos_to_process[-1]
@@ -131,22 +194,41 @@ rec_checkout_repos <- function(repos_to_process, feature, include_downstream = F
     stopifnot(!is.null(repo_and_host$repo))
     stopifnot(!is.null(repo_and_host$host))
 
-    repo_dir <- checkout_repo(repo_and_host$repo, repo_and_host$host, feature, verbose = verbose)
-
-    new_repos <- if (include_downstream) {
-      get_deps_info(repo_dir)$upstream_repos
+    if (hashed_repo_and_host %in% names(local_repo_to_dir)) {
+      repo_dir <- copy_local_repo_to_cachedir(
+        local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
+        verbose = verbose
+      )
     } else {
-      c(get_deps_info(repo_dir)$upstream_repos, get_deps_info(repo_dir)$downstream_repos)
+      repo_dir <- checkout_repo(repo_and_host$repo, repo_and_host$host, feature, verbose = verbose)
     }
-    hashed_new_repos <- lapply(new_repos, hash_repo_and_host)
-    hashed_processed_repos <- names(upstream_deps_graph)
+
+    hashed_new_repos <- c()
+    if ("upstream" %in% direction) {
+      # Attention: use lapply because with vapply, vector may be NULL, so assignment to
+      # upstream_deps_graph removes the element
+      hashed_upstream_repos <- lapply(get_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
+      upstream_deps_graph[[hashed_repo_and_host]] <- hashed_upstream_repos
+      hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
+    }
+    if ("downstream" %in% direction) {
+      hashed_downstream_repos <- lapply(get_deps_info(repo_dir)$downstream_repos, hash_repo_and_host)
+      downstream_deps_graph[[hashed_repo_and_host]] <- hashed_downstream_repos
+      hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
+    }
+    hashed_processed_repos <- union(names(upstream_deps_graph), names(downstream_deps_graph))
     hashed_repos_to_process <- union(hashed_repos_to_process, setdiff(hashed_new_repos, hashed_processed_repos))
-    upstream_deps_graph[[hashed_repo_and_host]] <- hashed_new_repos
   }
 
-  install_order <- topological_sort(upstream_deps_graph)
-  install_order <- lapply(install_order, unhash_repo_and_host)
-  install_order
+  res <- list()
+  if ("upstream" %in% direction) {
+    res[["upstream_deps"]] <- upstream_deps_graph
+  }
+  if ("downstream" %in% direction) {
+    res[["downstream_deps"]] <- downstream_deps_graph
+  }
+
+  res
 }
 
 # gets the currently checked out branch
@@ -173,6 +255,13 @@ warn_if_stageddeps_inexistent <- function(project) {
 #' Note: It runs against the remote version of project, so the project must have
 #' been pushed before.
 #'
+#' If A <- B (i.e. A is upstream of B), we require that A lists B as downstream
+#' and B lists A as upstream. This requirement can be verified with
+#' `dependency_table` by looking at the arrows (each arrow should be once dashed
+#' and once solid).
+#'
+#' todo: check if only one lists the other
+#'
 #' @md
 #'
 #' @export
@@ -186,6 +275,8 @@ warn_if_stageddeps_inexistent <- function(project) {
 #' @export
 #' @seealso determine_branch
 #'
+#' @return `data.frame` of installed packages (in installation order) and checked packages
+#'
 #' @examples
 #' \dontrun{
 #' check_downstream(project = ".", verbose = 1)
@@ -195,38 +286,253 @@ warn_if_stageddeps_inexistent <- function(project) {
 #' )
 #' }
 check_downstream <- function(project = ".", feature = NULL, downstream_repos = NULL,
+                             local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
                              recursive = TRUE, dry_install_and_check = FALSE, verbose = 0) {
   warn_if_stageddeps_inexistent(project)
+  stopifnot(is.list(local_repos))
 
   project_branch <- get_current_branch(project)
   if (is.null(feature)) {
     feature <- project_branch
   }
 
-  if (is.null(downstream_repos)) {
-    downstream_repos <- get_deps_info(project)$downstream_repos
+  expected_project_branch <- determine_branch(
+    feature, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
+  )
+  if (project_branch != expected_project_branch) {
+    warning("feature ", feature, " would match ", expected_project_branch,
+            ", but currently checked out branch is ", project_branch)
   }
-  stopifnot(all(vapply(downstream_repos, function(x) {
-    all(c("repo", "host") %in% names(x))
-  }, logical(1))))
 
-  install_order <- rec_checkout_repos(downstream_repos, feature, verbose = verbose,
-                                      include_downstream = recursive)
+  repo_deps_info <- get_deps_info(project)
+
+  local_repos <- rbind(
+    local_repos,
+    data.frame(
+      repo = repo_deps_info$current_repo$repo,
+      host = repo_deps_info$current_repo$host,
+      directory = normalizePath(project), stringsAsFactors = FALSE
+    )
+  )
+
+  if (is.null(downstream_repos)) {
+    # get downstream repos without fetching remote, todo: local upstream dependencies
+    downstream_repos <- if (!recursive) {
+      get_deps_info(project)$downstream_repos
+    } else {
+      deps <- rec_checkout_repos(
+        list(repo_deps_info$current_repo), feature, verbose = verbose,
+        direction = "downstream", local_repos = local_repos
+      )
+      hashed_downstream_nodes <- lapply(get_descendants(
+        deps[["downstream_deps"]], hash_repo_and_host(repo_deps_info$current_repo)
+      ), unhash_repo_and_host)
+    }
+  }
+  stopifnot(
+    is.list(downstream_repos),
+    all(vapply(downstream_repos, function(x) {
+      all(c("repo", "host") %in% names(x))
+    }, logical(1)))
+  )
+
+  deps <- rec_checkout_repos(
+    downstream_repos, feature, verbose = verbose,
+    local_repos = local_repos, direction = "upstream"
+  )
+  install_order <- get_install_order(deps)
+
+  local_repo_to_dir <- get_local_repo_to_dir_mapping(local_repos)
+  if (verbose) {
+    cat_nl("Installing packages in order: ", toString(install_order))
+  }
   for (repo_and_host in install_order) {
-    repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host)
+    is_local <- hash_repo_and_host(
+      list(repo = repo_and_host$repo, host = repo_and_host$host)
+    ) %in% names(local_repo_to_dir)
+    repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
     if (hash_repo_and_host(repo_and_host) %in% lapply(downstream_repos, hash_repo_and_host)) {
       if (!dry_install_and_check) {
         rcmdcheck::rcmdcheck(repo_dir, error_on = "warning", args = Sys.getenv("RCMDCHECK_ARGS")) #todo: make an option
       } else if (verbose >= 1) {
-        cat_nl("Skipping check of", repo_dir)
+        cat_nl("(Dry run): Skipping check of", repo_dir)
       }
     }
     if (!dry_install_and_check) {
       install_repo_add_sha(repo_dir)
     } else if (verbose >= 1) {
-      cat_nl("Skipping installation of", repo_dir)
+      cat_nl("(Dry run): Skipping installation of", repo_dir)
     }
   }
+
+  res <- do.call(rbind, lapply(install_order, function(repo_and_host) {
+    data.frame(
+      repo = repo_and_host$repo,
+      host = repo_and_host$host,
+      checked = hash_repo_and_host(repo_and_host) %in% lapply(downstream_repos, hash_repo_and_host)
+    )
+  }))
+  if (is.null(res)) {
+    data.frame(
+      repo = character(0),
+      host = character(0)$host,
+      checked = character(0)
+    )
+  }
+  res
+}
+
+# returns the order in which the repos must be installed
+get_install_order <- function(deps) {
+  install_order <- topological_sort(deps[["upstream_deps"]])
+  lapply(install_order, unhash_repo_and_host)
+}
+
+get_descendants <- function(parents_to_children, node) {
+  nodes_to_process <- c(node)
+  descendants <- c()
+  while (length(nodes_to_process) > 0) {
+    cur_node <- nodes_to_process[[1]]
+    nodes_to_process <- nodes_to_process[-1]
+
+    descendants <- c(descendants, cur_node)
+    children <- parents_to_children[[cur_node]]
+    nodes_to_process <- union(nodes_to_process, setdiff(children, descendants))
+  }
+
+  setdiff(descendants, node)
+}
+
+dependency_table <- function(project = ".", feature = NULL,
+                             local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
+                             verbose = 0) {
+  warn_if_stageddeps_inexistent(project)
+  stopifnot(is.list(local_repos))
+
+  project_branch <- get_current_branch(project)
+  if (is.null(feature)) {
+    feature <- project_branch
+  }
+
+  expected_project_branch <- determine_branch(
+    feature, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
+  )
+  if (project_branch != expected_project_branch) {
+    warning("feature ", feature, " would match ", expected_project_branch,
+            ", but currently checked out branch is ", project_branch)
+  }
+
+  repo_deps_info <- get_deps_info(project)
+
+  local_repos <- rbind(
+    local_repos,
+    data.frame(
+      repo = repo_deps_info$current_repo$repo,
+      host = repo_deps_info$current_repo$host,
+      directory = normalizePath(project), stringsAsFactors = FALSE
+    )
+  )
+
+  deps <- rec_checkout_repos(list(repo_deps_info$current_repo), feature,
+                             direction = c("upstream", "downstream"), local_repos = local_repos,
+                             verbose = verbose)
+  cur_node <- hash_repo_and_host(repo_deps_info$current_repo)
+  hashed_upstream_nodes <- get_descendants(deps[["upstream_deps"]], cur_node)
+  hashed_downstream_nodes <- get_descendants(deps[["downstream_deps"]], cur_node)
+  hashed_remaining_nodes <- setdiff(
+    union(names(deps[["upstream_deps"]]), names(deps[["downstream_deps"]])),
+    union(union(hashed_upstream_nodes, hashed_downstream_nodes), cur_node)
+  )
+
+  # if df is empty, don't add any type
+  cbind_handle_empty <- function(df, ...) {
+    col_and_vals <- list(...)
+    if (nrow(df) == 0) {
+      col_and_vals <- lapply(col_and_vals, function(x) character(0))
+    }
+    cbind(df, do.call(data.frame, c(col_and_vals, stringsAsFactors = FALSE)))
+  }
+
+  df <- rbind(
+    cbind_handle_empty(data.frame(unhash_repo_and_host(cur_node), stringsAsFactors = FALSE), type = "current"),
+    cbind_handle_empty(data.frame(unhash_repo_and_host(hashed_upstream_nodes), stringsAsFactors = FALSE), type = "upstream"),
+    cbind_handle_empty(data.frame(unhash_repo_and_host(hashed_downstream_nodes), stringsAsFactors = FALSE), type = "downstream"),
+    cbind_handle_empty(data.frame(unhash_repo_and_host(hashed_remaining_nodes), stringsAsFactors = FALSE), type = "other")
+  )
+  local_repo_to_dir <- get_local_repo_to_dir_mapping(local_repos)
+  df$branch <- Map(function(repo, host) {
+    is_local <- hash_repo_and_host(list(repo = repo, host = host)) %in% names(local_repo_to_dir)
+    branch <- get_active_branch_in_cache(repo, host, local = is_local)
+    if (is_local) {
+      paste0("local (", branch, ")")
+    } else {
+      branch
+    }
+  }, df$repo, df$host)
+
+  # all_unique <- function(x) {
+  #   length(unique(x)) == length(x)
+  # }
+  # stopifnot(all_unique(df$repo))
+  library(dplyr) #todo
+  nodes <- df %>% mutate(
+    id = hash_repo_and_host(list(repo = repo, host = host)),
+    label = vapply(strsplit(repo, "/", fixed = TRUE), function(x) tail(x, 1), character(1)),
+    title = paste0("<p>", repo, "<br/>", host, "<br/>", type, "<br/>", branch, "</p"),
+    value = 3,
+    group = type
+    # color = case_when(
+    #   type == "upstream" ~ "#edc987", # "orange"
+    #   type == "downstream" ~ "#bad984", # "green"
+    #   type == "current" ~ "#ccc916", # "yellow"
+    #   TRUE ~ "grey"
+    # )
+  ) %>% select(id, label, title, value, group)
+
+  adj_list_to_edge_df <- function(parents_to_children) {
+    if (length(parents_to_children) == 0) {
+      return(data.frame(from = character(), to = character()))
+    }
+
+    do.call(rbind, lapply(names(parents_to_children), function(node) {
+      children <- parents_to_children[[node]]
+      data.frame(
+        from = if (length(children) > 0) node else character(0),
+        to = unlist(children, recursive = FALSE), stringsAsFactors = FALSE
+      )
+    }))
+  }
+
+  edges <- rbind(
+    cbind_handle_empty(
+      adj_list_to_edge_df(deps[["upstream_deps"]]) %>% rename(to = from, from = to),
+      arrows = "from", dashes = TRUE),
+    cbind_handle_empty(
+      adj_list_to_edge_df(deps[["downstream_deps"]]),
+      arrows = "from", dashes = FALSE
+    )
+  )
+
+  plot_title <- paste0("Dependency graph starting from ", repo_deps_info$current_repo$repo)
+  visNetwork::visNetwork(nodes, edges, width = "100%", main = plot_title) %>%
+    # topological sort
+    visNetwork::visHierarchicalLayout(sortMethod = "directed", direction = "LR") %>%
+    # "orange"
+    visNetwork::visGroups(groupname = "upstream", color = "#edc987") %>%
+    # "green"
+    visNetwork::visGroups(groupname = "downstream", color = "#bad984") %>%
+    # "yellow"
+    visNetwork::visGroups(groupname = "current", color = "#ccc916") %>%
+    # "grey"
+    visNetwork::visGroups(groupname = "other", color = "#c5c9c9") %>%
+    visNetwork::visLegend(
+      position = "right",
+      addEdges = data.frame(arrows = "from", dashes = c(TRUE, FALSE), font.vadjust = "15", label = c("upstream deps", "downstream deps"))
+    ) %>%
+    #visNetwork::visInteraction(zoomView = TRUE) %>%
+    print()
+
+  df
 }
 
 #' Install upstream dependencies of project corresponding to feature
@@ -259,8 +565,10 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 #' }
 #'
 install_upstream_deps <- function(project = ".", feature = NULL,
+                                  local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
                                   install_project = TRUE, dry_install = FALSE, verbose = 0) {
   warn_if_stageddeps_inexistent(project)
+  stopifnot(is.list(local_repos))
 
   project_branch <- get_current_branch(project)
   if (is.null(feature)) {
@@ -275,32 +583,42 @@ install_upstream_deps <- function(project = ".", feature = NULL,
             ", but currently checked out branch is ", project_branch)
   }
 
-  repos_to_process <- get_deps_info(project)$upstream_repos
-  install_order <- rec_checkout_repos(repos_to_process, feature, verbose = verbose)
+  repo_deps_info <- get_deps_info(project)
+
+  local_repos <- rbind(
+    local_repos,
+    data.frame(
+      repo = repo_deps_info$current_repo$repo,
+      host = repo_deps_info$current_repo$host,
+      directory = normalizePath(project), stringsAsFactors = FALSE
+    )
+  )
+
+  deps <- rec_checkout_repos(list(repo_deps_info$current_repo), feature, direction = "upstream",
+                             local_repos = local_repos, verbose = verbose)
+  install_order <- get_install_order(deps)
+  stopifnot(all.equal(tail(install_order, 1)[[1]], repo_deps_info$current_repo))
+  if (!install_project) {
+    install_order <- head(install_order, -1)
+  }
 
   if (verbose) {
-    cat_nl("Installing upstream packages: ", toString(install_order))
+    cat_nl("Installing packages in order: ", toString(install_order))
   }
+  local_repo_to_dir <- get_local_repo_to_dir_mapping(local_repos)
   for (repo_and_host in install_order) {
-    repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host)
+    is_local <- hash_repo_and_host(
+      list(repo = repo_and_host$repo, host = repo_and_host$host)
+    ) %in% names(local_repo_to_dir)
+    repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
     if (!dry_install) {
       install_repo_add_sha(repo_dir)
+    } else if (verbose >= 1) {
+      cat_nl("(Dry run) Skipping installation of", repo_dir)
     }
   }
 
-  installed_pkgs <- install_order
-  if (install_project) {
-    if (verbose) {
-      cat_nl("Installing current package from directory ", project)
-    }
-    if (!dry_install) {
-      # copy project to cache dir, compute git hash to install it from there, todo, e.g. via git commit
-      utils::install.packages(project, repos = NULL, type = "source")
-    }
-    installed_pkgs <- c(installed_pkgs, project)
-  }
-
-  installed_pkgs
+  install_order
 }
 
 #' Install git repository
@@ -373,16 +691,29 @@ install_repo_add_sha <- function(repo_dir) {
 #' )
 #' is.null(topological_sort(list()))
 #'
+#' \dontrun{
+#' # cycle
+#' topological_sort(list(
+#'   n1 = c("n2"), n2 = c("n3", "n1"), n3 = c()
+#' ))
+#' }
 topological_sort <- function(child_to_parents) {
   # depth-first search from children to parents, then output nodes in the order of finishing times
   ordering <- c()
+  visiting <- list()
 
   treat_node <- function(node) {
     # cat_nl("Treating node '", node, "'")
     # Sys.sleep(1)
+    # print(visiting)
+    if (node %in% names(visiting)) {
+      stop("Node ", node, " forms part of a cycle.")
+    }
+    visiting[[node]] <<- TRUE
     for (parent in setdiff(child_to_parents[[node]], ordering)) {
       treat_node(parent)
     }
+    visiting[[node]] <<- NULL # remove
     ordering <<- c(ordering, node)
   }
 
@@ -394,7 +725,6 @@ topological_sort <- function(child_to_parents) {
 
   ordering
 }
-
 
 #' Determine the branch to install based on feature (staging rules)
 #'
