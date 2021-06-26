@@ -2,5 +2,8 @@
 
 export(check_downstream)
 export(clear_cache)
+export(dependency_graph)
+export(dependency_structure)
+export(dependency_table)
 export(determine_branch)
 export(install_upstream_deps)

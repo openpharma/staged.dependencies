@@ -37,8 +37,7 @@
 
 <meta property="og:title" content="Check downstream dependencies — check_downstream" />
 <meta property="og:description" content="It installs the downstream dependencies and their upstream dependencies,
-and then runs rcmdcheck (R CMD check) on the downstream dependencies.
-It does not run recursively on the downstream dependencies." />
+and then runs rcmdcheck (R CMD check) on the downstream dependencies." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -71,7 +70,7 @@ It does not run recursively on the downstream dependencies." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">staged.dependencies</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
       </span>
     </div>
 
@@ -109,15 +108,18 @@ It does not run recursively on the downstream dependencies." />
 
     <div class="ref-description">
     <p>It installs the downstream dependencies and their upstream dependencies,
-and then runs <code>rcmdcheck</code> (<code>R CMD check</code>) on the downstream dependencies.
-It does not run recursively on the downstream dependencies.</p>
+and then runs <code>rcmdcheck</code> (<code>R CMD check</code>) on the downstream dependencies.</p>
     </div>
 
     <pre class="usage"><span class='fu'>check_downstream</span>(
   <span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>,
   <span class='kw'>feature</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>downstream_repos</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>downstream_repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>repo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>host</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>directory</span> <span class='kw'>=</span>
+    <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>)),
+  <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>dry_install_and_check</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>check_args</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>0</span>
 )</pre>
 
@@ -126,33 +128,63 @@ It does not run recursively on the downstream dependencies.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>project</th>
-      <td><p>directory of project (for which to restore the dependencies according to feature);
-must be a git repository.</p></td>
+      <td><p>(<code>character</code>) directory of project (for which to restore the
+dependencies according to feature); must be a git repository.</p></td>
     </tr>
     <tr>
       <th>feature</th>
-      <td><p>feature we want to build; inferred from the branch of the project if not provided</p></td>
+      <td><p>(<code>character</code>) feature we want to build; inferred from the
+branch of the project if not provided; warning if not consistent with
+current branch of project</p></td>
     </tr>
     <tr>
       <th>downstream_repos</th>
-      <td><p>to overwrite the downstream repos to check</p></td>
+      <td><p>(<code>list</code>) to overwrite the downstream repos to check
+of <code>project</code></p></td>
+    </tr>
+    <tr>
+      <th>local_repos</th>
+      <td><p>(<code>data.frame</code>) repositories that should be taken from
+local rather than cloned; columns are <code>repo, host, directory</code></p></td>
+    </tr>
+    <tr>
+      <th>recursive</th>
+      <td><p>(<code>logical</code>) whether to recursively check the downstream
+dependencies of the downstream dependencies</p></td>
     </tr>
     <tr>
       <th>dry_install_and_check</th>
-      <td><p>whether to install upstream dependencies and run the checks;
-useful to see a dry-run (it however updates the cached repos!)</p></td>
+      <td><p>(<code>logical</code>) whether to install upstream
+dependencies and check downstream repos; otherwise just reports
+what would be installed</p></td>
+    </tr>
+    <tr>
+      <th>check_args</th>
+      <td><p>(<code>list</code>) arguments passed to <code>rcmdcheck</code></p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>verbosity level, incremental;
-(0: None, 1: packages that get installed, 2: includes git checkout)</p></td>
+      <td><p><code>numeric</code>) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p><code>data.frame</code> of installed packages (in installation order) and checked packages</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Note: It runs against the remote version of project, so the project must have
-been pushed before.</p>
+    <p>If A &lt;- B (i.e. A is upstream of B), B should list A as upstream. Otherwise,
+B will be checked, but may not pick up the right version of A (unless there
+are other packages that require A and are processed before B).
+If A does not list B as downstream (which can be the case when projects A and
+B are unrelated), this will simply mean that check_downstream starting from A
+will not check B which is desirable.
+This requirement can be verified with <code>dependency_graph</code> by looking at the arrows.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p>determine_branch</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
@@ -167,7 +199,9 @@ been pushed before.</p>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
+      <li><a href="#value">Value</a></li>
       <li><a href="#details">Details</a></li>
+      <li><a href="#see-also">See also</a></li>
       <li><a href="#examples">Examples</a></li>
     </ul>
 
@@ -177,7 +211,7 @@ been pushed before.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Adrian Waddell, Maximilian Mordig.</p>
+  <p>Developed by Who to complain to.</p>
 </div>
 
 <div class="pkgdown">

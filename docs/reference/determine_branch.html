@@ -72,7 +72,7 @@ name1@name2@...@nameN, name2@name3@...@nameN, name3@name4@...@nameN, ..., nameN.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">staged.dependencies</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
       </span>
     </div>
 
@@ -135,13 +135,15 @@ work well with <code>git</code> because it clashes with the filesystem paths</p>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>branch to choose to match feature, error if no suitable branch was provided</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Use case: See readme.</p>
+    <p>Use case: See the readme.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>determine_branch</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>staged.dependencies</span><span class='kw ns'>:::</span><span class='no'><a href='https://rdrr.io/pkg/staged.dependencies/man/determine_branch.html'>determine_branch</a></span>
-
+    <pre class="examples"><div class='input'>
 <span class='fu'>determine_branch</span>(<span class='st'>"feature1"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"feature1"</span>)) <span class='kw'>==</span> <span class='st'>"feature1"</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"feature1@devel"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>)) <span class='kw'>==</span> <span class='st'>"devel"</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"fix1@feature1@devel"</span>,
 <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"main"</span>, <span class='st'>"devel"</span>, <span class='st'>"feature1"</span>, <span class='st'>"feature1@devel"</span>, <span class='st'>"fix1@feature1@devel"</span>, <span class='st'>"fix1"</span>)
 ) <span class='kw'>==</span> <span class='st'>"fix1@feature1@devel"</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>determine_branch</span>(<span class='st'>"fix1@feature1@devel"</span>,
@@ -156,6 +158,7 @@ work well with <code>git</code> because it clashes with the filesystem paths</p>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
+      <li><a href="#value">Value</a></li>
       <li><a href="#details">Details</a></li>
       <li><a href="#examples">Examples</a></li>
     </ul>
@@ -166,7 +169,7 @@ work well with <code>git</code> because it clashes with the filesystem paths</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Adrian Waddell, Maximilian Mordig.</p>
+  <p>Developed by Who to complain to.</p>
 </div>
 
 <div class="pkgdown">

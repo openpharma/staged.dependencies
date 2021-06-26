@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Topologically sorts nodes so that parents are listed before all their children — topological_sort • staged.dependencies</title>
+<title>Computes the dependency structure as a table — dependency_table • staged.dependencies</title>
 
 
 <!-- jquery -->
@@ -35,8 +35,11 @@
 
 
 
-<meta property="og:title" content="Topologically sorts nodes so that parents are listed before all their children — topological_sort" />
-<meta property="og:description" content="Topologically sorts nodes so that parents are listed before all their children" />
+<meta property="og:title" content="Computes the dependency structure as a table — dependency_table" />
+<meta property="og:description" content="The dependency structure depends on feature which determines which
+repositories are checked out.
+It starts from the project and discovers all reachable upstream and
+downstream dependencies." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -100,50 +103,86 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Topologically sorts nodes so that parents are listed before all their children</h1>
+    <h1>Computes the dependency structure as a table</h1>
     
-    <div class="hidden name"><code>topological_sort.Rd</code></div>
+    <div class="hidden name"><code>dependency_table.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Topologically sorts nodes so that parents are listed before all their children</p>
+    <p>The dependency structure depends on <code>feature</code> which determines which
+repositories are checked out.
+It starts from the project and discovers all reachable upstream and
+downstream dependencies.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>topological_sort</span>(<span class='no'>child_to_parents</span>)</pre>
+    <pre class="usage"><span class='fu'>dependency_table</span>(
+  <span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>,
+  <span class='kw'>feature</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>repo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>host</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>directory</span> <span class='kw'>=</span>
+    <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>)),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>0</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>child_to_parents</th>
-      <td><p>mapping from child to its parents (upstream dependencies)</p></td>
+      <th>project</th>
+      <td><p>(<code>character</code>) directory of project (for which to restore the
+dependencies according to feature); must be a git repository.</p></td>
+    </tr>
+    <tr>
+      <th>feature</th>
+      <td><p>(<code>character</code>) feature we want to build; inferred from the
+branch of the project if not provided; warning if not consistent with
+current branch of project</p></td>
+    </tr>
+    <tr>
+      <th>local_repos</th>
+      <td><p>(<code>data.frame</code>) repositories that should be taken from
+local rather than cloned; columns are <code>repo, host, directory</code></p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p><code>numeric</code>) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>vector listing parents before children</p>
+    <p>depending on <code>return_table_only</code> (see above); either <code>data.frame</code> or a list with
+the following elements:
+<code>df</code>:
+<code>data.frame</code> with columns <code>repo, host, type, branch</code>, where <code>type</code> is:</p><ul>
+<li><p><code>current</code> (project),</p></li>
+<li><p><code>upstream</code> (of project),</p></li>
+<li><p><code>downstream</code> (of project),</p></li>
+<li><p><code>other</code> (the remaining, e.g. downstream dependencies of upstream dependencies)
+and <code>branch</code> is <code>branch</code> corresponding to <code>feature</code> and becomes <code><a href='https://rdrr.io/r/base/eval.html'>local (branch)</a></code>
+if package is in <code>local_repos</code>.</p></li>
+</ul>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>topological_sort</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>staged.dependencies</span><span class='kw ns'>:::</span><span class='no'><a href='https://rdrr.io/pkg/staged.dependencies/man/topological_sort.html'>topological_sort</a></span>
+<p><code>graph</code>:
+visNetwork graph: with arrows going in the direction from downstream to upstream
+arrows are solid if both upstream and downstream list each other; they
+are dashed if either does not list the other:</p><ul>
+<li><p>if upstream does not list downstream, blue dashed</p></li>
+<li><p>if downstream does not list upstream, red dashed (this means that
+the downstream repo's yaml needs to be fixed)
+Tooltips give more information about nodes and edges.</p></li>
+</ul>
 
-<span class='fu'><a href='https://rdrr.io/r/base/all.html'>all</a></span>(<span class='fu'>topological_sort</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(
-<span class='kw'>n1</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(), <span class='kw'>n2</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"n1"</span>), <span class='kw'>n3</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"n2"</span>),
-<span class='kw'>n4</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"n2"</span>, <span class='st'>"n3"</span>))) <span class='kw'>==</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"n1"</span>, <span class='st'>"n2"</span>, <span class='st'>"n3"</span>, <span class='st'>"n4"</span>)
-)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/NULL.html'>is.null</a></span>(<span class='fu'>topological_sort</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>()))</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
-<span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='co'># cycle</span>
-<span class='fu'>topological_sort</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(
-  <span class='kw'>n1</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"n2"</span>), <span class='kw'>n2</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"n3"</span>, <span class='st'>"n1"</span>), <span class='kw'>n3</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>()
-))
-}</div></pre>
+<p><code>deps</code>:
+deps: upstream and downstream dependencies of each node</p>
+
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       <li><a href="#value">Value</a></li>
-      <li><a href="#examples">Examples</a></li>
     </ul>
 
   </div>

@@ -36,7 +36,8 @@
 
 
 <meta property="og:title" content="Clear the repository cache — clear_cache" />
-<meta property="og:description" content="Clear the repository cache" />
+<meta property="og:description" content="Use this function to cleanly clone some repositories if the
+git operations fail." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -69,7 +70,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">staged.dependencies</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
       </span>
     </div>
 
@@ -106,17 +107,27 @@
     </div>
 
     <div class="ref-description">
-    <p>Clear the repository cache</p>
+    <p>Use this function to cleanly clone some repositories if the
+<code>git</code> operations fail.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clear_cache</span>()</pre>
+    <pre class="usage"><span class='fu'>clear_cache</span>(<span class='kw'>pattern</span> <span class='kw'>=</span> <span class='st'>"*"</span>)</pre>
 
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>pattern</th>
+      <td><p>files to remove, see <code>unlink</code> (wildcards <code>*</code> and <code>?</code> allowed)</p></td>
+    </tr>
+    </table>
 
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
+      <li><a href="#arguments">Arguments</a></li>
     </ul>
 
   </div>
@@ -125,7 +136,7 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by Adrian Waddell, Maximilian Mordig.</p>
+  <p>Developed by Who to complain to.</p>
 </div>
 
 <div class="pkgdown">

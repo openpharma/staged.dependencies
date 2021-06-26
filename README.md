@@ -83,6 +83,11 @@ repoA: devel
 A PR on repoB `fix1@feature1@devel --> feature1@devel` takes `repoB:fix1@feature1@devel, repoC: feature1@devel, repoA: devel`. This can be checked by setting `feature = fix1@feature1@devel` and running `R CMD check` on `repoC`, or `check_downstream` on `repoB` (adding `repoC` to its downstream dependencies).
 The PR on `repoB` and  `repoC` `feature1@devel --> devel` takes `repoB:feature1@devel, repoC: feature1@devel, repoA: devel`, setting `feature = feature1@devel`.
 
+## Addins
+When you are working from a project todo, includes gitignored files
+caches local repos with sha
+use hashing
+
 ## Troubleshooting
 
 `git2r::clone` may fail. Check that the git host is reachable (VPN may be needed) and that the access token has read privileges for the repositories.

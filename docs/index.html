@@ -5,15 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Install R packages from Particular Git Branches • staged.dependencies</title>
+<title>What the package does (short line) • staged.dependencies</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="Install R packages from Particular Git Branches">
-<meta property="og:description" content="When developing multiple dependent packages, it is often useful to introduce development
-  stages (devel, pre-release, release) that synchronize these packages. 
-  This package provides an implementation of development stages via branch naming rules.">
+<script src="pkgdown.js"></script><meta property="og:title" content="What the package does (short line)">
+<meta property="og:description" content="More about what it does (maybe more than one line)">
 <meta name="twitter:card" content="summary">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -33,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">staged.dependencies</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
       </span>
     </div>
 
@@ -68,10 +66,23 @@
 <h2 class="hasAnchor">
 <a href="#usage" class="anchor"></a>Usage</h2>
 <p>Set the access tokens to download from the git hubs (GitHub, Gitlab) with read privilege for the repositories in question.</p>
-<pre class="{r}"><code><a href="https://rdrr.io/r/base/Sys.setenv.html">Sys.setenv("PUBLIC_GITHUB_PAT" = "######")
-Sys.setenv("ROCHE_GITHUB_PAT" = "######")
-Sys.setenv("ROCHE_GITLAB_PAT" = "######")</a></code></pre>
-<p>A good idea is to put this into your <code>.Rprofile</code>, e.g. by calling <code><a href="https://usethis.r-lib.org/reference/edit.html">usethis::edit_r_profile()</a></code>.</p>
+<pre><code><a href="https://rdrr.io/r/base/Sys.setenv.html">Sys.setenv("GITHUB_PAT" = "&lt;token&gt;")
+Sys.setenv("ROCHE_GITHUB_PAT" = "&lt;token&gt;")
+Sys.setenv("ROCHE_GITLAB_PAT" = "&lt;token&gt;")</a></code></pre>
+<p>You can have these tokens set permanently by putting the information into the <code>~/.Renviron</code> file, e.g. by calling <code><a href="https://usethis.r-lib.org/reference/edit.html">usethis::edit_r_environ()</a></code>:</p>
+<pre><code>GITHUB_PAT=&lt;token&gt;
+ROCHE_GITHUB_PAT=&lt;token&gt;
+ROCHE_GITLAB_PAT=&lt;token&gt;</code></pre>
+<p>Roche specific: Put this into your <code>~/.Rprofile</code> (by calling <code><a href="https://usethis.r-lib.org/reference/edit.html">usethis::edit_r_profile()</a></code>):</p>
+<pre><code><a href="https://rdrr.io/r/base/options.html">options(
+  staged.dependencies.token_mapping = c(
+    "https://github.com" = "GITHUB_PAT",
+    "https://gitlab.com" = "GITLAB_PAT",
+    "https://github.roche.com" = "ROCHE_GITHUB_PAT",
+    "https://code.roche.com" = "ROCHE_GITLAB_PAT"
+  )
+)</a></code></pre>
+<p>You can also call this later once the package is loaded.</p>
 <p>Load the addins with <code><a href="https://rdrr.io/r/base/library.html">library(staged.dependencies)</a></code>, then search for them in the addins menu. Alternatively, you can run them explicitly and change the default arguments:</p>
 <pre class="{r}"><code><a href="https://rdrr.io/r/base/Sys.setenv.html"># latex may not be installed, so `R CMD check` does not fail because of it
 Sys.setenv(RCMDCHECK_ARGS = "--no-manual")
@@ -112,6 +123,11 @@ repoC: feature1@devel, devel
 repoA: devel</code></pre>
 <p>A PR on repoB <code>fix1@feature1@devel --&gt; feature1@devel</code> takes <code>repoB:fix1@feature1@devel, repoC: feature1@devel, repoA: devel</code>. This can be checked by setting <code>feature = fix1@feature1@devel</code> and running <code>R CMD check</code> on <code>repoC</code>, or <code>check_downstream</code> on <code>repoB</code> (adding <code>repoC</code> to its downstream dependencies). The PR on <code>repoB</code> and <code>repoC</code> <code>feature1@devel --&gt; devel</code> takes <code>repoB:feature1@devel, repoC: feature1@devel, repoA: devel</code>, setting <code>feature = feature1@devel</code>.</p>
 </div>
+<div id="addins" class="section level2">
+<h2 class="hasAnchor">
+<a href="#addins" class="anchor"></a>Addins</h2>
+<p>When you are working from a project todo, includes gitignored files caches local repos with sha use hashing</p>
+</div>
 <div id="troubleshooting" class="section level2">
 <h2 class="hasAnchor">
 <a href="#troubleshooting" class="anchor"></a>Troubleshooting</h2>
@@ -124,15 +140,13 @@ repoA: devel</code></pre>
     <div class="license">
 <h2>License</h2>
 <ul class="list-unstyled">
-<li>file <a href="LICENSE-text.html">LICENSE</a>
-</li>
+<li>What license is it under?</li>
 </ul>
 </div>
 <div class="developers">
 <h2>Developers</h2>
 <ul class="list-unstyled">
-<li>Adrian Waddell <br><small class="roles"> Author, maintainer </small>  </li>
-<li>Maximilian Mordig <br><small class="roles"> Author </small>  </li>
+<li>Who to complain to <br><small class="roles"> Maintainer </small>  </li>
 </ul>
 </div>
 
@@ -141,7 +155,7 @@ repoA: devel</code></pre>
 
 
       <footer><div class="copyright">
-  <p>Developed by Adrian Waddell, Maximilian Mordig.</p>
+  <p>Developed by Who to complain to.</p>
 </div>
 
 <div class="pkgdown">
