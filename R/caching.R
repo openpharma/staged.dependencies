@@ -29,6 +29,14 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
   get_current_branch(get_repo_cache_dir(repo, host, local))
 }
 
+#todo
+# get_repo_cached_dir2 <- function(project, local_repos)
+#
+# get_available_branches_in_cache <- function(repo, host, local = FALSE) {
+#   # include remote and local branches
+#   gsub("origin/", "", git2r::branches(get_repo_cache_dir(repo, host, local)))
+# }
+
 # copies a local directory to the cache dir and commits the current state in
 # that cache dir, so the SHA can be added to the DESCRIPTION file
 # note: files in .gitignore are also available to the package locally
@@ -114,10 +122,10 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
                                local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
                                verbose = 0) {
   stopifnot(
-    is.list(repos_to_process)
+    is.list(repos_to_process),
+    all(direction %in% c("upstream", "downstream")), length(direction) >= 1
   )
   check_verbose_arg(verbose)
-  stopifnot(all(direction %in% c("upstream", "downstream")), length(direction) >= 1)
 
   local_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
   rm(local_repos)
@@ -146,6 +154,7 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
       repo_dir <- checkout_repo(
         get_repo_cache_dir(repo_and_host$repo, repo_and_host$host),
         get_repo_url(repo_and_host$repo, repo_and_host$host),
+        token_envvar = get_authtoken_envvar(repo_and_host$host),
         select_branch_rule = function(available_branches) {
           determine_branch(feature, available_branches)
         },

@@ -13,6 +13,7 @@ check_downstream(
   recursive = TRUE,
   dry_install_and_check = FALSE,
   check_args = NULL,
+  only_tests = FALSE,
   verbose = 0
 )
 }
@@ -38,6 +39,8 @@ dependencies and check downstream repos; otherwise just reports
 what would be installed}
 
 \item{check_args}{(\code{list}) arguments passed to \code{rcmdcheck}}
+
+\item{only_tests}{(\code{logical}) whether to only run tests (rather than checks)}
 
 \item{verbose}{\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,

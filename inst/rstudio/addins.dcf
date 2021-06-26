@@ -1,7 +1,12 @@
 Name: Install Upstream Dependencies and this Package
-Description: Installs upstream dependencies from particular branches to match feature branch
-Binding: install_upstream_deps
+Description: Installs upstream dependencies from branches that match branch of current project
+Binding: install_deps
 Interactive: false
+
+Name: Install Dependencies
+Description: Installs dependencies from branches that match branch of current project
+Binding: install_deps_app
+Interactive: true
 
 Name: Check Downstream Dependencies
 Description: Checks that current package does not break the downstream dependencies

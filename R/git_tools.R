@@ -35,14 +35,14 @@ check_only_remote_branches <- function(git_repo) {
 # and selects one of them
 # verbose level: 0: none, 1: print high-level git operations, 2: print git clone detailed messages etc.
 #get_repo_cache_dir(repo = "maximilian_oliver.mordig/testPruneFetch", host = "https://code.roche.com"); verbose <- 2; select_branch_rule <- function(x) "master"
-checkout_repo <- function(repo_dir, repo_url, select_branch_rule, verbose = 0) {
+checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, verbose = 0) {
   stopifnot(
     dir.exists(repo_dir),
     is.function(select_branch_rule)
   )
   check_verbose_arg(verbose)
 
-  creds <- git2r::cred_token(token = get_authtoken_envvar(host))
+  creds <- git2r::cred_token(token = token_envvar)
   if (!dir.exists(repo_dir)) {
     stopifnot(is_non_empty_char(repo_url))
     if (verbose >= 1) {

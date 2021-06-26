@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Computes the dependency structure as a table — dependency_table • staged.dependencies</title>
+<title>Gadget or Shiny app to select the dependencies to install — install_deps_app • staged.dependencies</title>
 
 
 <!-- jquery -->
@@ -35,11 +35,9 @@
 
 
 
-<meta property="og:title" content="Computes the dependency structure as a table — dependency_table" />
-<meta property="og:description" content="The dependency structure depends on feature which determines which
-repositories are checked out.
-It starts from the project and discovers all reachable upstream and
-downstream dependencies." />
+<meta property="og:title" content="Gadget or Shiny app to select the dependencies to install — install_deps_app" />
+<meta property="og:description" content="The dependencies are obtained by traversing the upstream and downstream
+dependencies starting from project." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -103,24 +101,23 @@ downstream dependencies." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Computes the dependency structure as a table</h1>
+    <h1>Gadget or Shiny app to select the dependencies to install</h1>
     
-    <div class="hidden name"><code>dependency_table.Rd</code></div>
+    <div class="hidden name"><code>install_deps_app.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>The dependency structure depends on <code>feature</code> which determines which
-repositories are checked out.
-It starts from the project and discovers all reachable upstream and
-downstream dependencies.</p>
+    <p>The dependencies are obtained by traversing the upstream and downstream
+dependencies starting from <code>project</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>dependency_table</span>(
+    <pre class="usage"><span class='fu'>install_deps_app</span>(
   <span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>,
   <span class='kw'>feature</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>repo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>host</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>directory</span> <span class='kw'>=</span>
     <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>)),
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>0</span>
+  <span class='kw'>run_gadget</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>1</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -143,6 +140,10 @@ current branch of project</p></td>
 local rather than cloned; columns are <code>repo, host, directory</code></p></td>
     </tr>
     <tr>
+      <th>run_gadget</th>
+      <td><p>whether to run the app as a gadget</p></td>
+    </tr>
+    <tr>
       <th>verbose</th>
       <td><p><code>numeric</code>) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
@@ -152,30 +153,7 @@ local rather than cloned; columns are <code>repo, host, directory</code></p></td
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>depending on <code>return_table_only</code> (see above); either <code>data.frame</code> or a list with
-the following elements:
-<code>df</code>:
-<code>data.frame</code> with columns <code>repo, host, type, branch</code>, where <code>type</code> is:</p><ul>
-<li><p><code>current</code> (project),</p></li>
-<li><p><code>upstream</code> (of project),</p></li>
-<li><p><code>downstream</code> (of project),</p></li>
-<li><p><code>other</code> (the remaining, e.g. downstream dependencies of upstream dependencies)
-and <code>branch</code> is <code>branch</code> corresponding to <code>feature</code> and becomes <code><a href='https://rdrr.io/r/base/eval.html'>local (branch)</a></code>
-if package is in <code>local_repos</code>.</p></li>
-</ul>
-
-<p><code>graph</code>:
-visNetwork graph: with arrows going in the direction from downstream to upstream
-arrows are solid if both upstream and downstream list each other; they
-are dashed if either does not list the other:</p><ul>
-<li><p>if upstream does not list downstream, blue dashed</p></li>
-<li><p>if downstream does not list upstream, red dashed (this means that
-the downstream repo's yaml needs to be fixed)
-Tooltips give more information about nodes and edges.</p></li>
-</ul>
-
-<p><code>deps</code>:
-deps: upstream and downstream dependencies of each node</p>
+    <p><code>shiny.app</code> or value returned by app (executed as a gadget)</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

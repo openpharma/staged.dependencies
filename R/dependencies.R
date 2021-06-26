@@ -15,13 +15,12 @@
 NULL
 
 # returns the order in which the repos must be installed, unhashing the dependencies
-get_install_order <- function(deps) {
+get_install_order <- function(upstream_deps) {
   stopifnot(
-    is.list(deps),
-    !is.null(deps[["upstream_deps"]])
+    is.list(upstream_deps)
   )
 
-  install_order <- topological_sort(deps[["upstream_deps"]])
+  install_order <- topological_sort(upstream_deps)
   lapply(install_order, unhash_repo_and_host)
 }
 
@@ -43,6 +42,8 @@ get_install_order <- function(deps) {
 #'   current branch of project
 #' @param local_repos (`data.frame`) repositories that should be taken from
 #'   local rather than cloned; columns are `repo, host, directory`
+#' @param what (`character`), `upstream`: installs all upstream dependencies,
+#'   `all`: installs all reachable dependencies
 #' @param install_project (`logical`) whether to also install the current
 #'   package (`project`)
 #' @param dry_install (`logical`) dry run that lists packages that would be
@@ -59,20 +60,26 @@ get_install_order <- function(deps) {
 #'
 #' @examples
 #' \dontrun{
-#' install_upstream_deps()
+#' install_deps()
 #' }
 #'
-install_upstream_deps <- function(project = ".", feature = NULL,
+install_deps <- function(project = ".", feature = NULL,
                                   local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
+                                  what = c("upstream", "all"),
                                   install_project = TRUE, dry_install = FALSE, verbose = 0) {
   stopifnot(
     dir.exists(project),
     is.data.frame(local_repos),
     is.logical(install_project),
-    is.logical(dry_install)
+    is.logical(dry_install),
   )
   check_verbose_arg(verbose)
   error_if_stageddeps_inexistent(project)
+  what <- match.arg(what)
+  if (what == "all") {
+    direction <- c("upstream", "downstream")
+  }
+  rm(what)
 
   feature <- infer_feature_from_branch(feature, project)
 
@@ -89,10 +96,11 @@ install_upstream_deps <- function(project = ".", feature = NULL,
   )
 
   deps <- rec_checkout_repos(
-    list(repo_deps_info$current_repo), feature, direction = "upstream",
+    list(repo_deps_info$current_repo), feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
-  install_order <- get_install_order(deps)
+
+  install_order <- get_install_order(deps[["upstream_deps"]])
   stopifnot(all.equal(utils::tail(install_order, 1)[[1]], repo_deps_info$current_repo))
   if (!install_project) {
     install_order <- utils::head(install_order, -1)
@@ -114,6 +122,103 @@ install_upstream_deps <- function(project = ".", feature = NULL,
 
   install_order
 }
+
+
+#' Gadget or Shiny app to select the dependencies to install
+#'
+#' The dependencies are obtained by traversing the upstream and downstream
+#' dependencies starting from `project`.
+#'
+#' @md
+#' @param run_gadget whether to run the app as a gadget
+#' @inheritParams install_deps
+#' @export
+#' @return `shiny.app` or value returned by app (executed as a gadget)
+#'
+install_deps_app <- function(project = ".", feature = NULL,
+                             local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
+                             run_gadget = TRUE,
+                             verbose = 1) {
+  require_pkgs(c("shiny", "miniUI"))
+
+  app <- shiny::shinyApp(
+    ui = function() {
+      # todo: id
+      miniUI::miniPage(
+        shiny::fillRow(
+          shiny::textInput("feature", label = "Feature: ", value = feature),
+          shiny::actionButton("compute_graph", "Compute graph")
+        ),
+        visNetwork::visNetworkOutput("network_proxy_nodes", height = "400px"),
+        miniUI::gadgetTitleBar(
+          "Cmd + Click node to not install the node",
+          right = miniTitleBarButton("done", "Install", primary = TRUE)
+        ),
+        shiny::tags$p("The following packages will be installed:"),
+        shiny::verbatimTextOutput("nodesToInstall")
+      )
+    },
+    server = function(input, output, session) {
+      compute_dep_structure <- shiny::eventReactive(input$compute_graph, {
+        feature <- input$feature
+        if (identical(feature, "")) {
+          feature <- NULL
+        }
+        if (verbose >= 1) {
+          message("Computing dependency structure for feature ", feature, " starting from project ", project)
+        }
+        dependency_structure("../stageddeps.electricity/", feature = feature,
+                             local_repos = local_repos, verbose = 2)
+      })
+
+      output$network_proxy_nodes <- visNetwork::renderVisNetwork({
+        compute_dep_structure()$graph %>%
+          visNetwork::visInteraction(multiselect = TRUE)
+      })
+
+      # todo: better solution? this only updates every 1s, so clicking on
+      # okay in between takes old selected nodes
+      autoInvalidate <- shiny::reactiveTimer(1000)
+      shiny::observeEvent({
+        autoInvalidate()
+      }, {
+        visNetwork::visNetworkProxy("network_proxy_nodes") %>%
+          visNetwork::visGetSelectedNodes()
+      })
+      output$nodesToInstall <- shiny::renderText({
+        paste(setdiff(
+          names(compute_dep_structure()$deps[["upstream_deps"]]),
+          input$network_proxy_nodes_selectedNodes
+        ), collapse = "\n")
+      })
+      shiny::observeEvent(input$done, {
+        selected_hashed_pkgs <- input$network_proxy_nodes_selectedNodes
+        install_order <- get_install_order(compute_dep_structure()$deps[["upstream_deps"]])
+
+        hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
+        for (repo_and_host in install_order) {
+          if (hash_repo_and_host(repo_and_host) %in% selected_hashed_pkgs) {
+            # the selected nodes are NOT installed
+            next
+          }
+          is_local <- hash_repo_and_host(repo_and_host) %in% names(hashed_repo_to_dir)
+          repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
+
+          install_repo_add_sha(repo_dir)
+        }
+
+        invisible(shiny::stopApp())
+      })
+    }
+  ); app
+  if (run_gadget) {
+    shiny::runGadget(app, viewer = shiny::dialogViewer("Install packages"))
+  } else {
+    app
+  }
+}
+
+
 
 #' Check downstream dependencies
 #'
@@ -141,7 +246,7 @@ install_upstream_deps <- function(project = ".", feature = NULL,
 #'   dependencies of the downstream dependencies
 #' @param check_args (`list`) arguments passed to `rcmdcheck`
 #' @param only_tests (`logical`) whether to only run tests (rather than checks)
-#' @inheritParams install_upstream_deps
+#' @inheritParams install_deps
 #' @export
 #' @seealso determine_branch
 #'
@@ -206,7 +311,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = l
     downstream_repos, feature, verbose = verbose,
     local_repos = local_repos, direction = "upstream"
   )
-  install_order <- get_install_order(deps)
+  install_order <- get_install_order(deps[["upstream_deps"]])
 
   hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
   if (verbose >= 1) {
@@ -247,7 +352,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = l
 #' @md
 #'
 #' @param return_table_only (`logical`) whether to return a table or (table, graph, deps)
-#' @inheritParams install_upstream_deps
+#' @inheritParams install_deps
 #' @export
 #' @seealso determine_branch
 #'
@@ -273,6 +378,9 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = l
 #'
 #'   `deps`:
 #'   deps: upstream and downstream dependencies of each node
+#'
+#' @importFrom dplyr `%>%` mutate select rename group_by ungroup one_of
+#' @importFrom rlang .data
 dependency_structure <- function(project = ".", feature = NULL,
                                  local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
                                  return_table_only = FALSE, verbose = 0) {
@@ -348,12 +456,12 @@ dependency_structure <- function(project = ".", feature = NULL,
   require_pkgs(c("dplyr", "visNetwork"))
   # todo: put branch below node: https://github.com/almende/vis/issues/3436
   nodes <- df %>% mutate(
-    id = hash_repo_and_host(list(repo = repo, host = host)),
-    label = short_repo_name(repo),
-    title = paste0("<p>", repo, "<br/>", host, "<br/>", type, "<br/>", branch, "</p"),
+    id = hash_repo_and_host(list(repo = .data$repo, host = .data$host)),
+    label = short_repo_name(.data$repo),
+    title = paste0("<p>", .data$repo, "<br/>", .data$host, "<br/>", .data$type, "<br/>", .data$branch, "</p"),
     value = 3,
-    group = type
-  ) %>% select(id, label, title, value, group)
+    group = .data$type
+  ) %>% select(c("id", "label", "title", "value", "group"))
 
   edges <- rbind(
     cbind_handle_empty(
@@ -361,7 +469,7 @@ dependency_structure <- function(project = ".", feature = NULL,
       arrows = "to", listed_by = "from"
     ),
     cbind_handle_empty(
-      adj_list_to_edge_df(deps[["downstream_deps"]]) %>% rename(to = from, from = to),
+      adj_list_to_edge_df(deps[["downstream_deps"]]) %>% rename(to = .data$from, from = .data$to),
       arrows = "to", listed_by = "to"
     )
   )
@@ -390,13 +498,12 @@ dependency_structure <- function(project = ".", feature = NULL,
       stop("Unexpected listed_by: ", listed_by)
     }
   }
-  browser()
-  edges <- edges %>% group_by(from, to) %>%
-    mutate(color = get_edge_color(listed_by)) %>%
-    mutate(title = get_edge_tooltip(from, to, listed_by)) %>%
-    mutate(dashes = !setequal(listed_by, c("from", "to"))) %>%
+  edges <- edges %>% group_by(.data$from, .data$to) %>%
+    mutate(color = get_edge_color(.data$listed_by)) %>%
+    mutate(title = get_edge_tooltip(.data$from, .data$to, .data$listed_by)) %>%
+    mutate(dashes = !setequal(.data$listed_by, c("from", "to"))) %>%
     ungroup() %>%
-    select(-listed_by)
+    select(-one_of("listed_by"))
 
   plot_title <- paste0("Dependency graph starting from ", repo_deps_info$current_repo$repo)
   graph <- visNetwork::visNetwork(nodes, edges, width = "100%", main = plot_title) %>%
@@ -410,6 +517,9 @@ dependency_structure <- function(project = ".", feature = NULL,
     visNetwork::visGroups(groupname = "current", color = "#ccc916") %>%
     # "grey"
     visNetwork::visGroups(groupname = "other", color = "#c5c9c9") %>%
+    visNetwork::visOptions(highlightNearest = list(algorithm = "all")) %>%
+    # display option to export as png
+    visNetwork::visExport() %>%
     visNetwork::visLegend(
       position = "right",
       addEdges = data.frame(
@@ -417,7 +527,7 @@ dependency_structure <- function(project = ".", feature = NULL,
         color = c(get_edge_color(c("from", "to")), get_edge_color(c("to")), get_edge_color(c("from"))),
         label = c("listed by both", "listed by upstream", "listed by downstream")
       )
-    ); graph
+    )
 
   list(df = df, graph = graph, deps = deps)
 }
@@ -465,6 +575,8 @@ dependency_graph <- function(project = ".", feature = NULL,
     project = project, feature = feature, local_repos = local_repos, return_table_only = FALSE, verbose = verbose
   )$graph
 }
+
+
 
 
 

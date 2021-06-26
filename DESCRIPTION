@@ -1,13 +1,36 @@
 Package: staged.dependencies
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
-Date: 2021-06-26
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
-RoxygenNote: 7.1.0
+Title: Install R packages from Particular Git Branches
+Version: 0.1.0
+Authors@R: c(
+  person("Adrian", "Waddell", email = "adrian.waddell@roche.com", role = c("aut", "cre")),
+  person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = "aut")
+  )
+Imports:
+  digest,
+  dplyr,
+  fs,
+  git2r,
+  rcmdcheck,
+  remotes,
+  rlang,
+  utils,
+  yaml
+Description: When developing multiple dependent packages, it is often useful to introduce development
+  stages (devel, pre-release, release) that synchronize these packages. 
+  This package provides an implementation of development stages via branch naming rules.
+License: file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+Suggests: 
+    knitr,
+    miniUI,
+    rmarkdown,
+    shiny,
+    testthat (>= 2.1.0),
+    visNetwork
+VignetteBuilder: knitr
 Collate: 
     'branching_strategy.R'
     'caching.R'
@@ -16,5 +39,3 @@ Collate:
     'graph_methods.R'
     'utils.R'
     'zzz.R'
-Suggests: 
-    testthat (>= 2.1.0)

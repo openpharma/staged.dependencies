@@ -70,7 +70,7 @@ and then runs rcmdcheck (R CMD check) on the downstream dependencies." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">staged.dependencies</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
       </span>
     </div>
 
@@ -120,6 +120,7 @@ and then runs <code>rcmdcheck</code> (<code>R CMD check</code>) on the downstrea
   <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>dry_install_and_check</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>check_args</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>only_tests</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>0</span>
 )</pre>
 
@@ -161,6 +162,10 @@ what would be installed</p></td>
     <tr>
       <th>check_args</th>
       <td><p>(<code>list</code>) arguments passed to <code>rcmdcheck</code></p></td>
+    </tr>
+    <tr>
+      <th>only_tests</th>
+      <td><p>(<code>logical</code>) whether to only run tests (rather than checks)</p></td>
     </tr>
     <tr>
       <th>verbose</th>
@@ -211,7 +216,7 @@ This requirement can be verified with <code>dependency_graph</code> by looking a
 
       <footer>
       <div class="copyright">
-  <p>Developed by Who to complain to.</p>
+  <p>Developed by Adrian Waddell, Maximilian Mordig.</p>
 </div>
 
 <div class="pkgdown">

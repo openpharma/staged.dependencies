@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Install upstream dependencies of project corresponding to feature — install_upstream_deps • staged.dependencies</title>
+<title>Install upstream dependencies of project corresponding to feature — install_deps • staged.dependencies</title>
 
 
 <!-- jquery -->
@@ -35,7 +35,7 @@
 
 
 
-<meta property="og:title" content="Install upstream dependencies of project corresponding to feature — install_upstream_deps" />
+<meta property="og:title" content="Install upstream dependencies of project corresponding to feature — install_deps" />
 <meta property="og:description" content="This reads the upstream dependencies for the project (recursively) and
 installs the right branches based on the feature." />
 <meta name="twitter:card" content="summary" />
@@ -70,7 +70,7 @@ installs the right branches based on the feature." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">staged.dependencies</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
       </span>
     </div>
 
@@ -103,7 +103,7 @@ installs the right branches based on the feature." />
     <div class="page-header">
     <h1>Install upstream dependencies of project corresponding to feature</h1>
     
-    <div class="hidden name"><code>install_upstream_deps.Rd</code></div>
+    <div class="hidden name"><code>install_deps.Rd</code></div>
     </div>
 
     <div class="ref-description">
@@ -111,11 +111,12 @@ installs the right branches based on the feature." />
 installs the right branches based on the feature.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>install_upstream_deps</span>(
+    <pre class="usage"><span class='fu'>install_deps</span>(
   <span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>,
   <span class='kw'>feature</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>repo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>host</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>directory</span> <span class='kw'>=</span>
     <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>)),
+  <span class='kw'>what</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"upstream"</span>, <span class='st'>"all"</span>),
   <span class='kw'>install_project</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>dry_install</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>0</span>
@@ -139,6 +140,11 @@ current branch of project</p></td>
       <th>local_repos</th>
       <td><p>(<code>data.frame</code>) repositories that should be taken from
 local rather than cloned; columns are <code>repo, host, directory</code></p></td>
+    </tr>
+    <tr>
+      <th>what</th>
+      <td><p>(<code>character</code>), <code>upstream</code>: installs all upstream dependencies,
+<code>all</code>: installs all reachable dependencies</p></td>
     </tr>
     <tr>
       <th>install_project</th>
@@ -173,7 +179,7 @@ The checked out branch should be a local branch.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'>install_upstream_deps</span>()
+<span class='fu'>install_deps</span>()
 }</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -192,7 +198,7 @@ The checked out branch should be a local branch.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Who to complain to.</p>
+  <p>Developed by Adrian Waddell, Maximilian Mordig.</p>
 </div>
 
 <div class="pkgdown">
