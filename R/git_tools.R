@@ -28,12 +28,6 @@ check_only_remote_branches <- function(git_repo) {
   stopifnot(all(vapply(all_branches, function(x) startsWith(x, "origin/"), logical(1))))
 }
 
-# todo: remove
-# is_git_root <- function(repo_dir) {
-#   stopifnot(dir.exists(repo_dir))
-#   dirname(git2r::repository(repo_dir)$path) == repo_dir
-# }
-
 # clones the repo and only keeps remote branches
 # if repo is already there, fetches and prunes (removes) remote branches that are
 # no longer there

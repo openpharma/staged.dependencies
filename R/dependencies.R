@@ -8,6 +8,7 @@
 # todo: cached repos, add examples
 #todo: rstudio addin to format doc
 # todo: add project field in yaml: to restrict to projects (e.g. nest only)
+# todo: fetch project from remote
 
 
 #' @include caching.R
@@ -139,6 +140,7 @@ install_upstream_deps <- function(project = ".", feature = NULL,
 #' @param recursive (`logical`) whether to recursively check the downstream
 #'   dependencies of the downstream dependencies
 #' @param check_args (`list`) arguments passed to `rcmdcheck`
+#' @param only_tests (`logical`) whether to only run tests (rather than checks)
 #' @inheritParams install_upstream_deps
 #' @export
 #' @seealso determine_branch
@@ -156,6 +158,7 @@ install_upstream_deps <- function(project = ".", feature = NULL,
 check_downstream <- function(project = ".", feature = NULL, downstream_repos = list(),
                              local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
                              recursive = TRUE, dry_install_and_check = FALSE, check_args = NULL,
+                             only_tests = FALSE,
                              verbose = 0) {
   stopifnot(
     dir.exists(project),
@@ -214,9 +217,13 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = l
     repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
     if (hash_repo_and_host(repo_and_host) %in% lapply(downstream_repos, hash_repo_and_host)) {
       if (!dry_install_and_check) {
-        rcmdcheck::rcmdcheck(repo_dir, error_on = "warning", args = check_args)
+        if (only_tests) {
+          testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
+        } else {
+          rcmdcheck::rcmdcheck(repo_dir, error_on = "warning", args = check_args)
+        }
       } else if (verbose >= 1) {
-        cat_nl("(Dry run): Would check ", repo_dir)
+        cat_nl("(Dry run): Would test/check ", repo_dir)
       }
     }
     if (!dry_install_and_check) {

@@ -61,15 +61,3 @@ require_pkgs <- function(pkgs) {
     }
   }
 }
-
-# todo: remove
-# system2_succeed <- function(...) {
-#   res <- system2(..., stdout = TRUE)
-#   if (!is.null(attr(res, "status"))) {
-#     # stop("Error running command '", toString(list(...)), "': ", toString(attr(res, "errmsg")))
-#     stop("Error running command")
-#   }
-#   res
-# }
-# # system2_succeed("echo", "hh")
-# # system2_succeed("echo11", "hh")
