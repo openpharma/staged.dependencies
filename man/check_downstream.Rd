@@ -2,14 +2,13 @@
 % Please edit documentation in R/dependencies.R
 \name{check_downstream}
 \alias{check_downstream}
-\title{Check downstream dependencies}
+\title{Check & install downstream dependencies}
 \usage{
 check_downstream(
   project = ".",
   feature = NULL,
   downstream_repos = list(),
-  local_repos = data.frame(repo = character(0), host = character(0), directory =
-    character(0)),
+  local_repos = get_local_pkgs_from_config(),
   recursive = TRUE,
   dry_install_and_check = FALSE,
   check_args = NULL,
@@ -35,14 +34,14 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 dependencies of the downstream dependencies}
 
 \item{dry_install_and_check}{(\code{logical}) whether to install upstream
-dependencies and check downstream repos; otherwise just reports
+dependencies and check/test downstream repos; otherwise just reports
 what would be installed}
 
 \item{check_args}{(\code{list}) arguments passed to \code{rcmdcheck}}
 
 \item{only_tests}{(\code{logical}) whether to only run tests (rather than checks)}
 
-\item{verbose}{\code{numeric}) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 }

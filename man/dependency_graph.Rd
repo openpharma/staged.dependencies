@@ -7,8 +7,7 @@
 dependency_graph(
   project = ".",
   feature = NULL,
-  local_repos = data.frame(repo = character(0), host = character(0), directory =
-    character(0)),
+  local_repos = get_local_pkgs_from_config(),
   verbose = 0
 )
 }
@@ -23,13 +22,14 @@ current branch of project}
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
 
-\item{verbose}{\code{numeric}) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 }
 \value{
 depending on \code{return_table_only} (see above); either \code{data.frame} or a list with
 the following elements:
+
 \code{df}:
 \code{data.frame} with columns \verb{repo, host, type, branch}, where \code{type} is:
 \itemize{
@@ -37,13 +37,14 @@ the following elements:
 \item \code{upstream} (of project),
 \item \code{downstream} (of project),
 \item \code{other} (the remaining, e.g. downstream dependencies of upstream dependencies)
-and \code{branch} is \code{branch} corresponding to \code{feature} and becomes \code{local (branch)}
-if package is in \code{local_repos}.
 }
 
+and \code{branch} is the branch corresponding to \code{feature} and becomes \code{local (branch)}
+if package is in \code{local_repos}.
+
 \code{graph}:
-visNetwork graph: with arrows going in the direction from downstream to upstream
-arrows are solid if both upstream and downstream list each other; they
+visNetwork graph with arrows going in the direction from downstream to upstream.
+Arrows are solid if both upstream and downstream list each other; they
 are dashed if either does not list the other:
 \itemize{
 \item if upstream does not list downstream, blue dashed
@@ -60,4 +61,9 @@ The dependency structure depends on \code{feature} which determines which
 repositories are checked out.
 It starts from the project and discovers all reachable upstream and
 downstream dependencies.
+}
+\examples{
+\dontrun{
+dependency_graph()
+}
 }

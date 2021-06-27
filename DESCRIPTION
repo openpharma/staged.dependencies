@@ -18,7 +18,8 @@ Imports:
   yaml
 Description: When developing multiple dependent packages, it is often useful to introduce development
   stages (devel, pre-release, release) that synchronize these packages. 
-  This package provides an implementation of development stages via branch naming rules.
+  This package provides an implementation of development stages via branch naming rules. It defines
+  RStudio addins that allow to install the matching upstream and downstream dependencies.
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -32,6 +33,7 @@ Suggests:
     visNetwork
 VignetteBuilder: knitr
 Collate: 
+    'addin_helpers.R'
     'branching_strategy.R'
     'caching.R'
     'dependencies.R'

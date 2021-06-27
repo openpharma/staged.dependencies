@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Check downstream dependencies — check_downstream • staged.dependencies</title>
+<title>Check &amp; install downstream dependencies — check_downstream • staged.dependencies</title>
 
 
 <!-- jquery -->
@@ -35,7 +35,7 @@
 
 
 
-<meta property="og:title" content="Check downstream dependencies — check_downstream" />
+<meta property="og:title" content="Check &amp; install downstream dependencies — check_downstream" />
 <meta property="og:description" content="It installs the downstream dependencies and their upstream dependencies,
 and then runs rcmdcheck (R CMD check) on the downstream dependencies." />
 <meta name="twitter:card" content="summary" />
@@ -101,7 +101,7 @@ and then runs rcmdcheck (R CMD check) on the downstream dependencies." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Check downstream dependencies</h1>
+    <h1>Check &amp; install downstream dependencies</h1>
     
     <div class="hidden name"><code>check_downstream.Rd</code></div>
     </div>
@@ -115,8 +115,7 @@ and then runs <code>rcmdcheck</code> (<code>R CMD check</code>) on the downstrea
   <span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>,
   <span class='kw'>feature</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>downstream_repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>repo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>host</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>directory</span> <span class='kw'>=</span>
-    <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>)),
+  <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='get_local_pkgs_from_config.html'>get_local_pkgs_from_config</a></span>(),
   <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>dry_install_and_check</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>check_args</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -156,7 +155,7 @@ dependencies of the downstream dependencies</p></td>
     <tr>
       <th>dry_install_and_check</th>
       <td><p>(<code>logical</code>) whether to install upstream
-dependencies and check downstream repos; otherwise just reports
+dependencies and check/test downstream repos; otherwise just reports
 what would be installed</p></td>
     </tr>
     <tr>
@@ -169,7 +168,7 @@ what would be installed</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p><code>numeric</code>) verbosity level, incremental;
+      <td><p>(<code>numeric</code>) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)</p></td>
     </tr>

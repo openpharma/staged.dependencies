@@ -114,9 +114,8 @@ installs the right branches based on the feature.</p>
     <pre class="usage"><span class='fu'>install_deps</span>(
   <span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>,
   <span class='kw'>feature</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>repo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>host</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>), <span class='kw'>directory</span> <span class='kw'>=</span>
-    <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>)),
-  <span class='kw'>what</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"upstream"</span>, <span class='st'>"all"</span>),
+  <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='get_local_pkgs_from_config.html'>get_local_pkgs_from_config</a></span>(),
+  <span class='kw'>direction</span> <span class='kw'>=</span> <span class='st'>"upstream"</span>,
   <span class='kw'>install_project</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>dry_install</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>0</span>
@@ -142,9 +141,9 @@ current branch of project</p></td>
 local rather than cloned; columns are <code>repo, host, directory</code></p></td>
     </tr>
     <tr>
-      <th>what</th>
-      <td><p>(<code>character</code>), <code>upstream</code>: installs all upstream dependencies,
-<code>all</code>: installs all reachable dependencies</p></td>
+      <th>direction</th>
+      <td><p>(<code>character</code>) either or both of "upstream" and "downstream"
+to recursively checkout upstream and/or downstream dependencies</p></td>
     </tr>
     <tr>
       <th>install_project</th>
@@ -159,7 +158,7 @@ match <code>feature</code></p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p><code>numeric</code>) verbosity level, incremental;
+      <td><p>(<code>numeric</code>) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)</p></td>
     </tr>

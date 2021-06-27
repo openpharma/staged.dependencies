@@ -37,7 +37,6 @@ check_only_remote_branches <- function(git_repo) {
 #get_repo_cache_dir(repo = "maximilian_oliver.mordig/testPruneFetch", host = "https://code.roche.com"); verbose <- 2; select_branch_rule <- function(x) "master"
 checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, verbose = 0) {
   stopifnot(
-    dir.exists(repo_dir),
     is.function(select_branch_rule)
   )
   check_verbose_arg(verbose)
@@ -96,7 +95,7 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
 #'
 #' @param repo_dir directory of repo
 install_repo_add_sha <- function(repo_dir) {
-  stopifnot(dir.exists(repo_dir))
+  check_dir_exists(repo_dir)
 
   read_dcf <- function(path) {
     fields <- colnames(read.dcf(path))

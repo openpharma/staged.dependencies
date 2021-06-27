@@ -13,7 +13,8 @@
 <script src="pkgdown.js"></script><meta property="og:title" content="Install R packages from Particular Git Branches">
 <meta property="og:description" content="When developing multiple dependent packages, it is often useful to introduce development
   stages (devel, pre-release, release) that synchronize these packages. 
-  This package provides an implementation of development stages via branch naming rules.">
+  This package provides an implementation of development stages via branch naming rules. It defines
+  RStudio addins that allow to install the matching upstream and downstream dependencies.">
 <meta name="twitter:card" content="summary">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -84,8 +85,17 @@ ROCHE_GITLAB_PAT=&lt;token&gt;</code></pre>
     "https://code.roche.com" = "ROCHE_GITLAB_PAT"
   )
 )</a></code></pre>
-<p>You can also call this later once the package is loaded.</p>
-<p>Load the addins with <code><a href="https://rdrr.io/r/base/library.html">library(staged.dependencies)</a></code>, then search for them in the addins menu. Alternatively, you can run them explicitly and change the default arguments:</p>
+<p>For example, the environment variable <code>GITHUB_PAT</code> contains the token for <code>https://github.com</code>. You can also call this later once the package is loaded.</p>
+<p>Search for the addins of this package:</p>
+<ul>
+<li>Install Upstream Dependencies and this Package: Install remote upstream dependencies and the local version of this package.</li>
+<li>Install All Dependencies: Opens a Shiny application to unselect those dependencies that should not be installed. The feature input element can be empty in which case it takes the branch name as the feature.</li>
+<li><p>Check and Install Downstream Dependencies: Checks the downstream dependencies. It installs them as well as their upstream dependencies. It picks up the environment variable <code>RCMDCHECK_ARGS</code> and passes it as arguments to <code>R CMD check</code>.</p></li>
+<li><p>Test and Install Downstream Dependencies: See above. It tests instead of checks.</p></li>
+</ul>
+<p>If you are working locally on a collection of packages, you can modify the <code>~/.staged.dependencies/config.yaml</code> to automatically pick up the local packages that should be taken instead of their remote ones. For the current project, the local rather than remote version is always taken. The directory <code>~/staged.dependencies</code> as well as a dummy config file are created whenever the package is loaded and the directory does not exist.</p>
+<p>For the branch naming strategy, see <code><a href="reference/determine_branch.html">staged.dependencies::determine_branch</a></code> and the section below.</p>
+<p>You can run the actions of the addins explicitly and change the default arguments:</p>
 <pre class="{r}"><code><a href="https://rdrr.io/r/base/Sys.setenv.html"># latex may not be installed, so `R CMD check` does not fail because of it
 Sys.setenv(RCMDCHECK_ARGS = "--no-manual")
 
@@ -103,6 +113,43 @@ check_downstream(
 install_upstream_deps(project = "../stageddeps.house", feature = "fix1@feature1@master", verbose = 1)</a></code></pre>
 <p>Remember to restart the R session after installing packages that were already loaded.</p>
 </div>
+<div id="branch-naming-workflow" class="section level2">
+<h2 class="hasAnchor">
+<a href="#branch-naming-workflow" class="anchor"></a>Branch Naming / Workflow</h2>
+<p>Suppose one implements a new feature called <code>feature1</code> that involves <code>repoB, repoC</code> with the dependency graph <code>repoA --&gt; repoB --&gt; repoC</code>, where <code>repoA</code> is an additional upstream dependency. One then notices that <code>feature1</code> requires a fix in <code>repoB</code>, so one creates a new branch <code>fix1@feature1@devel</code> on <code>repoB</code>. The setup can be summarized as follows:</p>
+<pre><code>repoB: fix1@feature1@devel, feature1@devel, devel
+repoC: feature1@devel, devel
+repoA: devel</code></pre>
+<p>A PR on repoB <code>fix1@feature1@devel --&gt; feature1@devel</code> takes <code>repoB:fix1@feature1@devel, repoC: feature1@devel, repoA: devel</code>. This can be checked by setting <code>feature = fix1@feature1@devel</code> and running <code>R CMD check</code> on <code>repoC</code>, or <code>check_downstream</code> on <code>repoB</code> (adding <code>repoC</code> to its downstream dependencies). The PR on <code>repoB</code> and <code>repoC</code> <code>feature1@devel --&gt; devel</code> takes <code>repoB:feature1@devel, repoC: feature1@devel, repoA: devel</code>, setting <code>feature = feature1@devel</code>.</p>
+</div>
+<div id="functioning-of-the-package" class="section level2">
+<h2 class="hasAnchor">
+<a href="#functioning-of-the-package" class="anchor"></a>Functioning of the Package</h2>
+<p>Given a feature and a git repository, the package determines the branch to checkout according to the branch naming convention. To get the upstream or downstream dependencies, it inspects the <code>staged_dependencies.yaml</code> file. This file is of the form:</p>
+<pre><code>---
+upstream_repos:
+- repo: Roche/rtables
+  host: https://github.com
+- repo: Roche/respectables
+  host: https://github.com
+
+downstream_repos:
+- repo: NEST/test.nest
+  host: https://github.roche.com
+- repo: nest/tlg.standards
+  host: https://code.roche.com
+
+current_repo:
+  repo: openpharma/staged.dependencies
+  host: https://github.com</code></pre>
+<p>It contains all the information that is required to fetch the repos. The <code>current_repo</code> lists the info to fetch the project itself. Each package is cached in a directory whose name is based on <code>repo</code> and a hash of <code>repo, host</code>. If it exists, it fetches. Otherwise, it clones. The repositories only have remote branches, the default tracking branch is deleted. Otherwise, there would be problems if the default branch is deleted from the remote, checked out locally, so <code>git fetch --prune</code> would not remove it and the local branch would be among the available branches considered in <code>determine_branch</code>.</p>
+<p>If a repo is part of the local packages, it is not fetched, but instead copied to the cache dir. A commit is created with all files (including staged, unstaged and untracked, but excluding git-ignored) files. Given such a cache directory, the commit hash is added to the <code>DESCRIPTION</code> file and the package is installed, unless the package is already installed with the same commit hash. When calling <code>install_deps</code> and similar functions, the current project is always added to the <code>local_repos</code> so that its local rather than remote version is installed. For this, the <code>current_repo</code> field must be correct, so downstream dependencies do not fetch the remote version.</p>
+</div>
+<div id="troubleshooting" class="section level2">
+<h2 class="hasAnchor">
+<a href="#troubleshooting" class="anchor"></a>Troubleshooting</h2>
+<p><code><a href="https://docs.ropensci.org/git2r/reference/clone.html">git2r::clone</a></code> may fail. Check that the git host is reachable (VPN may be needed) and that the access token has read privileges for the repositories.</p>
+</div>
 <div id="example-setup" class="section level2">
 <h2 class="hasAnchor">
 <a href="#example-setup" class="anchor"></a>Example Setup</h2>
@@ -115,25 +162,6 @@ stageddeps.garden::get_garden()
 stageddeps.food::get_food()
 stageddeps.elecinfra::get_elecinfra()
 stageddeps.electricity::get_electricity()</a></code></pre>
-</div>
-<div id="workflow" class="section level2">
-<h2 class="hasAnchor">
-<a href="#workflow" class="anchor"></a>Workflow</h2>
-<p>Suppose one implements a new feature called <code>feature1</code> that involves <code>repoB, repoC</code> with the dependency graph <code>repoA --&gt; repoB --&gt; repoC</code>, where <code>repoA</code> is an additional upstream dependency. One then notices that <code>feature1</code> requires a fix in <code>repoB</code>, so one creates a new branch <code>fix1@feature1@devel</code> on <code>repoB</code>. The setup can be summarized as follows:</p>
-<pre><code>repoB: fix1@feature1@devel, feature1@devel, devel
-repoC: feature1@devel, devel
-repoA: devel</code></pre>
-<p>A PR on repoB <code>fix1@feature1@devel --&gt; feature1@devel</code> takes <code>repoB:fix1@feature1@devel, repoC: feature1@devel, repoA: devel</code>. This can be checked by setting <code>feature = fix1@feature1@devel</code> and running <code>R CMD check</code> on <code>repoC</code>, or <code>check_downstream</code> on <code>repoB</code> (adding <code>repoC</code> to its downstream dependencies). The PR on <code>repoB</code> and <code>repoC</code> <code>feature1@devel --&gt; devel</code> takes <code>repoB:feature1@devel, repoC: feature1@devel, repoA: devel</code>, setting <code>feature = feature1@devel</code>.</p>
-</div>
-<div id="addins" class="section level2">
-<h2 class="hasAnchor">
-<a href="#addins" class="anchor"></a>Addins</h2>
-<p>When you are working from a project todo, includes gitignored files caches local repos with sha use hashing</p>
-</div>
-<div id="troubleshooting" class="section level2">
-<h2 class="hasAnchor">
-<a href="#troubleshooting" class="anchor"></a>Troubleshooting</h2>
-<p><code><a href="https://docs.ropensci.org/git2r/reference/clone.html">git2r::clone</a></code> may fail. Check that the git host is reachable (VPN may be needed) and that the access token has read privileges for the repositories.</p>
 </div>
 </div>
   </div>

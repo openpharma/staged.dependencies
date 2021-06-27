@@ -7,9 +7,8 @@
 install_deps(
   project = ".",
   feature = NULL,
-  local_repos = data.frame(repo = character(0), host = character(0), directory =
-    character(0)),
-  what = c("upstream", "all"),
+  local_repos = get_local_pkgs_from_config(),
+  direction = "upstream",
   install_project = TRUE,
   dry_install = FALSE,
   verbose = 0
@@ -26,8 +25,8 @@ current branch of project}
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
 
-\item{what}{(\code{character}), \code{upstream}: installs all upstream dependencies,
-\code{all}: installs all reachable dependencies}
+\item{direction}{(\code{character}) either or both of "upstream" and "downstream"
+to recursively checkout upstream and/or downstream dependencies}
 
 \item{install_project}{(\code{logical}) whether to also install the current
 package (\code{project})}
@@ -36,7 +35,7 @@ package (\code{project})}
 installed without installing; this still checks out the git repos to
 match \code{feature}}
 
-\item{verbose}{\code{numeric}) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 }

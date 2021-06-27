@@ -1,0 +1,11 @@
+
+# staged.dependencies config file
+# put absolute paths for the directory!
+# cp inst/config.yaml ~/.staged.dependencies/
+
+---
+
+local_packages:
+#- repo: maximilian_oliver.mordig/stageddeps.house
+#  host: https://code.roche.com
+#  directory: "/Users/mordigm/Desktop/ClonedRepos/NESTprojects/stageddeps_test/stageddeps.house"

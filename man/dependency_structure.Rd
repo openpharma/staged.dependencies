@@ -7,8 +7,7 @@
 dependency_structure(
   project = ".",
   feature = NULL,
-  local_repos = data.frame(repo = character(0), host = character(0), directory =
-    character(0)),
+  local_repos = get_local_pkgs_from_config(),
   return_table_only = FALSE,
   verbose = 0
 )
@@ -26,13 +25,14 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{return_table_only}{(\code{logical}) whether to return a table or (table, graph, deps)}
 
-\item{verbose}{\code{numeric}) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 }
 \value{
 depending on \code{return_table_only} (see above); either \code{data.frame} or a list with
 the following elements:
+
 \code{df}:
 \code{data.frame} with columns \verb{repo, host, type, branch}, where \code{type} is:
 \itemize{
@@ -40,13 +40,14 @@ the following elements:
 \item \code{upstream} (of project),
 \item \code{downstream} (of project),
 \item \code{other} (the remaining, e.g. downstream dependencies of upstream dependencies)
-and \code{branch} is \code{branch} corresponding to \code{feature} and becomes \code{local (branch)}
-if package is in \code{local_repos}.
 }
 
+and \code{branch} is the branch corresponding to \code{feature} and becomes \code{local (branch)}
+if package is in \code{local_repos}.
+
 \code{graph}:
-visNetwork graph: with arrows going in the direction from downstream to upstream
-arrows are solid if both upstream and downstream list each other; they
+visNetwork graph with arrows going in the direction from downstream to upstream.
+Arrows are solid if both upstream and downstream list each other; they
 are dashed if either does not list the other:
 \itemize{
 \item if upstream does not list downstream, blue dashed
@@ -60,6 +61,11 @@ deps: upstream and downstream dependencies of each node
 }
 \description{
 Compute the dependency structure starting from project
+}
+\examples{
+\dontrun{
+dependency_structure()
+}
 }
 \seealso{
 determine_branch

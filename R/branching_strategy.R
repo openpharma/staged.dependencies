@@ -55,9 +55,9 @@ determine_branch <- function(feature, available_branches, branch_sep = "@") {
 # if feature is provided, check it is consistent with the checked out project branch
 infer_feature_from_branch <- function(feature = NULL, project = ".") {
   stopifnot(
-    dir.exists(project),
     is.null(feature) || is_non_empty_char(feature)
   )
+  check_dir_exists(project)
   project_branch <- get_current_branch(project)
   if (is.null(feature)) {
     feature <- project_branch

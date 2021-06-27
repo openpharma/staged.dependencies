@@ -1,14 +1,11 @@
-# unlink(CACHE_DIR, recursive = TRUE); dir.create(CACHE_DIR) #todo
+# unlink(get_packages_cache_dir(), recursive = TRUE); dir.create(get_packages_cache_dir()) #todo
 
 # DISCUSSION POINTS:
 # todo: replace git2r by gert
-# todo: rstudio addin interactive with Shiny
-# todo: how to run rcmdcheck without latex?
-# todo: remote remote version of project
 # todo: cached repos, add examples
-#todo: rstudio addin to format doc
-# todo: add project field in yaml: to restrict to projects (e.g. nest only)
-# todo: fetch project from remote
+# todo: rstudio addin to format doc
+# todo: add project field (scope) in yaml: to restrict to projects (e.g. nest only)
+# todo: option to also fetch project from remote
 
 
 #' @include caching.R
@@ -40,18 +37,12 @@ get_install_order <- function(upstream_deps) {
 #' @param feature (`character`) feature we want to build; inferred from the
 #'   branch of the project if not provided; warning if not consistent with
 #'   current branch of project
-#' @param local_repos (`data.frame`) repositories that should be taken from
-#'   local rather than cloned; columns are `repo, host, directory`
-#' @param what (`character`), `upstream`: installs all upstream dependencies,
-#'   `all`: installs all reachable dependencies
 #' @param install_project (`logical`) whether to also install the current
 #'   package (`project`)
 #' @param dry_install (`logical`) dry run that lists packages that would be
 #'   installed without installing; this still checks out the git repos to
 #'   match `feature`
-#' @param verbose `numeric`) verbosity level, incremental;
-#'   (0: None, 1: packages that get installed + high-level git operations,
-#'   2: includes git checkout infos)
+#' @inheritParams rec_checkout_repos
 #'
 #' @return installed packages in installation order
 #'
@@ -64,22 +55,17 @@ get_install_order <- function(upstream_deps) {
 #' }
 #'
 install_deps <- function(project = ".", feature = NULL,
-                                  local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
-                                  what = c("upstream", "all"),
+                                  local_repos = get_local_pkgs_from_config(),
+                                  direction = "upstream",
                                   install_project = TRUE, dry_install = FALSE, verbose = 0) {
   stopifnot(
-    dir.exists(project),
-    is.data.frame(local_repos),
+    is.data.frame(local_repos) || is.null(local_repos),
     is.logical(install_project),
-    is.logical(dry_install),
+    is.logical(dry_install)
   )
+  check_dir_exists(project)
   check_verbose_arg(verbose)
   error_if_stageddeps_inexistent(project)
-  what <- match.arg(what)
-  if (what == "all") {
-    direction <- c("upstream", "downstream")
-  }
-  rm(what)
 
   feature <- infer_feature_from_branch(feature, project)
 
@@ -119,6 +105,9 @@ install_deps <- function(project = ".", feature = NULL,
       cat_nl("(Dry run) Skipping installation of ", repo_dir)
     }
   }
+  if (verbose >= 1) {
+    message("Installed packages in order: ", toString(extract_str_field(install_order, "repo")))
+  }
 
   install_order
 }
@@ -136,14 +125,13 @@ install_deps <- function(project = ".", feature = NULL,
 #' @return `shiny.app` or value returned by app (executed as a gadget)
 #'
 install_deps_app <- function(project = ".", feature = NULL,
-                             local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
+                             local_repos = get_local_pkgs_from_config(),
                              run_gadget = TRUE,
                              verbose = 1) {
   require_pkgs(c("shiny", "miniUI"))
 
   app <- shiny::shinyApp(
     ui = function() {
-      # todo: id
       miniUI::miniPage(
         shiny::fillRow(
           shiny::textInput("feature", label = "Feature: ", value = feature),
@@ -152,7 +140,7 @@ install_deps_app <- function(project = ".", feature = NULL,
         visNetwork::visNetworkOutput("network_proxy_nodes", height = "400px"),
         miniUI::gadgetTitleBar(
           "Cmd + Click node to not install the node",
-          right = miniTitleBarButton("done", "Install", primary = TRUE)
+          right = miniUI::miniTitleBarButton("done", "Install", primary = TRUE)
         ),
         shiny::tags$p("The following packages will be installed:"),
         shiny::verbatimTextOutput("nodesToInstall")
@@ -220,7 +208,7 @@ install_deps_app <- function(project = ".", feature = NULL,
 
 
 
-#' Check downstream dependencies
+#' Check & install downstream dependencies
 #'
 #' It installs the downstream dependencies and their upstream dependencies,
 #' and then runs `rcmdcheck` (`R CMD check`) on the downstream dependencies.
@@ -240,7 +228,7 @@ install_deps_app <- function(project = ".", feature = NULL,
 #' @param downstream_repos (`list`) to overwrite the downstream repos to check
 #'   of `project`
 #' @param dry_install_and_check (`logical`) whether to install upstream
-#'   dependencies and check downstream repos; otherwise just reports
+#'   dependencies and check/test downstream repos; otherwise just reports
 #'   what would be installed
 #' @param recursive (`logical`) whether to recursively check the downstream
 #'   dependencies of the downstream dependencies
@@ -261,16 +249,16 @@ install_deps_app <- function(project = ".", feature = NULL,
 #' )
 #' }
 check_downstream <- function(project = ".", feature = NULL, downstream_repos = list(),
-                             local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
+                             local_repos = get_local_pkgs_from_config(),
                              recursive = TRUE, dry_install_and_check = FALSE, check_args = NULL,
                              only_tests = FALSE,
                              verbose = 0) {
   stopifnot(
-    dir.exists(project),
-    is.data.frame(local_repos),
+    is.data.frame(local_repos) || is.null(local_repos),
     is.logical(recursive),
     is.logical(dry_install_and_check)
   )
+  check_dir_exists(project)
   check_verbose_arg(verbose)
   error_if_stageddeps_inexistent(project)
 
@@ -337,6 +325,9 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = l
       cat_nl("(Dry run): Would install ", repo_dir)
     }
   }
+  if (verbose >= 1) {
+    message("Installed packages in order: ", toString(extract_str_field(install_order, "repo")))
+  }
 
   df <- data.frame(
     repo = extract_str_field(install_order, "repo"),
@@ -358,18 +349,20 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = l
 #'
 #' @return depending on `return_table_only` (see above); either `data.frame` or a list with
 #'   the following elements:
+#'
 #'   `df`:
 #'   `data.frame` with columns `repo, host, type, branch`, where `type` is:
 #'   - `current` (project),
 #'   - `upstream` (of project),
 #'   - `downstream` (of project),
 #'   - `other` (the remaining, e.g. downstream dependencies of upstream dependencies)
-#'   and `branch` is `branch` corresponding to `feature` and becomes `local (branch)`
+#'
+#'   and `branch` is the branch corresponding to `feature` and becomes `local (branch)`
 #'   if package is in `local_repos`.
 #'
 #'   `graph`:
-#'   visNetwork graph: with arrows going in the direction from downstream to upstream
-#'   arrows are solid if both upstream and downstream list each other; they
+#'   visNetwork graph with arrows going in the direction from downstream to upstream.
+#'   Arrows are solid if both upstream and downstream list each other; they
 #'   are dashed if either does not list the other:
 #'   - if upstream does not list downstream, blue dashed
 #'   - if downstream does not list upstream, red dashed (this means that
@@ -381,14 +374,19 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = l
 #'
 #' @importFrom dplyr `%>%` mutate select rename group_by ungroup one_of
 #' @importFrom rlang .data
+#'
+#' @examples
+#' \dontrun{
+#' dependency_structure()
+#' }
 dependency_structure <- function(project = ".", feature = NULL,
-                                 local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
+                                 local_repos = get_local_pkgs_from_config(),
                                  return_table_only = FALSE, verbose = 0) {
   stopifnot(
-    dir.exists(project),
-    is.data.frame(local_repos),
+    is.data.frame(local_repos) || is.null(local_repos),
     is.logical(return_table_only)
   )
+  check_dir_exists(project)
   check_verbose_arg(verbose)
   error_if_stageddeps_inexistent(project)
 
@@ -532,7 +530,7 @@ dependency_structure <- function(project = ".", feature = NULL,
   list(df = df, graph = graph, deps = deps)
 }
 
-#' Computes the dependency structure as a table
+#' Get the dependency structure as a table
 #'
 #' The dependency structure depends on `feature` which determines which
 #' repositories are checked out.
@@ -543,11 +541,13 @@ dependency_structure <- function(project = ".", feature = NULL,
 #' @inheritParams dependency_structure
 #' @inherit dependency_structure return
 #'
-#'
-#'
 #' @export
+#' @examples
+#' \dontrun{
+#' dependency_table()
+#' }
 dependency_table <- function(project = ".", feature = NULL,
-                             local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
+                             local_repos = get_local_pkgs_from_config(),
                              verbose = 0) {
   dependency_structure(
     project = project, feature = feature, local_repos = local_repos, return_table_only = TRUE, verbose = verbose
@@ -565,18 +565,47 @@ dependency_table <- function(project = ".", feature = NULL,
 #' @inheritParams dependency_structure
 #' @inherit dependency_structure return
 #'
-#'
-#'
 #' @export
+#' @examples
+#' \dontrun{
+#' dependency_graph()
+#' }
 dependency_graph <- function(project = ".", feature = NULL,
-                             local_repos = data.frame(repo = character(0), host = character(0), directory = character(0)),
+                             local_repos = get_local_pkgs_from_config(),
                              verbose = 0) {
   dependency_structure(
     project = project, feature = feature, local_repos = local_repos, return_table_only = FALSE, verbose = verbose
   )$graph
 }
 
-
+#' Loads the config file and extracts `local_packages`
+#'
+#' Checks that all directories exist and are absolute paths.
+#'
+#' @md
+#' @return local_packages
+#' @export
+#'
+#' @examples
+#' get_local_pkgs_from_config()
+get_local_pkgs_from_config <- function() {
+  filename <- file.path(STORAGE_DIR, CONFIG_FILENAME)
+  if (file.exists(filename)) {
+    content <- yaml::read_yaml(filename)
+    local_pkgs <- content[["local_packages"]]
+    df <- do.call(rbind,
+                  lapply(local_pkgs, function(x) data.frame(x, stringsAsFactors = FALSE))
+    )
+    stopifnot(setequal(colnames(df), c("repo", "host", "directory")))
+    stopifnot(all(vapply(df$directory, function(x) {
+      check_dir_exists(x, "Local package config: ")
+      fs::is_absolute_path(x)
+    }, logical(1))))
+    df
+  } else {
+    NULL
+  }
+}
 
 
 

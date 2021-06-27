@@ -10,6 +10,7 @@ clear_cache(pattern = "*")
 \item{pattern}{files to remove, see \code{unlink} (wildcards \code{*} and \verb{?} allowed)}
 }
 \description{
-Use this function to cleanly clone some repositories if the
-\code{git} operations fail.
+Use this function to clear the package cache and reclone some
+or all repositories (depending on \code{pattern}) if
+the \code{git} operations fail.
 }

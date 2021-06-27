@@ -7,8 +7,7 @@
 install_deps_app(
   project = ".",
   feature = NULL,
-  local_repos = data.frame(repo = character(0), host = character(0), directory =
-    character(0)),
+  local_repos = get_local_pkgs_from_config(),
   run_gadget = TRUE,
   verbose = 1
 )
@@ -26,7 +25,7 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{run_gadget}{whether to run the app as a gadget}
 
-\item{verbose}{\code{numeric}) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 }
