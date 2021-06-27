@@ -158,8 +158,9 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
   rm(repos_to_process)
 
   # only one of them may be filled depending on the direction
-  upstream_deps_graph <- c()
-  downstream_deps_graph <- c()
+  # should not be c() since assigned to list below removes element otherwise
+  upstream_deps_graph <- list()
+  downstream_deps_graph <- list()
 
   while (length(hashed_repos_to_process) > 0) {
     hashed_repo_and_host <- hashed_repos_to_process[[1]]

@@ -7,7 +7,7 @@
 check_downstream(
   project = ".",
   feature = NULL,
-  downstream_repos = list(),
+  downstream_repos = NULL,
   local_repos = get_local_pkgs_from_config(),
   recursive = TRUE,
   dry_install_and_check = FALSE,

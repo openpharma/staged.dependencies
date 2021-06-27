@@ -61,7 +61,7 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
     rm(local_branch, remote_branch)
   } else {
     if (verbose >= 1) {
-      message(paste("fetch", git2r::remote_url(git_repo), "in directory", repo_dir))
+      message(paste("fetch", git2r::remote_url(repo_dir), "in directory", repo_dir))
     }
 
     git_repo <- git2r::repository(repo_dir)

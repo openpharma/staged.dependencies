@@ -248,7 +248,7 @@ install_deps_app <- function(project = ".", feature = NULL,
 #'   project = "../stageddeps.electricity"
 #' )
 #' }
-check_downstream <- function(project = ".", feature = NULL, downstream_repos = list(),
+check_downstream <- function(project = ".", feature = NULL, downstream_repos = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              recursive = TRUE, dry_install_and_check = FALSE, check_args = NULL,
                              only_tests = FALSE,
@@ -283,7 +283,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = l
         list(repo_deps_info$current_repo), feature, verbose = verbose,
         direction = "downstream", local_repos = local_repos
       )
-      hashed_downstream_nodes <- lapply(get_descendants(
+      lapply(get_descendants(
         deps[["downstream_deps"]], hash_repo_and_host(repo_deps_info$current_repo)
       ), unhash_repo_and_host)
     }
