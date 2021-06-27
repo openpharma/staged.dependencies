@@ -23,7 +23,7 @@ current branch of project}
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
 
-\item{run_gadget}{whether to run the app as a gadget}
+\item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,

@@ -52,6 +52,8 @@ For the current project, the local rather than remote version is always taken.
 The directory `~/staged.dependencies` as well as a dummy config file are created whenever the package is loaded and 
 the directory does not exist.
 
+Moreover, these functions are also implemented as RStudio jobs.
+
 For the branch naming strategy, see `staged.dependencies::determine_branch` and
 the section below.
 

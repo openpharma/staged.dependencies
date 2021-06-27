@@ -52,6 +52,9 @@ get_install_order <- function(upstream_deps) {
 #' @examples
 #' \dontrun{
 #' install_deps()
+#'
+#' # install all dependencies
+#' install_deps(direction = c("upstream", "downstream"))
 #' }
 #'
 install_deps <- function(project = ".", feature = NULL,
@@ -87,7 +90,10 @@ install_deps <- function(project = ".", feature = NULL,
   )
 
   install_order <- get_install_order(deps[["upstream_deps"]])
-  stopifnot(all.equal(utils::tail(install_order, 1)[[1]], repo_deps_info$current_repo))
+  if (identical(direction, "upstream")) {
+    # if installing upstream dependencies, project should appear last
+    stopifnot(all.equal(utils::tail(install_order, 1)[[1]], repo_deps_info$current_repo))
+  }
   if (!install_project) {
     install_order <- utils::head(install_order, -1)
   }
@@ -119,7 +125,7 @@ install_deps <- function(project = ".", feature = NULL,
 #' dependencies starting from `project`.
 #'
 #' @md
-#' @param run_gadget whether to run the app as a gadget
+#' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @inheritParams install_deps
 #' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
@@ -596,6 +602,9 @@ get_local_pkgs_from_config <- function() {
     df <- do.call(rbind,
                   lapply(local_pkgs, function(x) data.frame(x, stringsAsFactors = FALSE))
     )
+    if (is.null(df)) {
+      return(NULL)
+    }
     stopifnot(setequal(colnames(df), c("repo", "host", "directory")))
     stopifnot(all(vapply(df$directory, function(x) {
       check_dir_exists(x, "Local package config: ")

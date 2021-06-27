@@ -12,8 +12,22 @@ get_packages_cache_dir <- function() {
 #' @md
 #' @param pattern files to remove, see `unlink` (wildcards `*` and `?` allowed)
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' clear_cache()
+#' clear_cache("*elecinfra*")
+#' }
 clear_cache <- function(pattern = "*") {
   unlink(file.path(get_packages_cache_dir(), pattern), recursive = TRUE)
+  if (!identical(pattern, "*")) {
+    direcs <- dir(get_packages_cache_dir())
+    if (length(direcs) == 0) {
+      message("Cache empty")
+    } else {
+      message("Directories remaining in cache:\n", paste(direcs, collapse = "\n"))
+    }
+  }
 }
 
 # copies example config file to package settings directory

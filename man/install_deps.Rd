@@ -54,6 +54,9 @@ The checked out branch should be a local branch.
 \examples{
 \dontrun{
 install_deps()
+
+# install all dependencies
+install_deps(direction = c("upstream", "downstream"))
 }
 
 }

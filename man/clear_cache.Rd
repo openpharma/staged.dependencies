@@ -14,3 +14,9 @@ Use this function to clear the package cache and reclone some
 or all repositories (depending on \code{pattern}) if
 the \code{git} operations fail.
 }
+\examples{
+\dontrun{
+clear_cache()
+clear_cache("*elecinfra*")
+}
+}

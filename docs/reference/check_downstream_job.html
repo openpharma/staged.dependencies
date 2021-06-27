@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Clear the repository cache — clear_cache • staged.dependencies</title>
+<title>Check &amp; install downstream job — check_downstream_job • staged.dependencies</title>
 
 
 <!-- jquery -->
@@ -35,10 +35,8 @@
 
 
 
-<meta property="og:title" content="Clear the repository cache — clear_cache" />
-<meta property="og:description" content="Use this function to clear the package cache and reclone some
-or all repositories (depending on pattern) if
-the git operations fail." />
+<meta property="og:title" content="Check &amp; install downstream job — check_downstream_job" />
+<meta property="og:description" content="Check &amp;amp; install downstream job" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -102,39 +100,69 @@ the git operations fail." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Clear the repository cache</h1>
+    <h1>Check &amp; install downstream job</h1>
     
-    <div class="hidden name"><code>clear_cache.Rd</code></div>
+    <div class="hidden name"><code>check_downstream_job.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Use this function to clear the package cache and reclone some
-or all repositories (depending on <code>pattern</code>) if
-the <code>git</code> operations fail.</p>
+    <p>Check &amp; install downstream job</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clear_cache</span>(<span class='kw'>pattern</span> <span class='kw'>=</span> <span class='st'>"*"</span>)</pre>
+    <pre class="usage"><span class='fu'>check_downstream_job</span>(<span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>1</span>, <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>pattern</th>
-      <td><p>files to remove, see <code>unlink</code> (wildcards <code>*</code> and <code>?</code> allowed)</p></td>
+      <th>project</th>
+      <td><p>(<code>character</code>) directory of project (for which to restore the
+dependencies according to feature); must be a git repository.</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>(<code>numeric</code>) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Arguments passed on to <code><a href='check_downstream.html'>check_downstream</a></code></p><dl class='dl-horizontal'>
+    <dt><code>downstream_repos</code></dt><dd><p>(<code>list</code>) to overwrite the downstream repos to check
+of <code>project</code></p></dd>
+    <dt><code>dry_install_and_check</code></dt><dd><p>(<code>logical</code>) whether to install upstream
+dependencies and check/test downstream repos; otherwise just reports
+what would be installed</p></dd>
+    <dt><code>recursive</code></dt><dd><p>(<code>logical</code>) whether to recursively check the downstream
+dependencies of the downstream dependencies</p></dd>
+    <dt><code>check_args</code></dt><dd><p>(<code>list</code>) arguments passed to <code>rcmdcheck</code></p></dd>
+    <dt><code>only_tests</code></dt><dd><p>(<code>logical</code>) whether to only run tests (rather than checks)</p></dd>
+    <dt><code>feature</code></dt><dd><p>(<code>character</code>) feature we want to build; inferred from the
+branch of the project if not provided; warning if not consistent with
+current branch of project</p></dd>
+    <dt><code>local_repos</code></dt><dd><p>(<code>data.frame</code>) repositories that should be taken from
+local rather than cloned; columns are <code>repo, host, directory</code></p></dd>
+  
+</dl></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p>check_downstream</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'>clear_cache</span>()
-<span class='fu'>clear_cache</span>(<span class='st'>"*elecinfra*"</span>)
+<span class='fu'>check_downstream_job</span>(<span class='kw'>check_args</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"RCMDCHECK_ARGS"</span>))
+<span class='fu'>check_downstream_job</span>(<span class='kw'>check_args</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.getenv.html'>Sys.getenv</a></span>(<span class='st'>"RCMDCHECK_ARGS"</span>), <span class='kw'>feature</span> <span class='kw'>=</span> <span class='st'>"6_makegraph@main@master"</span>)
+<span class='fu'>check_downstream_job</span>(<span class='kw'>only_tests</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 }</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
+      <li><a href="#see-also">See also</a></li>
       <li><a href="#examples">Examples</a></li>
     </ul>
 

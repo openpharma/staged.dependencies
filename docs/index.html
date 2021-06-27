@@ -94,6 +94,7 @@ ROCHE_GITLAB_PAT=&lt;token&gt;</code></pre>
 <li><p>Test and Install Downstream Dependencies: See above. It tests instead of checks.</p></li>
 </ul>
 <p>If you are working locally on a collection of packages, you can modify the <code>~/.staged.dependencies/config.yaml</code> to automatically pick up the local packages that should be taken instead of their remote ones. For the current project, the local rather than remote version is always taken. The directory <code>~/staged.dependencies</code> as well as a dummy config file are created whenever the package is loaded and the directory does not exist.</p>
+<p>Moreover, these functions are also implemented as RStudio jobs.</p>
 <p>For the branch naming strategy, see <code><a href="reference/determine_branch.html">staged.dependencies::determine_branch</a></code> and the section below.</p>
 <p>You can run the actions of the addins explicitly and change the default arguments:</p>
 <pre class="{r}"><code><a href="https://rdrr.io/r/base/Sys.setenv.html"># latex may not be installed, so `R CMD check` does not fail because of it
@@ -156,12 +157,12 @@ current_repo:
 <p>This package can be tested on the following setup of packages. <img src="StagedDepsExample.png" alt="Dependencies. Arrow point from upstream to downstream packages"></p>
 <p>See <a href="https://code.roche.com/maximilian_oliver.mordig/stageddeps.water" class="uri">https://code.roche.com/maximilian_oliver.mordig/stageddeps.water</a> and the related packages.</p>
 <p>You can check that the right branches of the packages are installed with:</p>
-<pre class="{r}"><code><a href="https://rdrr.io/pkg/stageddeps.house/man/get_house.html">stageddeps.house::get_house()
+<pre class="{r}"><code>stageddeps.house::get_house()
 stageddeps.water::get_water()
 stageddeps.garden::get_garden()
 stageddeps.food::get_food()
 stageddeps.elecinfra::get_elecinfra()
-stageddeps.electricity::get_electricity()</a></code></pre>
+stageddeps.electricity::get_electricity()</code></pre>
 </div>
 </div>
   </div>
