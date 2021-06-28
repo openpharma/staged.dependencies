@@ -161,7 +161,7 @@ install_deps_app <- function(project = ".", feature = NULL,
         if (verbose >= 1) {
           message("Computing dependency structure for feature ", feature, " starting from project ", project)
         }
-        dependency_structure("../stageddeps.electricity/", feature = feature,
+        dependency_structure(project, feature = feature,
                              local_repos = local_repos, verbose = 2)
       })
 
