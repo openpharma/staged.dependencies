@@ -346,6 +346,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 }
 
 #' Compute the dependency structure starting from project
+#'
 #' @md
 #'
 #' @param return_table_only (`logical`) whether to return a table or (table, graph, deps)
