@@ -56,7 +56,7 @@ check_verbose_arg <- function(verbose) {
 
 require_pkgs <- function(pkgs) {
   for (pkg in pkgs) {
-    if (!require(pkg, character.only = TRUE, quietly = TRUE)) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
       stop("Please install ", pkg)
     }
   }

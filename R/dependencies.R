@@ -473,7 +473,8 @@ dependency_structure <- function(project = ".", feature = NULL,
   # todo: put branch below node: https://github.com/almende/vis/issues/3436
   nodes <- df %>% mutate(
     id = hash_repo_and_host(list(repo = .data$repo, host = .data$host)),
-    label = short_repo_name(.data$repo),
+    # label does not support html tags
+    label = paste0(short_repo_name(.data$repo), "\n", branch),
     title = paste0("<p>", .data$repo, "<br/>", .data$host, "<br/>", .data$type, "<br/>", .data$branch, "</p"),
     value = 3,
     group = .data$type
