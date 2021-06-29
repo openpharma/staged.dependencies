@@ -440,10 +440,21 @@ dependency_structure <- function(project = ".", feature = NULL,
   hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
   df$branch <- Map(function(repo, host) {
     is_local <- hash_repo_and_host(list(repo = repo, host = host)) %in% names(hashed_repo_to_dir)
-    branch <- get_active_branch_in_cache(repo, host, local = is_local)
     if (is_local) {
+      branch <- get_active_branch_in_cache(repo, host, local = is_local)
       paste0("local (", branch, ")")
     } else {
+      # HEAD is detached, so we infer the branch name from the branch rule (we cannot handle it
+      # as in the previous case since a SHA can correspond to multiple branches)
+      repo_dir <- get_repo_cache_dir(repo, host)
+      available_branches <- names(git2r::branches(repo_dir))
+      available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
+      branch <- determine_branch(feature, available_branches)
+      # check sha of remote branch agrees with currently checked out commit (in detached HEAD mode)
+      stopifnot(
+        git2r::revparse_single(repo_dir, paste0("origin/", branch))$sha ==
+          git2r::repository_head(repo_dir)$sha
+      )
       branch
     }
   }, df$repo, df$host)
