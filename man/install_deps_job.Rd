@@ -15,22 +15,20 @@ dependencies according to feature); must be a git repository.}
 2: includes git checkout infos)}
 
 \item{...}{
-  Arguments passed on to \code{\link[=check_downstream]{check_downstream}}
+  Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
-    \item{\code{downstream_repos}}{(\code{list}) to overwrite the downstream repos to check
-of \code{project}}
-    \item{\code{dry_install_and_check}}{(\code{logical}) whether to install upstream
-dependencies and check/test downstream repos; otherwise just reports
-what would be installed}
-    \item{\code{recursive}}{(\code{logical}) whether to recursively check the downstream
-dependencies of the downstream dependencies}
-    \item{\code{check_args}}{(\code{list}) arguments passed to \code{rcmdcheck}}
-    \item{\code{only_tests}}{(\code{logical}) whether to only run tests (rather than checks)}
     \item{\code{feature}}{(\code{character}) feature we want to build; inferred from the
 branch of the project if not provided; warning if not consistent with
 current branch of project}
+    \item{\code{install_project}}{(\code{logical}) whether to also install the current
+package (\code{project})}
+    \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
+installed without installing; this still checks out the git repos to
+match \code{feature}}
     \item{\code{local_repos}}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
+    \item{\code{direction}}{(\code{character}) either or both of "upstream" and "downstream"
+to recursively checkout upstream and/or downstream dependencies}
   }}
 }
 \description{
@@ -47,5 +45,5 @@ install_deps_job(dry_install = TRUE)
 }
 }
 \seealso{
-check_downstream
+install_deps
 }

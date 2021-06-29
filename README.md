@@ -37,7 +37,7 @@ You can also call this later once the package is loaded.
 Search for the addins of this package:
 - Install Upstream Dependencies and this Package: Install remote upstream dependencies
   and the local version of this package.
-- Install All Dependencies: Opens a Shiny application to unselect those 
+- Install All Dependencies App: Opens a Shiny application to unselect those 
   dependencies that should not be installed. The feature input element can be empty 
   in which case it takes the branch name as the feature.
 - Check and Install Downstream Dependencies: Checks the downstream dependencies.
@@ -135,6 +135,9 @@ the package is already installed with the same commit hash.
 When calling `install_deps` and similar functions, the current project is always added to the `local_repos` so that
 its local rather than remote version is installed.
 For this, the `current_repo` field must be correct, so downstream dependencies do not fetch the remote version.
+
+When testing the addins, note that they run in a separate R process, so they pick up the currently installed version
+of `staged.dependencies` rather than the one loaded with `devtools::load_all()`.
 
 ## Troubleshooting
 

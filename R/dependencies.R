@@ -21,6 +21,24 @@ get_install_order <- function(upstream_deps) {
   lapply(install_order, unhash_repo_and_host)
 }
 
+# add the specified project to the local repos
+add_project_to_local_repos <- function(project, local_repos) {
+  stopifnot(
+    is.data.frame(local_repos) || is.null(local_repos)
+  )
+  check_dir_exists(project)
+
+  repo_deps_info <- get_deps_info(project)
+  rbind(
+    local_repos,
+    data.frame(
+      repo = repo_deps_info$current_repo$repo,
+      host = repo_deps_info$current_repo$host,
+      directory = normalizePath(project), stringsAsFactors = FALSE
+    )
+  )
+}
+
 
 #' Install upstream dependencies of project corresponding to feature
 #'
@@ -72,17 +90,10 @@ install_deps <- function(project = ".", feature = NULL,
 
   feature <- infer_feature_from_branch(feature, project)
 
-  repo_deps_info <- get_deps_info(project)
-
   # take local version of project (rather than remote)
-  local_repos <- rbind(
-    local_repos,
-    data.frame(
-      repo = repo_deps_info$current_repo$repo,
-      host = repo_deps_info$current_repo$host,
-      directory = normalizePath(project), stringsAsFactors = FALSE
-    )
-  )
+  local_repos <- add_project_to_local_repos(project, local_repos)
+
+  repo_deps_info <- get_deps_info(project)
 
   deps <- rec_checkout_repos(
     list(repo_deps_info$current_repo), feature, direction = direction,
@@ -125,31 +136,44 @@ install_deps <- function(project = ".", feature = NULL,
 #' dependencies starting from `project`.
 #'
 #' @md
+#' @param default_feature (`character`) default feature, see also the parameter
+#'   `feature` of `\link{install_deps}`
 #' @param run_gadget (`logical`) whether to run the app as a gadget
+#' @param run_as_job (`logical`) whether to run the installation as an RStudio job
 #' @inheritParams install_deps
 #' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
 #'
-install_deps_app <- function(project = ".", feature = NULL,
+install_deps_app <- function(project = ".", default_feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
-                             run_gadget = TRUE,
+                             run_gadget = TRUE, run_as_job = TRUE,
                              verbose = 1) {
   require_pkgs(c("shiny", "miniUI"))
+
+  # take local version of project (rather than remote)
+  local_repos <- add_project_to_local_repos(project, local_repos)
 
   app <- shiny::shinyApp(
     ui = function() {
       miniUI::miniPage(
-        shiny::fillRow(
-          shiny::textInput("feature", label = "Feature: ", value = feature),
-          shiny::actionButton("compute_graph", "Compute graph")
+        shiny::fillCol(
+          shiny::tagList(
+            shiny::textInput("feature", label = "Feature: ", value = default_feature),
+            shiny::actionButton("compute_graph", "Compute graph")
+          ),
+          miniUI::miniContentPanel(
+            visNetwork::visNetworkOutput("network_proxy_nodes", height = "400px")
+          ),
+          miniUI::miniContentPanel(
+            shiny::tags$p("The following packages will be installed:"),
+            shiny::verbatimTextOutput("nodesToInstall")
+          ),
+          flex = c(NA, 2, 1)
         ),
-        visNetwork::visNetworkOutput("network_proxy_nodes", height = "400px"),
         miniUI::gadgetTitleBar(
           "Cmd + Click node to not install the node",
           right = miniUI::miniTitleBarButton("done", "Install", primary = TRUE)
-        ),
-        shiny::tags$p("The following packages will be installed:"),
-        shiny::verbatimTextOutput("nodesToInstall")
+        )
       )
     },
     server = function(input, output, session) {
@@ -163,7 +187,10 @@ install_deps_app <- function(project = ".", feature = NULL,
         }
         dependency_structure(project, feature = feature,
                              local_repos = local_repos, verbose = 2)
-      })
+      },
+      # do not ignore NULL to also compute initially with the default feature when
+      # the button was not yet clicked
+      ignoreNULL = FALSE)
 
       output$network_proxy_nodes <- visNetwork::renderVisNetwork({
         compute_dep_structure()$graph %>%
@@ -189,6 +216,13 @@ install_deps_app <- function(project = ".", feature = NULL,
         selected_hashed_pkgs <- input$network_proxy_nodes_selectedNodes
         install_order <- get_install_order(compute_dep_structure()$deps[["upstream_deps"]])
 
+        # take local version of project (rather than remote)
+        local_repos <- add_project_to_local_repos(project, local_repos)
+
+        # subset of repo dirs to install according to selection
+        # we write the code this way so we only have to pass the repo dirs to the
+        # rstudio job script
+        repo_dirs_to_install <- c()
         hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
         for (repo_and_host in install_order) {
           if (hash_repo_and_host(repo_and_host) %in% selected_hashed_pkgs) {
@@ -198,15 +232,38 @@ install_deps_app <- function(project = ".", feature = NULL,
           is_local <- hash_repo_and_host(repo_and_host) %in% names(hashed_repo_to_dir)
           repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
 
-          install_repo_add_sha(repo_dir)
+          repo_dirs_to_install <- c(repo_dirs_to_install, repo_dir)
+          #install_repo_add_sha(repo_dir)
         }
 
+        if (verbose >= 1) {
+          message("Installing directories in order: ", repo_dirs_to_install)
+        }
+        if (run_as_job) {
+          # note: this uses the currently installed version of this package because
+          # it spans a new R process (not the loaded version)
+          args_str <- paste(deparse(repo_dirs_to_install), collapse = "\n")
+          script <- glue::glue(
+            "lapply({args_str}, staged.dependencies:::install_repo_add_sha)"
+          )
+          run_job(script, "install_deps_app",
+                  paste0("Install selection of deps of ", basename(project)))
+        } else {
+          lapply(repo_dirs_to_install, install_repo_add_sha)
+        }
+        if (verbose >= 1) {
+          message("Installed directories in order: ", repo_dirs_to_install)
+        }
+
+        # calling it at the top of this reactive still finishes executing
+        # the reactive (so installs), so we call it down here
         invisible(shiny::stopApp())
       })
     }
   ); app
   if (run_gadget) {
     shiny::runGadget(app, viewer = shiny::dialogViewer("Install packages"))
+    # shiny::runGadget(app, viewer = browserViewer())
   } else {
     app
   }
@@ -270,16 +327,10 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 
   feature <- infer_feature_from_branch(feature, project)
 
-  repo_deps_info <- get_deps_info(project)
+  # take local version of project (rather than remote)
+  local_repos <- add_project_to_local_repos(project, local_repos)
 
-  local_repos <- rbind(
-    local_repos,
-    data.frame(
-      repo = repo_deps_info$current_repo$repo,
-      host = repo_deps_info$current_repo$host,
-      directory = normalizePath(project), stringsAsFactors = FALSE
-    )
-  )
+  repo_deps_info <- get_deps_info(project)
 
   if (is.null(downstream_repos)) {
     downstream_repos <- if (!recursive) {
@@ -317,7 +368,29 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     if (hash_repo_and_host(repo_and_host) %in% lapply(downstream_repos, hash_repo_and_host)) {
       if (!dry_install_and_check) {
         if (only_tests) {
-          testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
+          # testthat::test_dir and devtools::test do not agree for test.nest@master
+          # testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
+          # stop_on_failure argument cannot be passed to devtools::test
+          if (dir.exists(file.path(repo_dir, "tests"))) {
+            # this does not work with legacy R packages where tests are in the inst directory
+            # see devtools:::find_test_dir
+            test_res <- devtools::test(repo_dir, stop_on_warning = TRUE)
+            all_passed <- function(res) {
+              # copied from testthat:::all_passed
+              if (length(res) == 0) {
+                return(TRUE)
+              }
+              df <- as.data.frame(res)
+              sum(df$failed) == 0 && all(!df$error)
+            }
+            if (!all_passed(test_res)) {
+              stop("Tests for package in directory ", repo_dir, " failed")
+            }
+          } else {
+            if (verbose >= 1) {
+              message("No tests found for package in directory ", repo_dir)
+            }
+          }
         } else {
           rcmdcheck::rcmdcheck(repo_dir, error_on = "warning", args = check_args)
         }
@@ -399,16 +472,10 @@ dependency_structure <- function(project = ".", feature = NULL,
 
   feature <- infer_feature_from_branch(feature, project)
 
-  repo_deps_info <- get_deps_info(project)
+  # take local version of project (rather than remote)
+  local_repos <- add_project_to_local_repos(project, local_repos)
 
-  local_repos <- rbind(
-    local_repos,
-    data.frame(
-      repo = repo_deps_info$current_repo$repo,
-      host = repo_deps_info$current_repo$host,
-      directory = normalizePath(project), stringsAsFactors = FALSE
-    )
-  )
+  repo_deps_info <- get_deps_info(project)
 
   deps <- rec_checkout_repos(
     list(repo_deps_info$current_repo), feature, direction = c("upstream", "downstream"),
@@ -474,7 +541,7 @@ dependency_structure <- function(project = ".", feature = NULL,
   nodes <- df %>% mutate(
     id = hash_repo_and_host(list(repo = .data$repo, host = .data$host)),
     # label does not support html tags
-    label = paste0(short_repo_name(.data$repo), "\n", branch),
+    label = paste0(short_repo_name(.data$repo), "\n", .data$branch),
     title = paste0("<p>", .data$repo, "<br/>", .data$host, "<br/>", .data$type, "<br/>", .data$branch, "</p"),
     value = 3,
     group = .data$type
@@ -544,7 +611,7 @@ dependency_structure <- function(project = ".", feature = NULL,
         color = c(get_edge_color(c("from", "to")), get_edge_color(c("to")), get_edge_color(c("from"))),
         label = c("listed by both", "listed by upstream", "listed by downstream")
       )
-    )
+    ); graph
 
   list(df = df, graph = graph, deps = deps)
 }

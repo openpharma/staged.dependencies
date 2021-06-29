@@ -24,20 +24,28 @@ Among the available branches, it searches in the order
 \code{name1@name2@...@nameN}, \code{name2@name3@...@nameN}, \code{name3@name4@...@nameN}, ..., \code{nameN}.
 }
 \details{
-Use case: See the readme.
+Use case: See the \code{README}.
 }
 \examples{
-
 determine_branch("feature1", c("main", "feature1")) == "feature1"
+
 determine_branch("feature1@devel", c("main", "devel", "feature1")) == "devel"
-determine_branch("fix1@feature1@devel",
-c("main", "devel", "feature1", "feature1@devel", "fix1@feature1@devel", "fix1")
+
+determine_branch(
+  feature = "fix1@feature1@devel",
+  available_branches = c("main", "devel", "feature1", "feature1@devel",
+  "fix1@feature1@devel", "fix1")
 ) == "fix1@feature1@devel"
-determine_branch("fix1@feature1@devel",
-c("main", "devel", "feature1", "feature1@devel", "fix1")
+
+determine_branch(
+  "fix1@feature1@devel",
+  c("main", "devel", "feature1", "feature1@devel", "fix1")
 ) == "feature1@devel"
-determine_branch("fix1@feature1@devel",
-c("main", "devel", "feature1", "fix1")) == "devel"
+
+determine_branch(
+  "fix1@feature1@devel",
+  c("main", "devel", "feature1", "fix1")
+) == "devel"
 
 # error because neither `feature1@release` nor `release` branch exists
 # determine_branch("feature1@release", c("main", "devel"))

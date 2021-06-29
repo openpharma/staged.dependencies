@@ -6,9 +6,10 @@
 \usage{
 install_deps_app(
   project = ".",
-  feature = NULL,
+  default_feature = NULL,
   local_repos = get_local_pkgs_from_config(),
   run_gadget = TRUE,
+  run_as_job = TRUE,
   verbose = 1
 )
 }
@@ -16,14 +17,15 @@ install_deps_app(
 \item{project}{(\code{character}) directory of project (for which to restore the
 dependencies according to feature); must be a git repository.}
 
-\item{feature}{(\code{character}) feature we want to build; inferred from the
-branch of the project if not provided; warning if not consistent with
-current branch of project}
+\item{default_feature}{(\code{character}) default feature, see also the parameter
+\code{feature} of \verb{\link{install_deps}}}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
+
+\item{run_as_job}{(\code{logical}) whether to run the installation as an RStudio job}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,

@@ -7,6 +7,7 @@ Authors@R: c(
   person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = "aut")
   )
 Imports:
+    devtools,
     digest,
     dplyr,
     fs,
@@ -40,7 +41,7 @@ Collate:
     'dependencies.R'
     'git_tools.R'
     'graph_methods.R'
-    'rstudio_addins.R'
     'rstudio_jobs.R'
+    'rstudio_addins.R'
     'utils.R'
     'zzz.R'

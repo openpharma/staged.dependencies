@@ -24,7 +24,8 @@
 #'
 #' determine_branch(
 #'   feature = "fix1@feature1@devel",
-#'   available_branches = c("main", "devel", "feature1", "feature1@devel", "fix1@feature1@devel", "fix1")
+#'   available_branches = c("main", "devel", "feature1", "feature1@devel",
+#'   "fix1@feature1@devel", "fix1")
 #' ) == "fix1@feature1@devel"
 #'
 #' determine_branch(

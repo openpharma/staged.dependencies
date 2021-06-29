@@ -3,7 +3,7 @@ Description: Installs upstream dependencies from branches that match branch of c
 Binding: install_deps_addin
 Interactive: false
 
-Name: Install All Dependencies
+Name: Install All Dependencies App
 Description: Installs dependencies from branches that match branch of current project
 Binding: install_deps_app_addin
 Interactive: true

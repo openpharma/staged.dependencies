@@ -130,13 +130,13 @@ error_if_stageddeps_inexistent <- function(project) {
 # local_repos: data.frame that maps repo and host to local directory
 # returns named character vector mapping hashed repo and host to the directory
 get_hashed_repo_to_dir_mapping <- function(local_repos) {
-  stopifnot(
-    is.data.frame(local_repos) || is.null(local_repos),
-    setequal(colnames(local_repos), c("repo", "host", "directory"))
-  )
   if (is.null(local_repos) || (nrow(local_repos) == 0)) {
     list()
   } else {
+    stopifnot(
+      is.data.frame(local_repos),
+      setequal(colnames(local_repos), c("repo", "host", "directory"))
+    )
     stats::setNames(local_repos$directory, hash_repo_and_host(local_repos))
   }
 }
