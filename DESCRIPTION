@@ -7,22 +7,41 @@ Authors@R: c(
   person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = "aut")
   )
 Imports:
-  digest,
-  gh,
-  git2r,
-  httr,
-  rcmdcheck,
-  remotes,
-  utils,
-  yaml
+    devtools,
+    digest,
+    dplyr,
+    fs,
+    git2r,
+    glue,
+    rcmdcheck,
+    remotes,
+    rlang,
+    utils,
+    yaml
 Description: When developing multiple dependent packages, it is often useful to introduce development
   stages (devel, pre-release, release) that synchronize these packages. 
-  This package provides an implementation of development stages via branch naming rules.
+  This package provides an implementation of development stages via branch naming rules. It defines
+  RStudio addins that allow to install the matching upstream and downstream dependencies.
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
-    rmarkdown
+    miniUI,
+    rmarkdown,
+    rstudioapi,
+    shiny,
+    testthat (>= 2.1.0),
+    visNetwork
 VignetteBuilder: knitr
+Collate: 
+    'branching_strategy.R'
+    'caching.R'
+    'dependencies.R'
+    'git_tools.R'
+    'graph_methods.R'
+    'rstudio_jobs.R'
+    'rstudio_addins.R'
+    'utils.R'
+    'zzz.R'

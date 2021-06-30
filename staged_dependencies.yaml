@@ -13,4 +13,6 @@ downstream_repos:
 - repo: nest/tlg.standards
   host: https://code.roche.com
 
-#todo: add mapping from host to env var name that contains auth token
+current_repo:
+  repo: openpharma/staged.dependencies
+  host: https://github.com

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Clear the repository cache — clear_cache • staged.dependencies</title>
+<title>Loads the config file and extracts <code>local_packages</code> — get_local_pkgs_from_config • staged.dependencies</title>
 
 
 <!-- jquery -->
@@ -35,10 +35,8 @@
 
 
 
-<meta property="og:title" content="Clear the repository cache — clear_cache" />
-<meta property="og:description" content="Use this function to clear the package cache and reclone some
-or all repositories (depending on pattern) if
-the git operations fail." />
+<meta property="og:title" content="Loads the config file and extracts <code>local_packages</code> — get_local_pkgs_from_config" />
+<meta property="og:description" content="Checks that all directories exist and are absolute paths." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -102,39 +100,29 @@ the git operations fail." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Clear the repository cache</h1>
+    <h1>Loads the config file and extracts <code>local_packages</code></h1>
     
-    <div class="hidden name"><code>clear_cache.Rd</code></div>
+    <div class="hidden name"><code>get_local_pkgs_from_config.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Use this function to clear the package cache and reclone some
-or all repositories (depending on <code>pattern</code>) if
-the <code>git</code> operations fail.</p>
+    <p>Checks that all directories exist and are absolute paths.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clear_cache</span>(<span class='kw'>pattern</span> <span class='kw'>=</span> <span class='st'>"*"</span>)</pre>
+    <pre class="usage"><span class='fu'>get_local_pkgs_from_config</span>()</pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>pattern</th>
-      <td><p>files to remove, see <code>unlink</code> (wildcards <code>*</code> and <code>?</code> allowed)</p></td>
-    </tr>
-    </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>local_packages</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'>clear_cache</span>()
-<span class='fu'>clear_cache</span>(<span class='st'>"*elecinfra*"</span>)
-}</div></pre>
+    <pre class="examples"><div class='input'><span class='fu'>get_local_pkgs_from_config</span>()</div><div class='output co'>#&gt; NULL</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
+      <li><a href="#value">Value</a></li>
       <li><a href="#examples">Examples</a></li>
     </ul>
 

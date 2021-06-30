@@ -6,7 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Clear the repository cache — clear_cache • staged.dependencies</title>
+<title>Recursively check out all repos to match branch determined by feature
+starting from repos_to_process. — rec_checkout_repos • staged.dependencies</title>
 
 
 <!-- jquery -->
@@ -35,10 +36,10 @@
 
 
 
-<meta property="og:title" content="Clear the repository cache — clear_cache" />
-<meta property="og:description" content="Use this function to clear the package cache and reclone some
-or all repositories (depending on pattern) if
-the git operations fail." />
+<meta property="og:title" content="Recursively check out all repos to match branch determined by feature
+starting from repos_to_process. — rec_checkout_repos" />
+<meta property="og:description" content="Recursively check out all repos to match branch determined by feature
+starting from repos_to_process." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -102,40 +103,64 @@ the git operations fail." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Clear the repository cache</h1>
+    <h1>Recursively check out all repos to match branch determined by feature
+starting from repos_to_process.</h1>
     
-    <div class="hidden name"><code>clear_cache.Rd</code></div>
+    <div class="hidden name"><code>rec_checkout_repos.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Use this function to clear the package cache and reclone some
-or all repositories (depending on <code>pattern</code>) if
-the <code>git</code> operations fail.</p>
+    <p>Recursively check out all repos to match branch determined by feature
+starting from repos_to_process.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clear_cache</span>(<span class='kw'>pattern</span> <span class='kw'>=</span> <span class='st'>"*"</span>)</pre>
+    <pre class="usage"><span class='fu'>rec_checkout_repos</span>(
+  <span class='no'>repos_to_process</span>,
+  <span class='no'>feature</span>,
+  <span class='kw'>direction</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"upstream"</span>),
+  <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='get_local_pkgs_from_config.html'>get_local_pkgs_from_config</a></span>(),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>0</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>pattern</th>
-      <td><p>files to remove, see <code>unlink</code> (wildcards <code>*</code> and <code>?</code> allowed)</p></td>
+      <th>repos_to_process</th>
+      <td><p><code>list</code> of <code><a href='https://rdrr.io/r/base/list.html'>list(repo, host)</a></code></p></td>
+    </tr>
+    <tr>
+      <th>feature</th>
+      <td><p>(<code>character</code>) feature to build</p></td>
+    </tr>
+    <tr>
+      <th>direction</th>
+      <td><p>(<code>character</code>) either or both of "upstream" and "downstream"
+to recursively checkout upstream and/or downstream dependencies</p></td>
+    </tr>
+    <tr>
+      <th>local_repos</th>
+      <td><p>(<code>data.frame</code>) repositories that should be taken from
+local rather than cloned; columns are <code>repo, host, directory</code></p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>(<code>numeric</code>) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'>clear_cache</span>()
-<span class='fu'>clear_cache</span>(<span class='st'>"*elecinfra*"</span>)
-}</div></pre>
+    <p>the upstream and/or downstream dependency graphs</p>
+
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#examples">Examples</a></li>
+      <li><a href="#value">Value</a></li>
     </ul>
 
   </div>

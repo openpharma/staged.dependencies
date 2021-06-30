@@ -1,9 +1,19 @@
-Name: Install Upstream Dependencies and this Package (from remote)
-Description: Installs upstream dependencies from particular branches to match feature branch + remote version of this package
-Binding: install_upstream_deps
+Name: Install Upstream Dependencies and this Package
+Description: Installs upstream dependencies from branches that match branch of current project
+Binding: install_deps_addin
 Interactive: false
 
-Name: Check Downstream Dependencies
-Description: Checks that current package (pushed to remote) does not break the downstream dependencies
-Binding: check_downstream
+Name: Install All Dependencies App
+Description: Installs dependencies from branches that match branch of current project
+Binding: install_deps_app_addin
+Interactive: true
+
+Name: Check and Install Downstream Dependencies
+Description: R CMD check downstream dependencies to make sure that they don't break
+Binding: check_downstream_addin
+Interactive: false
+
+Name: Test and Install Downstream Dependencies
+Description: Execute tests of downstream dependencies to make sure that they don't break
+Binding: test_downstream_addin
 Interactive: false

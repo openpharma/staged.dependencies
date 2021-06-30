@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Clear the repository cache — clear_cache • staged.dependencies</title>
+<title>Install upstream dependencies of project corresponding to feature — install_deps • staged.dependencies</title>
 
 
 <!-- jquery -->
@@ -35,10 +35,9 @@
 
 
 
-<meta property="og:title" content="Clear the repository cache — clear_cache" />
-<meta property="og:description" content="Use this function to clear the package cache and reclone some
-or all repositories (depending on pattern) if
-the git operations fail." />
+<meta property="og:title" content="Install upstream dependencies of project corresponding to feature — install_deps" />
+<meta property="og:description" content="This reads the upstream dependencies for the project (recursively) and
+installs the right branches based on the feature." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -102,39 +101,96 @@ the git operations fail." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Clear the repository cache</h1>
+    <h1>Install upstream dependencies of project corresponding to feature</h1>
     
-    <div class="hidden name"><code>clear_cache.Rd</code></div>
+    <div class="hidden name"><code>install_deps.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Use this function to clear the package cache and reclone some
-or all repositories (depending on <code>pattern</code>) if
-the <code>git</code> operations fail.</p>
+    <p>This reads the upstream dependencies for the project (recursively) and
+installs the right branches based on the feature.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clear_cache</span>(<span class='kw'>pattern</span> <span class='kw'>=</span> <span class='st'>"*"</span>)</pre>
+    <pre class="usage"><span class='fu'>install_deps</span>(
+  <span class='kw'>project</span> <span class='kw'>=</span> <span class='st'>"."</span>,
+  <span class='kw'>feature</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>local_repos</span> <span class='kw'>=</span> <span class='fu'><a href='get_local_pkgs_from_config.html'>get_local_pkgs_from_config</a></span>(),
+  <span class='kw'>direction</span> <span class='kw'>=</span> <span class='st'>"upstream"</span>,
+  <span class='kw'>install_project</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>dry_install</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>0</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>pattern</th>
-      <td><p>files to remove, see <code>unlink</code> (wildcards <code>*</code> and <code>?</code> allowed)</p></td>
+      <th>project</th>
+      <td><p>(<code>character</code>) directory of project (for which to restore the
+dependencies according to feature); must be a git repository.</p></td>
+    </tr>
+    <tr>
+      <th>feature</th>
+      <td><p>(<code>character</code>) feature we want to build; inferred from the
+branch of the project if not provided; warning if not consistent with
+current branch of project</p></td>
+    </tr>
+    <tr>
+      <th>local_repos</th>
+      <td><p>(<code>data.frame</code>) repositories that should be taken from
+local rather than cloned; columns are <code>repo, host, directory</code></p></td>
+    </tr>
+    <tr>
+      <th>direction</th>
+      <td><p>(<code>character</code>) either or both of "upstream" and "downstream"
+to recursively checkout upstream and/or downstream dependencies</p></td>
+    </tr>
+    <tr>
+      <th>install_project</th>
+      <td><p>(<code>logical</code>) whether to also install the current
+package (<code>project</code>)</p></td>
+    </tr>
+    <tr>
+      <th>dry_install</th>
+      <td><p>(<code>logical</code>) dry run that lists packages that would be
+installed without installing; this still checks out the git repos to
+match <code>feature</code></p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>(<code>numeric</code>) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>installed packages in installation order</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>It throws a warning if the currently checked out branch in the project
+is not the one that would be taken based on <code>feature</code>.
+The checked out branch should be a local branch.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p>determine_branch</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'>clear_cache</span>()
-<span class='fu'>clear_cache</span>(<span class='st'>"*elecinfra*"</span>)
+<span class='fu'>install_deps</span>()
+
+<span class='co'># install all dependencies</span>
+<span class='fu'>install_deps</span>(<span class='kw'>direction</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"upstream"</span>, <span class='st'>"downstream"</span>))
 }</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
+      <li><a href="#value">Value</a></li>
+      <li><a href="#details">Details</a></li>
+      <li><a href="#see-also">See also</a></li>
       <li><a href="#examples">Examples</a></li>
     </ul>
 
