@@ -48,7 +48,7 @@ determine_branch <- function(feature, available_branches, branch_sep = "@") {
   )
 
   els <- unlist(strsplit(feature, branch_sep, fixed = TRUE))
-  branches_to_check <- rev(Reduce(function(x, y) paste0(y, branch_sep, x), rev(els), accumulate = TRUE))
+  branches_to_check <- c(rev(Reduce(function(x, y) paste0(y, branch_sep, x), rev(els), accumulate = TRUE)), "main")
 
   for (branch in branches_to_check) {
     if (branch %in% available_branches) {
