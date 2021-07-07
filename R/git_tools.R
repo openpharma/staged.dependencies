@@ -59,6 +59,8 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
     git2r::checkout(git_repo, branch = remote_branch$name)
     git2r::branch_delete(local_branch)
     rm(local_branch, remote_branch)
+
+    # todo: on.exit if unsuccessful
   } else {
     if (verbose >= 1) {
       message(paste("fetch", git2r::remote_url(repo_dir), "in directory", repo_dir))
@@ -140,7 +142,17 @@ install_repo_add_sha <- function(repo_dir) {
   # see remotes:::add_metadata
   source_desc <- file.path(repo_dir, "DESCRIPTION")
   desc <- read_dcf(source_desc)
-  desc <- utils::modifyList(desc, list(RemoteSha = commit_sha))
+  # see https://github.com/r-lib/remotes/blob/055754a709314f325b254a6182820e1e6d9bea32/R/install-git.R#L128
+  # we use generic git2r remote type rather than github or gitlab because we cannot
+  # deduce this directly from the URL
+  metadata <- list(
+    RemoteType = "git2r",
+    RemoteUrl = git2r::remote_url(repo_dir),
+    #RemoteSubdir = NULL,
+    #RemoteRef = x$ref,
+    RemoteSha = commit_sha
+  )
+  desc <- utils::modifyList(desc, metadata)
   write_dcf(source_desc, desc)
 
   # only install if SHA differs
