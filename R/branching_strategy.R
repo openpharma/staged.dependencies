@@ -9,7 +9,7 @@
 #'
 #' @md
 #' @param feature feature we want to build, includes fallbacks
-#' @param available_branches branches to search in
+#' @param available_branches branches to search in, adds `main` branch last
 #' @param branch_sep separator between branches in `feature`, `/` does not
 #'   work well with `git` because it clashes with the filesystem paths
 #'
@@ -48,7 +48,10 @@ determine_branch <- function(feature, available_branches, branch_sep = "@") {
   )
 
   els <- unlist(strsplit(feature, branch_sep, fixed = TRUE))
-  branches_to_check <- c(rev(Reduce(function(x, y) paste0(y, branch_sep, x), rev(els), accumulate = TRUE)), "main")
+  branches_to_check <- union(
+    rev(Reduce(function(x, y) paste0(y, branch_sep, x), rev(els), accumulate = TRUE)),
+    "main"
+  )
 
   for (branch in branches_to_check) {
     if (branch %in% available_branches) {
