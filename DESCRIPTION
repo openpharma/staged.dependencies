@@ -17,7 +17,8 @@ Imports:
     remotes,
     rlang,
     utils,
-    yaml
+    yaml,
+    remotes
 Description: When developing multiple dependent packages, it is often useful to introduce development
   stages (devel, pre-release, release) that synchronize these packages. 
   This package provides an implementation of development stages via branch naming rules. It defines
