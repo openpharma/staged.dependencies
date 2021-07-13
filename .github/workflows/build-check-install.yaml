@@ -71,7 +71,7 @@ jobs:
           ncores <- parallel::detectCores(all.tests = FALSE, logical = TRUE)
           cat(paste("\n\nnumber of cores detected:", ncores, "\n\n"))
           if (file.exists("renv.lock")) {
-            renv::restore()rocker_staged_deps_ci
+            renv::restore()
           } else {
             if (!("remotes" %in% installed.packages())) install.packages("remotes", upgrade = "never", Ncpus = ncores)
             remotes::install_deps(dependencies = TRUE, upgrade = "never", Ncpus = ncores)
