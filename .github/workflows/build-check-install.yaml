@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {image: waddella/rocker_rstudio_4.1.0_deps, tag: 'latest'}
+          - {image: waddella/rocker_staged_deps_ci, tag: 'latest'}
 
     steps:
       - name: Gather info from PR
@@ -71,7 +71,7 @@ jobs:
           ncores <- parallel::detectCores(all.tests = FALSE, logical = TRUE)
           cat(paste("\n\nnumber of cores detected:", ncores, "\n\n"))
           if (file.exists("renv.lock")) {
-            renv::restore()
+            renv::restore()rocker_staged_deps_ci
           } else {
             if (!("remotes" %in% installed.packages())) install.packages("remotes", upgrade = "never", Ncpus = ncores)
             remotes::install_deps(dependencies = TRUE, upgrade = "never", Ncpus = ncores)
