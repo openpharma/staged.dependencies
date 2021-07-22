@@ -80,10 +80,17 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
   stopifnot(branch %in% available_branches)
   branch <- paste0("origin/", branch)
 
+
+  # force = TRUE to discard any changes (which should not happen)
+  if (startsWith(git_repo$path, get_packages_cache_dir())) {
+    if (verbose >= 1) {
+      message("   - in cache: reset --hard HEAD")
+    }
+    git2r::reset(git_repo, reset_type = "hard", path = "HEAD")
+  }
   if (verbose >= 1) {
     message(paste("   - checkout branch", branch, "in directory", repo_dir))
   }
-  # force = TRUE to discard any changes (which should not happen)
   git2r::checkout(git_repo, branch = branch, force = TRUE)
 
   repo_dir
