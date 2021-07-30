@@ -105,10 +105,7 @@ get_deps_info <- function(repo_dir) {
   yaml_file <- file.path(repo_dir, STAGEDDEPS_FILENAME)
   if (file.exists(yaml_file)) {
     content <- yaml::read_yaml(yaml_file)
-    required_fields <- c("upstream_repos", "downstream_repos", "current_repo")
-    if (!all(required_fields %in% names(content))) {
-      stop("File ", yaml_file, " invalid, it must contain fields ", toString(required_fields))
-    }
+    validate_staged_deps_yaml(content, file_name = yaml_file)
     content
   } else {
     list(upstream_repos = list(), downstream_repos = list(),
