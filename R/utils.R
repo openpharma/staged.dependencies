@@ -82,24 +82,25 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
   # More complex schemas cannot yet be validated
   # Fields in addition to these are ignored and no error is shown
   required_schema <- list(
-    list(name = "upstream_repos", content = c("repo","host"), nullable = TRUE, array = TRUE),
-    list(name = "downstream_repos", content = c("repo","host"), nullable = TRUE, array = TRUE),
-    list(name = "current_repo", content = c("repo","host"), nullable = FALSE, array = FALSE)
+    list(name = "upstream_repos", content = c("repo", "host"), nullable = TRUE, array = TRUE),
+    list(name = "downstream_repos", content = c("repo", "host"), nullable = TRUE, array = TRUE),
+    list(name = "current_repo", content = c("repo", "host"), nullable = FALSE, array = FALSE)
   )
-
 
   # helper function to validate field values
   check_single_entry <- function(content, expected_content, field_name) {
     # check the required contents exist
     if (!(all(expected_content %in% names(content)))) {
       stop("File ", file_name , " invalid, field ", field_name,
-           " cannot be an array and must have entries ", toString(expected_content))
+        " cannot be an array and must have entries ", toString(expected_content)
+      )
     }
     # and are unnamed and character scalars
     lapply(expected_content, function(x){
       if (!rlang::is_scalar_character(content[[x]]) || rlang::is_named(content[[x]])) {
         stop("File ", file_name , " invalid, field ", field_name,
-             " must have (non array) character values ", toString(expected_content))
+          " must have (non array) character values ", toString(expected_content)
+        )
       }
     })
   }

@@ -48,7 +48,7 @@ test_that("empty staged dep yaml file throws error", {
   expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
 })
 
-test_that("staged dep yaml file missing expected field throws error", {
+test_that("staged dep yaml file missing expected fields throws error", {
 
   text <- "---
   hello
