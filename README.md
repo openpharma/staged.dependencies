@@ -146,7 +146,10 @@ has read privileges for the repositories.
 
 ## Example Setup
 
-This package can be tested on the following setup of packages.
+A simple example of usage can be found with the [synthetic.cdisc.data](https://github.com/Roche/synthetic.cdisc.data) 
+package and its (upstream) dependency [respectables](https://github.com/Roche/respectables). 
+
+This package can also be tested on a more complex setup of packages.
 ![Dependencies. Arrow point from upstream to downstream packages](StagedDepsExample.png)
 
 See https://code.roche.com/maximilian_oliver.mordig/stageddeps.water and the related packages.
