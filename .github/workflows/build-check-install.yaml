@@ -71,6 +71,7 @@ jobs:
           ncores <- parallel::detectCores(all.tests = FALSE, logical = TRUE)
           cat(paste("\n\nnumber of cores detected:", ncores, "\n\n"))
           if (file.exists("renv.lock")) {
+            if (!("renv" %in% installed.packages())) install.packages("renv", upgrade = "never", Ncpus = ncores)
             renv::restore()
           } else {
             if (!("remotes" %in% installed.packages())) install.packages("remotes", upgrade = "never", Ncpus = ncores)
