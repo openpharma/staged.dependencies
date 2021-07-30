@@ -164,3 +164,17 @@ stageddeps.food::get_food()
 stageddeps.elecinfra::get_elecinfra()
 stageddeps.electricity::get_electricity()
 ```
+
+## Package development
+
+We use `renv` to control for external dependencies, please run:
+
+```
+renv::restore()
+```
+
+If you would like to test against the latest packages on CRAN run:
+
+```
+renv::update()
+```
