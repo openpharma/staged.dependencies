@@ -2,32 +2,30 @@
 % Please edit documentation in R/graph_methods.R
 \name{topological_sort}
 \alias{topological_sort}
-\title{Topologically sorts nodes so that parents are listed before all their children}
+\title{Topological graph sort}
 \usage{
-topological_sort(child_to_parents)
+topological_sort(graph)
 }
 \arguments{
-\item{child_to_parents}{mapping from child to its parents (upstream dependencies)}
+\item{graph}{(named `list`) list with node vector elements mapping from
+child to its parents (upstream dependencies)}
 }
 \value{
 vector listing parents before children
 }
 \description{
-Topologically sorts nodes so that parents are listed before all their children
+Graph is a list which for each node contains a vector of child nodes
+in the returned list, parents appear before their children.
+}
+\details{
+Implementation of Kahn algorithm with a modification to maintain the order of input elements.
 }
 \examples{
-topological_sort <- staged.dependencies:::topological_sort
-
-all(topological_sort(list(
-n1 = c(), n2 = c("n1"), n3 = c("n2"),
-n4 = c("n2", "n3"))) == c("n1", "n2", "n3", "n4")
-)
-is.null(topological_sort(list()))
-
+  staged.dependencies:::topological_sort(list(A = c(), B = c("A"), C = c("B"), D = c("A")))
+  staged.dependencies:::topological_sort(list(D = c("A"), A = c(), B = c("A"), C = c("B")))
+  staged.dependencies:::topological_sort(list(D = c("A"), B = c("A"), C = c("B"), A = c()))
 \dontrun{
-# cycle
-topological_sort(list(
-  n1 = c("n2"), n2 = c("n3", "n1"), n3 = c()
-))
+  # cycle
+  topological_sort(list(A = c("B"), B = c("C", "A"), C = c()))
 }
 }
