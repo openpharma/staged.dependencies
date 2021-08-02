@@ -8,6 +8,9 @@ specify a `staged_dependencies.yaml` file containing *upstream* (i.e. those pack
 *downstream* (i.e. those packages which depend on your current repo's package) 
 dependency packages within your development set of packages.
 
+The set of packages you are co-developing are *internal* dependencies. Other R packages they depend on
+are named *external* dependencies.
+
 By using a git branching naming convention in your development work, `staged.dependencies` makes it
 straightforward to:
 
@@ -17,6 +20,7 @@ straightforward to:
   the requested branches for each repository. It picks up the
   environment variable `RCMDCHECK_ARGS` and passes it as arguments to `R CMD check`.
 - Test and install downstream dependencies: see above. It tests instead of checks.
+- Create dependency graphs of internal dependencies.
 
 The package also provides:
 
@@ -30,13 +34,13 @@ A public github example will be available shortly.
 
 ## Usage
 
-The directory `~/staged.dependencies` as well as a dummy config file are created whenever the package is loaded and 
+The directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and 
 the directory does not exist and this is where checked out repositories are cached.
 
 ### Setup tokens
 
 This package requires [personal access tokens](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) 
- with read access to the repositories you are developing) set as environment variables.   
+ with read access to the repositories you are developing set as environment variables.   
 
 For example:
 ```
