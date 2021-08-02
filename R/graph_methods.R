@@ -55,7 +55,7 @@ topological_sort <- function(graph) {
   }
 
   if (visited != length(in_degrees)) {
-    stop("Graph is not a directed acyclic graph. Cycles involving nodes: ",
+    stop("Dependency graph is not a directed acyclic graph. Cycles involving: ",
          paste0(setdiff(names(in_degrees), sorted), collapse = " "))
   } else {
     return(unlist(sorted))
