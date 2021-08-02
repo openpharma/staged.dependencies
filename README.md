@@ -4,7 +4,7 @@
 
 The `staged.dependencies` package simplifies the development process for developing a set of
 inter-dependent R packages. In each repository of the set of R packages you are co-developing you should
-specify a `staged_dependencies.yaml` file containing *upstream* (i.e. those packages this repo depends on) and
+specify a `staged_dependencies.yaml` file containing *upstream* (i.e. those packages your current repo depends on) and
 *downstream* (i.e. those packages which depend on your current repo's package) 
 dependency packages within your development set of packages.
 
@@ -16,15 +16,15 @@ straightforward to:
 
 - Install upstream dependencies (and the current package): install remote upstream dependencies
   and the local version of the current package using the requested branches for each repository.
-- Check and install downstream dependencies: install downstream and upstream dependencies using
-  the requested branches for each repository. It picks up the
+- Check and install downstream dependencies: install downstream and their required upstream dependencies using
+  the requested branches for each repository (following the branch naming convention, see below). It picks up the
   environment variable `RCMDCHECK_ARGS` and passes it as arguments to `R CMD check`.
 - Test and install downstream dependencies: see above. It tests instead of checks.
 - Create dependency graphs of internal dependencies.
 
 The package also provides:
 
-- RStudio addins to perform the above tasks with a single click
+- RStudio addins to perform the above tasks with a single click.
 - Install all dependencies app: A Shiny application to un-select those 
   dependencies that should not be installed. 
 
@@ -129,22 +129,23 @@ graph `repoA --> repoB --> repoC`, where `repoA` is an additional upstream depen
 `feature1` requires a fix in `repoB`, so one creates a new branch `fix1@feature1@main` on `repoB`. 
 The setup can be summarized as follows:
 ```
+repoA: devel
 repoB: fix1@feature1@main, feature1@main, main
 repoC: feature1@main, main
-repoA: devel
 ```
 A PR on repoB `fix1@feature1@main --> feature1@main` takes 
-`repoB:fix1@feature1@main, repoC: feature1@main, repoA: main`. 
-This can be checked by setting `feature = fix1@feature1@main` and running `R CMD check` on `repoC`, 
-or `check_downstream` on `repoB` (adding `repoC` to its downstream dependencies).
-The PR on `repoB` and  `repoC` `feature1@main --> main` takes 
-`repoB:feature1@main, repoC: feature1@main, repoA: main`, setting `feature = feature1@main`.
+`repoA: main, repoB: fix1@feature1@main, repoC: feature1@main`. 
+This can be checked by setting `feature = fix1@feature1@main` and running `check_downstream` on either `repoC` or
+`check_downstream` on `repoB` (which adds `repoC` to its downstream dependencies).
+A PR on either `repoB` or `repoC` `feature1@main --> main` takes 
+`repoA: main, repoB:feature1@main, repoC: feature1@main`, setting `feature = feature1@main`.
 
 
 ### Working with local packages
 
 If you are working locally on a collection of packages, you can modify the `~/.staged.dependencies/config.yaml` to
 automatically pick up the local packages that should be taken instead of their remote ones.
+The file `~/.staged.dependencies/config.yaml` describes the available options.
 For the current project, the local rather than remote version is always taken.
 
 ### Structure of `staged_dependencies.yaml` file
