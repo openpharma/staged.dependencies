@@ -573,7 +573,7 @@ dependency_structure <- function(project = ".", feature = NULL,
     from <- short_repo_name(unhash_repo_and_host(from[[1]])$repo)
     to <- short_repo_name(unhash_repo_and_host(to[[1]])$repo)
     if (setequal(listed_by, c("from", "to"))) {
-      list(NULL)
+      ""
     } else if (setequal(listed_by, c("from"))) {
       paste0("<p>", to, "<br/> does not list <br/>", from, "</p>")
     } else if (setequal(listed_by, c("to"))) {
