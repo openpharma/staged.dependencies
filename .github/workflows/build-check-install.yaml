@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {image: waddella/rocker_staged_deps_ci, tag: 'latest'}
+          - {image: ghcr.io/insightsengineering/tidyverse_4.1.0_bioc_3.13, tag: latest}
 
     steps:
       - name: Gather info from PR
@@ -71,6 +71,7 @@ jobs:
           ncores <- parallel::detectCores(all.tests = FALSE, logical = TRUE)
           cat(paste("\n\nnumber of cores detected:", ncores, "\n\n"))
           if (file.exists("renv.lock")) {
+            if (!("renv" %in% installed.packages())) install.packages("renv", upgrade = "never", Ncpus = ncores)
             renv::restore()
           } else {
             if (!("remotes" %in% installed.packages())) install.packages("remotes", upgrade = "never", Ncpus = ncores)
