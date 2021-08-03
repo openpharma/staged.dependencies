@@ -74,7 +74,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
 
   repo_dir <- get_repo_cache_dir(repo, host, local = TRUE)
   if (dir.exists(repo_dir)) {
-    unlink(repo_dir, recursive = TRUE)
+    fs::dir_delete(repo_dir)
   }
 
   if (verbose >= 1) {
