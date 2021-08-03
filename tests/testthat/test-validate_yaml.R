@@ -41,11 +41,17 @@ test_that("empty staged dep yaml file throws error", {
 
   text <- "---
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, it must contain fields upstream_repos, downstream_repos, current_repo"
+  )
 
   text <- "
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, it must contain fields upstream_repos, downstream_repos, current_repo"
+  )
 })
 
 test_that("staged dep yaml file missing expected fields throws error", {
@@ -53,7 +59,10 @@ test_that("staged dep yaml file missing expected fields throws error", {
   text <- "---
   hello
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, it must contain fields upstream_repos, downstream_repos, current_repo"
+  )
 
 
   text <- "---
@@ -61,7 +70,10 @@ test_that("staged dep yaml file missing expected fields throws error", {
 
   upstream_repos:
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, it must contain fields upstream_repos, downstream_repos, current_repo"
+  )
 })
 
 test_that("staged dep yaml file without current_repo content throws error", {
@@ -75,7 +87,10 @@ test_that("staged dep yaml file without current_repo content throws error", {
   current_repo:
 
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field current_repo cannot be empty"
+  )
 })
 
 test_that("staged dep yaml file with current_repo as array throws error", {
@@ -87,7 +102,10 @@ test_that("staged dep yaml file with current_repo as array throws error", {
     - repo: test/test
       host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field current_repo cannot be an array and must have entries repo, host"
+  )
 })
 
 test_that("staged dep yaml file cannot contain non-character values", {
@@ -101,7 +119,10 @@ test_that("staged dep yaml file cannot contain non-character values", {
     repo: true
     host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field current_repo must have non-array character values repo, host"
+  )
 
   text <- "---
   upstream_repos:
@@ -112,7 +133,10 @@ test_that("staged dep yaml file cannot contain non-character values", {
     repo: 456
     host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field current_repo must have non-array character values repo, host"
+  )
 
   text <- "---
   upstream_repos:
@@ -123,7 +147,10 @@ test_that("staged dep yaml file cannot contain non-character values", {
     repo: test/test
     host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field downstream_repos must have non-array character values repo, host"
+  )
 
   text <- "---
   upstream_repos:
@@ -134,7 +161,10 @@ test_that("staged dep yaml file cannot contain non-character values", {
     repo: test/test
     host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field downstream_repos must have non-array character values repo, host"
+  )
 })
 
 test_that("staged dep yaml file missing repo or host throws error", {
@@ -148,7 +178,10 @@ test_that("staged dep yaml file missing repo or host throws error", {
     repo: test/test
     not_host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field current_repo cannot be an array and must have entries repo, host"
+  )
 
   text <- "---
   upstream_repos:
@@ -161,21 +194,10 @@ test_that("staged dep yaml file missing repo or host throws error", {
     repo: test/test
     host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
-})
-
-test_that("staged dep yaml with array of current_repo is invalid", {
-
-  text <- "---
-  downstream_repos:
-
-  upstream_repos:
-
-  current_repo:
-    - repo: test/test
-      host: https://github.com
-  "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field downstream_repos cannot be an array and must have entries repo, host"
+  )
 })
 
 test_that("staged dep yaml with nesting/naming inside repo or host throws an error", {
@@ -190,7 +212,10 @@ test_that("staged dep yaml with nesting/naming inside repo or host throws an err
        - nested: test/test
     host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field current_repo must have non-array character values repo, host"
+  )
 
   text <- "---
   downstream_repos:
@@ -203,8 +228,10 @@ test_that("staged dep yaml with nesting/naming inside repo or host throws an err
       host_nested:
         https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
-
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field current_repo must have non-array character values repo, host"
+  )
 
   text <- "---
   downstream_repos:
@@ -219,7 +246,11 @@ test_that("staged dep yaml with nesting/naming inside repo or host throws an err
     repo: test/test
     host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field downstream_repos must have non-array character values repo, host"
+  )
 
   text <- "---
   downstream_repos:
@@ -235,6 +266,10 @@ test_that("staged dep yaml with nesting/naming inside repo or host throws an err
     repo: test/test
     host: https://github.com
   "
-  expect_error(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
+
+  expect_error(
+    validate_staged_deps_yaml(yaml::read_yaml(text = text)),
+    regexp = "File  invalid, field downstream_repos must have non-array character values repo, host"
+  )
 
 })

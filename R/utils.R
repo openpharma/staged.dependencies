@@ -77,29 +77,29 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
 
   # A simplified schema object to capture the schema for the yaml file
   # each entry of the list contains the top level field, with their name
-  # whether they can be NULL and their content. If array is TRUE then each element
-  # of the field should contain the listed contents (as characters)
+  # whether they can be NULL and their subfields. If array is TRUE then each element
+  # of the field should contain the listed subfields (as characters)
   # More complex schemas cannot yet be validated
   # Fields in addition to these are ignored and no error is shown
   required_schema <- list(
-    list(name = "upstream_repos", content = c("repo", "host"), nullable = TRUE, array = TRUE),
-    list(name = "downstream_repos", content = c("repo", "host"), nullable = TRUE, array = TRUE),
-    list(name = "current_repo", content = c("repo", "host"), nullable = FALSE, array = FALSE)
+    list(name = "upstream_repos", subfields = c("repo", "host"), nullable = TRUE, array = TRUE),
+    list(name = "downstream_repos", subfields = c("repo", "host"), nullable = TRUE, array = TRUE),
+    list(name = "current_repo", subfields = c("repo", "host"), nullable = FALSE, array = FALSE)
   )
 
   # helper function to validate field values
-  check_single_entry <- function(content, expected_content, field_name) {
+  check_single_entry <- function(content, expected_fields, field_name) {
     # check the required contents exist
-    if (!(all(expected_content %in% names(content)))) {
+    if (!(all(expected_fields %in% names(content)))) {
       stop("File ", file_name , " invalid, field ", field_name,
-        " cannot be an array and must have entries ", toString(expected_content)
+        " cannot be an array and must have entries ", toString(expected_fields)
       )
     }
     # and are unnamed and character scalars
-    lapply(expected_content, function(x){
+    lapply(expected_fields, function(x){
       if (!rlang::is_scalar_character(content[[x]]) || rlang::is_named(content[[x]])) {
         stop("File ", file_name , " invalid, field ", field_name,
-          " must have (non array) character values ", toString(expected_content)
+          " must have non-array character values ", toString(expected_fields)
         )
       }
     })
@@ -113,26 +113,26 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
   }
 
   # next check the contents of the fields is as expected
-  lapply(required_schema, function(field, content){
+  lapply(required_schema, function(field){
 
     # extract the contents for this field
-    content <- content[[field$name]]
+    sub_content <- content[[field$name]]
 
     # check not NULL if required and exit if NULL and that's OK
-    if (!field$nullable && is.null(content)) {
+    if (!field$nullable && is.null(sub_content)) {
       stop("File ", file_name , " invalid, field ", field$name, " cannot be empty")
     }
-    if (is.null(content)){
+    if (is.null(sub_content)){
       return(invisible(NULL))
     }
 
     # if field is not array type check content is expected
     if (!field$array) {
-      check_single_entry(content, field$content, field$name)
+      check_single_entry(sub_content, field$subfields, field$name)
     }
     else { # if field is array type - for each element of array check content is expected
-      lapply(content, check_single_entry, field$content, field$name)
+      lapply(sub_content, check_single_entry, field$subfields, field$name)
     }
-  }, content)
+  })
   return(invisible(NULL))
 }
