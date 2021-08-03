@@ -9,7 +9,7 @@ determine_branch(feature, available_branches, branch_sep = "@")
 \arguments{
 \item{feature}{feature we want to build, includes fallbacks}
 
-\item{available_branches}{branches to search in}
+\item{available_branches}{branches to search in, adds \code{main} branch last}
 
 \item{branch_sep}{separator between branches in \code{feature}, \code{/} does not
 work well with \code{git} because it clashes with the filesystem paths}
