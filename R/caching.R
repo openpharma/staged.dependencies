@@ -183,11 +183,6 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
 
   hashed_processed_repos <- character(0)
 
-  # only one of them may be filled depending on the direction
-  # should not be c() since assigned to list below removes element otherwise
-  #upstream_deps_graph <- list()
-  #downstream_deps_graph <- list()
-
   # named list of packages dependencies (depends, suggest, imports)
   # from DESCRIPTION file of package
   r_description_file_deps <- list()
@@ -224,15 +219,11 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
 
     hashed_new_repos <- c()
     if ("upstream" %in% direction) {
-      # Attention: use lapply because with vapply, vector may be NULL, otherwise assignment to
-      # upstream_deps_graph removes the element
       hashed_upstream_repos <- lapply(get_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
-      #upstream_deps_graph[[hashed_repo_and_host]] <- hashed_upstream_repos
       hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
     }
     if ("downstream" %in% direction) {
       hashed_downstream_repos <- lapply(get_deps_info(repo_dir)$downstream_repos, hash_repo_and_host)
-      #downstream_deps_graph[[hashed_repo_and_host]] <- hashed_downstream_repos
       hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
     }
     hashed_processed_repos <- c(hashed_processed_repos, hashed_repo_and_host)
