@@ -63,6 +63,28 @@ topological_sort <- function(graph) {
 }
 
 # get the descendants (all children) of node, given list mapping parent to children
+# and their distances
+get_descendants_distance <- function(parents_to_children, node) {
+  internal_recursive_fun <- function(parents_to_children, node, distance = 0L) {
+    if (is.null(parents_to_children[[node]])) {
+      return()
+    }
+    c(
+      lapply(parents_to_children[[node]], list, distance + 1L),
+      unlist(lapply(parents_to_children[[node]],
+                    internal_recursive_fun, parents_to_children = parents_to_children,
+                    distance = distance + 1L), recursive = FALSE)
+    )
+  }
+  internal_recursive_fun(parents_to_children, node) %>%
+    c(stringsAsFactors = FALSE) %>%
+    do.call(rbind.data.frame, .) %>%
+    setNames(c("id", "distance")) %>%
+    group_by(id) %>%
+    dplyr::summarise(distance = min(distance))
+}
+
+# get the descendants (all children) of node, given list mapping parent to children
 get_descendants <- function(parents_to_children, node) {
   nodes_to_process <- c(node)
   descendants <- c()

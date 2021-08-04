@@ -114,6 +114,19 @@ get_deps_info <- function(repo_dir) {
   }
 }
 
+
+get_description_deps <- function(repo_dir) {
+  fdesc <- file.path(repo_dir, "DESCRIPTION")
+  dsc <- desc::desc(fdesc)
+  return(dsc$get_deps()$package)
+}
+
+get_package_name <- function(repo_dir) {
+  fdesc <- file.path(repo_dir, "DESCRIPTION")
+  dsc <- desc::desc(fdesc)
+  return(unname(dsc$get("Package")))
+}
+
 error_if_stageddeps_inexistent <- function(project) {
   fpath <- normalizePath(
     file.path(project, STAGEDDEPS_FILENAME),
@@ -168,10 +181,18 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
   hashed_repos_to_process <- vapply(repos_to_process, hash_repo_and_host, character(1))
   rm(repos_to_process)
 
+  hashed_processed_repos <- character(0)
+
   # only one of them may be filled depending on the direction
   # should not be c() since assigned to list below removes element otherwise
-  upstream_deps_graph <- list()
-  downstream_deps_graph <- list()
+  #upstream_deps_graph <- list()
+  #downstream_deps_graph <- list()
+
+  # named list of packages dependencies (depends, suggest, imports)
+  # from DESCRIPTION file of package
+  r_description_file_deps <- list()
+  # Named vector mapping hashed_repo_and_host to package name
+  r_package_name <- c()
 
   while (length(hashed_repos_to_process) > 0) {
     hashed_repo_and_host <- hashed_repos_to_process[[1]]
@@ -198,31 +219,50 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
       )
     }
 
+    r_description_file_deps[[hashed_repo_and_host]] <- get_description_deps(repo_dir)
+    r_package_name[hashed_repo_and_host] <- get_package_name(repo_dir)
+
     hashed_new_repos <- c()
     if ("upstream" %in% direction) {
       # Attention: use lapply because with vapply, vector may be NULL, otherwise assignment to
       # upstream_deps_graph removes the element
       hashed_upstream_repos <- lapply(get_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
-      upstream_deps_graph[[hashed_repo_and_host]] <- hashed_upstream_repos
+      #upstream_deps_graph[[hashed_repo_and_host]] <- hashed_upstream_repos
       hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
     }
     if ("downstream" %in% direction) {
       hashed_downstream_repos <- lapply(get_deps_info(repo_dir)$downstream_repos, hash_repo_and_host)
-      downstream_deps_graph[[hashed_repo_and_host]] <- hashed_downstream_repos
+      #downstream_deps_graph[[hashed_repo_and_host]] <- hashed_downstream_repos
       hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
     }
-    hashed_processed_repos <- union(names(upstream_deps_graph), names(downstream_deps_graph))
+    hashed_processed_repos <- c(hashed_processed_repos, hashed_repo_and_host)
     hashed_repos_to_process <- union(
       hashed_repos_to_process, setdiff(hashed_new_repos, hashed_processed_repos)
     )
   }
 
+  #convert package names into hashed_repo_and_host and remove external packages
+  r_description_file_deps <- lapply(r_description_file_deps,
+    function(x) {
+      names(r_package_name[r_package_name %in% x])
+    }
+  )
+
   res <- list()
   if ("upstream" %in% direction) {
-    res[["upstream_deps"]] <- upstream_deps_graph
+    res[["upstream_deps"]] <- r_description_file_deps
   }
   if ("downstream" %in% direction) {
-    res[["downstream_deps"]] <- downstream_deps_graph
+    reverse_desc_file_deps <- list()
+    for(x in names(r_description_file_deps)){
+      reverse_desc_file_deps[[x]] <- character(0)
+      for(y in names(r_description_file_deps)){
+        if(x %in% r_description_file_deps[[y]]){
+          reverse_desc_file_deps[[x]] <- c(reverse_desc_file_deps[[x]], y)
+        }
+      }
+    }
+    res[["downstream_deps"]] <- reverse_desc_file_deps
   }
 
   res

@@ -482,25 +482,31 @@ dependency_structure <- function(project = ".", feature = NULL,
     local_repos = local_repos, verbose = verbose
   )
   hashed_cur_repo <- hash_repo_and_host(repo_deps_info$current_repo)
-  hashed_upstream_nodes <- get_descendants(deps[["upstream_deps"]], hashed_cur_repo)
-  hashed_downstream_nodes <- get_descendants(deps[["downstream_deps"]], hashed_cur_repo)
+  hashed_upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], hashed_cur_repo)
+  hashed_downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], hashed_cur_repo)
   hashed_remaining_nodes <- setdiff(
     union(names(deps[["upstream_deps"]]), names(deps[["downstream_deps"]])),
-    union(union(hashed_upstream_nodes, hashed_downstream_nodes), hashed_cur_repo)
+    union(union(hashed_upstream_nodes$id, hashed_downstream_nodes$id), hashed_cur_repo)
   )
 
   df <- rbind(
     cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_cur_repo), stringsAsFactors = FALSE), type = "current"
+      data.frame(unhash_repo_and_host(hashed_cur_repo),
+                 distance = 0, stringsAsFactors = FALSE), type = "current"
     ),
     cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_upstream_nodes), stringsAsFactors = FALSE), type = "upstream"
+      data.frame(unhash_repo_and_host(hashed_upstream_nodes$id),
+                 distance = hashed_upstream_nodes$distance,
+                 stringsAsFactors = FALSE), type = "upstream"
     ),
     cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_downstream_nodes), stringsAsFactors = FALSE), type = "downstream"
+      data.frame(unhash_repo_and_host(hashed_downstream_nodes$id),
+                 distance = hashed_downstream_nodes$distance,
+                 stringsAsFactors = FALSE), type = "downstream"
     ),
     cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_remaining_nodes), stringsAsFactors = FALSE), type = "other"
+      data.frame(unhash_repo_and_host(hashed_remaining_nodes),
+                 distance = as.numeric(NA), stringsAsFactors = FALSE), type = "other"
     )
   )
   # add checked out branch
