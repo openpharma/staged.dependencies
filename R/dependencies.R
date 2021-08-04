@@ -704,5 +704,32 @@ get_local_pkgs_from_config <- function() {
 
 
 
+#' TODO roxygen
+#' @export
+update_stage_dep_yaml_with_direct_deps <- function(project = ".", feature = NULL,
+                                                   local_repos = get_local_pkgs_from_config(),
+                                                   verbose = 0){
+  dep_table <- dependency_structure(
+    project = project,
+    feature = feature,
+    local_repos = local_repos,
+    return_table_only = TRUE,
+    verbose = verbose
+  )
 
+  #TODO tidy this add error handling, dry run etc.
+  current_repo <- list("repo" = dep_table[dep_table$type == "current",]$repo,
+                       "host" = dep_table[dep_table$type == "current",]$host)
+
+  upstream_repos <- dep_table[dep_table$type == "upstream" & dep_table$distance == 1, c("repo", "host")]
+  upstream_repos = setNames(apply(upstream_repos, 1, FUN = function(row) row = list(repo=row["repo"], host = row["host"])), NULL)
+
+  downstream_repos <- dep_table[dep_table$type == "downstream" & dep_table$distance == 1, c("repo", "host")]
+  downstream_repos <- setNames(apply(downstream_repos, 1, FUN = function(row) row = list(repo=row["repo"], host = row["host"])), NULL)
+
+  yaml::write_yaml(
+    list(current_repo = current_repo,
+      upstream_repos = upstream_repos,
+      downstream_repos = downstream_repos), file = file.path(project, "staged_dependencies.yaml"))
+}
 
