@@ -48,9 +48,32 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
       message(paste("clone", repo_url, "to directory", repo_dir))
     }
 
+    # catch some common errors
+    # only do this when cloning because the API calls introduce quite some time overhead
+    if (grepl("https://github.com", repo_url, fixed = TRUE)) {
+      if (!identical(httr::status_code(httr::HEAD("https://github.com")), 200L)) {
+        stop("Host https://github.com not reachable")
+      }
+      repo <- paste(tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
+      repo <- substr(repo, start = 0, stop = nchar(repo) - nchar(".git"))
+      tryCatch(
+        # will error if URL not reachable
+        gh::gh(paste0("/repos/", repo), token = Sys.getenv(token_envvar)),
+        error = function(e) {
+          stop(
+            paste0("Could not access repo '", repo,
+                   "'. Check that repo and token in envvar '", token_envvar,
+                   "' are correct.\n"),
+            e
+          )
+        }
+      )
+    }
+
     git_repo <- git2r::clone(
       url = repo_url, local_path = repo_dir, credentials = creds, progress = verbose >= 2
     )
+
     # git automatically created local tracking branch (for master or main), checkout
     # corresponding remote branch and delete local branch, so we only have remote
     # branches

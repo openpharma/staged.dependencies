@@ -64,7 +64,13 @@ topological_sort <- function(graph) {
 
 # get the descendants (all children) of node, given list mapping parent to children
 # and their distances
+# returns a data.frame with columns id, distance
 get_descendants_distance <- function(parents_to_children, node) {
+  # todo: please rewrite this function in a nicer way in PR #48
+  # dirty fix
+  if (length(parents_to_children) == 0) {
+    return(data.frame(id = character(0), distance = character(0), stringsAsFactors = FALSE))
+  }
   internal_recursive_fun <- function(parents_to_children, node, distance = 0L) {
     if (is.null(parents_to_children[[node]])) {
       return()
