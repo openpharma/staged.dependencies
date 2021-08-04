@@ -103,7 +103,11 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
 #' installed.
 #'
 #' @param repo_dir directory of repo
-install_repo_add_sha <- function(repo_dir) {
+#' @param install_external_deps logical to describe whether to install
+#'   external dependencies of package using `remotes::install_deps`
+#' @param ... Additional args passed to `remotes::install_deps`. Note `upgrade`
+#'   is set to "never" and shouldn't be passed into this function.
+install_repo_add_sha <- function(repo_dir, install_external_deps = TRUE, ...) {
   check_dir_exists(repo_dir)
 
   read_dcf <- function(path) {
@@ -168,6 +172,9 @@ install_repo_add_sha <- function(repo_dir) {
     return(invisible(NULL))
   }
 
+  if (install_external_deps) {
+    remotes::install_deps(repo_dir, dependencies = TRUE, upgrade = "never", ...)
+  }
   utils::install.packages(repo_dir, repos = NULL, type = "source")
 
   # we do not clean up the DESCRIPTION file

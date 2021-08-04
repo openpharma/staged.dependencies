@@ -10,7 +10,9 @@ install_deps_app(
   local_repos = get_local_pkgs_from_config(),
   run_gadget = TRUE,
   run_as_job = TRUE,
-  verbose = 1
+  verbose = 1,
+  install_external_deps = TRUE,
+  ...
 )
 }
 \arguments{
@@ -25,11 +27,17 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
 
-\item{run_as_job}{(\code{logical}) whether to run the installation as an RStudio job}
+\item{run_as_job}{(\code{logical}) whether to run the installation as an RStudio job.}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
+
+\item{install_external_deps}{logical to describe whether to install
+external dependencies of package using \code{remotes::install_deps}.}
+
+\item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
+is set to "never" and shouldn't be passed into this function.}
 }
 \value{
 \code{shiny.app} or value returned by app (executed as a gadget)
