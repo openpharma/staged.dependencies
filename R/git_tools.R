@@ -56,10 +56,15 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
       }
       repo <- paste(tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
       repo <- substr(repo, start = 0, stop = nchar(repo) - nchar(".git"))
-      tryCatch(
+      tryCatch({
+        # does not work for some reason
+        # httr::HEAD(
+        #   "https://api.github.com/repos/insightsengineering/teal.devel", token = token
+        # )
+
         # will error if URL not reachable
-        gh::gh(paste0("/repos/", repo), token = Sys.getenv(token_envvar)),
-        error = function(e) {
+        gh::gh(paste0("/repos/", repo), token = Sys.getenv(token_envvar))
+      }, error = function(e) {
           stop(
             paste0("Could not access repo '", repo,
                    "'. Check that repo and token in envvar '", token_envvar,
