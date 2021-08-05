@@ -718,7 +718,9 @@ get_local_pkgs_from_config <- function() {
 }
 
 
-# TODO comments here
+# Given a list of packages (and their directories in the cache) of the form
+# list(`repo @ host`=<<path>>) create a dependency graph using the R
+# description files.
 get_internal_dependencies_graph <- function(internal_dependencies,
                                             direction = "upstream") {
 
@@ -773,7 +775,12 @@ get_internal_dependencies_graph <- function(internal_dependencies,
 
 
 
-#' TODO roxygen
+#' Update existing stage_dependencies yaml file
+#'
+#' Using the existing stage_dependencies yaml file
+#' 'graph' to define internal dependencies, update the
+#' project yaml file to include to include all direct
+#' (i.e. distance 1) upstream and downstream repos
 #' @inheritParams dependency_structure
 #' @export
 update_stageddeps_yaml_with_direct_deps <- function(project = ".", feature = NULL,

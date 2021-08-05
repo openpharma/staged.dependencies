@@ -2,7 +2,7 @@
 % Please edit documentation in R/dependencies.R
 \name{update_stageddeps_yaml_with_direct_deps}
 \alias{update_stageddeps_yaml_with_direct_deps}
-\title{TODO roxygen}
+\title{Update existing stage_dependencies yaml file}
 \usage{
 update_stageddeps_yaml_with_direct_deps(
   project = ".",
@@ -27,5 +27,8 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 2: includes git checkout infos)}
 }
 \description{
-TODO roxygen
+Using the existing stage_dependencies yaml file
+'graph' to define internal dependencies, update the
+project yaml file to include to include all direct
+(i.e. distance 1) upstream and downstream repos
 }

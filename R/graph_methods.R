@@ -62,26 +62,55 @@ topological_sort <- function(graph) {
   }
 }
 
-# get the descendants (all children) of node, given list mapping parent to children
+# get the descendants (all children) of node,
+# given list mapping parent to children
 # and their distances
-get_descendants_distance <- function(parents_to_children, node) {
-  internal_recursive_fun <- function(parents_to_children, node, distance = 0L) {
-    if (is.null(parents_to_children[[node]])) {
-      return()
-    }
-    c(
-      lapply(parents_to_children[[node]], list, distance + 1L),
-      unlist(lapply(parents_to_children[[node]],
-                    internal_recursive_fun, parents_to_children = parents_to_children,
-                    distance = distance + 1L), recursive = FALSE)
+get_descendants_distance <- function(parents_to_children, starting_node) {
+
+  if (length(parents_to_children) == 0 ||
+      length(parents_to_children[[starting_node]]) == 0) {
+    return(
+      data.frame(
+        id = character(0),
+        distance = character(0),
+        stringsAsFactors = FALSE
+      )
     )
   }
-  internal_recursive_fun(parents_to_children, node) %>%
-    c(stringsAsFactors = FALSE) %>%
-    do.call(rbind.data.frame, .) %>%
-    stats::setNames(c("id", "distance")) %>%
-    group_by(.data$id) %>%
-    dplyr::summarise(distance = min(.data$distance))
+
+  # named vector accumulating node id (element names)
+  # and min distance from starting_node
+  nodes <- stats::setNames(rep(1, length(parents_to_children[[starting_node]])),
+                           parents_to_children[[starting_node]])
+
+  #index along nodes vector
+  ptr <- 1
+
+  # go through nodes vector...
+  while (length(nodes) >= ptr) {
+
+    # ... find children to current node...
+    new_nodes <- parents_to_children[[names(nodes)[ptr]]]
+
+    # ... remove those already in nodes vector
+    new_nodes <- setdiff(new_nodes, names(nodes))
+
+    # ... append others to node vector
+    new_nodes <- stats::setNames(rep(nodes[ptr] + 1, length(new_nodes)), new_nodes)
+    nodes <- c(nodes, new_nodes)
+
+    # move onto next node
+    ptr <- ptr + 1
+  }
+
+  return(
+    data.frame(
+      id = names(nodes),
+      distance = nodes,
+      stringsAsFactors = FALSE
+    )
+  )
+
 }
 
 # get the descendants (all children) of node, given list mapping parent to children
