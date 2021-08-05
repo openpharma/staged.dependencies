@@ -249,10 +249,12 @@ install_deps_app <- function(project = ".", default_feature = NULL,
           args_str <- paste(deparse(repo_dirs_to_install), collapse = "\n")
 
           other_args <- c(list(install_external_deps = install_external_deps), list(...))
-          other_args_str <- paste(deparse(args), collapse = "\n")
+          other_args_str <- paste(deparse(other_args), collapse = "\n")
 
           script <- glue::glue(
-            "lapply({args_str}, staged.dependencies:::install_repo_add_sha, {other_args_str})"
+            "do.call(
+              function(...) lapply({args_str}, staged.dependencies:::install_repo_add_sha, ...),
+            {other_args_str})"
           )
           run_job(script, "install_deps_app",
                   paste0("Install selection of deps of ", basename(project)))
