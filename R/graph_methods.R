@@ -79,9 +79,9 @@ get_descendants_distance <- function(parents_to_children, node) {
   internal_recursive_fun(parents_to_children, node) %>%
     c(stringsAsFactors = FALSE) %>%
     do.call(rbind.data.frame, .) %>%
-    setNames(c("id", "distance")) %>%
-    group_by(id) %>%
-    dplyr::summarise(distance = min(distance))
+    stats::setNames(c("id", "distance")) %>%
+    group_by(.data$id) %>%
+    dplyr::summarise(distance = min(.data$distance))
 }
 
 # get the descendants (all children) of node, given list mapping parent to children
