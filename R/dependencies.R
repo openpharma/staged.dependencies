@@ -794,7 +794,6 @@ update_stageddeps_yaml_with_direct_deps <- function(project = ".", feature = NUL
     verbose = verbose
   )
 
-  #TODO tidy this add error handling, dry run etc.
   current_repo <- list("repo" = dep_table[dep_table$type == "current",]$repo,
                        "host" = dep_table[dep_table$type == "current",]$host)
 
