@@ -339,7 +339,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
       get_deps_info(project)$downstream_repos
     } else {
 
-      internal_deps <- get_internal_deps(
+      internal_deps <- rec_checkout_internal_deps(
         list(repo_deps_info$current_repo), feature, direction = "downstream",
         local_repos = local_repos, verbose = verbose
       )
