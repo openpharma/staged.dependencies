@@ -67,50 +67,30 @@ topological_sort <- function(graph) {
 # and their distances
 get_descendants_distance <- function(parents_to_children, starting_node) {
 
-  if (length(parents_to_children) == 0 ||
-      length(parents_to_children[[starting_node]]) == 0) {
-    return(
-      data.frame(
-        id = character(0),
-        distance = character(0),
-        stringsAsFactors = FALSE
-      )
-    )
+  # implement BFS
+  nodes_to_treat <- c(starting_node) # ordered queue
+  distances <- list()
+  distances[[starting_node]] <- 0
+  while (length(nodes_to_treat) > 0) {
+    cur_node <- nodes_to_treat[[1]]
+    nodes_to_treat <- nodes_to_treat[-1]
+    for (child_node in parents_to_children[[cur_node]]) {
+      if (!child_node %in% names(distances)) {
+        nodes_to_treat <- c(nodes_to_treat, child_node)
+        distances[[child_node]] <- distances[[cur_node]] + 1
+      }
+      # otherwise, child_node was already visited before with lower distance
+    }
   }
-
-  # named vector accumulating node id (element names)
-  # and min distance from starting_node
-  nodes <- stats::setNames(rep(1, length(parents_to_children[[starting_node]])),
-                           parents_to_children[[starting_node]])
-
-  #index along nodes vector
-  ptr <- 1
-
-  # go through nodes vector...
-  while (length(nodes) >= ptr) {
-
-    # ... find children to current node...
-    new_nodes <- parents_to_children[[names(nodes)[ptr]]]
-
-    # ... remove those already in nodes vector
-    new_nodes <- setdiff(new_nodes, names(nodes))
-
-    # ... append others to node vector
-    new_nodes <- stats::setNames(rep(nodes[ptr] + 1, length(new_nodes)), new_nodes)
-    nodes <- c(nodes, new_nodes)
-
-    # move onto next node
-    ptr <- ptr + 1
-  }
+  distances[[starting_node]] <- NULL # remove starting_node
 
   return(
     data.frame(
-      id = names(nodes),
-      distance = nodes,
+      id = names(distances),
+      distance = unlist(unname(distances)),
       stringsAsFactors = FALSE
     )
   )
-
 }
 
 # get the descendants (all children) of node, given list mapping parent to children

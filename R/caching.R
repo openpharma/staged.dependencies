@@ -142,6 +142,13 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #' Recursively check out all repos to match branch determined by feature
 #' starting from repos_to_process.
 #'
+#' This uses the `staged_dependencies.yaml` to discover the upstream
+#' and downstream packages.
+#' Another function allows to check that only (and all) direct upstream
+#' and downstream packages are listed there.
+#' The packages listed there are internal packages. All other dependencies
+#' listed in the `DESCRIPTION` file are external dependencies.
+#'
 #' @md
 #' @param repos_to_process `list` of `list(repo, host)`
 #' @param feature (`character`) feature to build
@@ -153,10 +160,10 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
 #'
-#' @return A list, on entry per checkout out repository whose name is the name of the
-#'   repo in the form x @@ host and whose value is the directory to
-#'   which it has been checked out into
-get_internal_dependencies <- function(repos_to_process, feature,
+#' @return A list, on entry per checkout out repository whose name is
+#'   the name of the repo in the form `repo @ host` (`hash(repo, host)`)
+#'   and whose value is the directory to which it has been checked out into
+rec_checkout_internal_deps <- function(repos_to_process, feature,
                                       direction = c("upstream"),
                                       local_repos = get_local_pkgs_from_config(),
                                       verbose = 0) {

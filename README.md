@@ -190,6 +190,12 @@ When calling `install_deps` and similar functions, the current project is always
 its local rather than remote version is installed.
 For this, the `current_repo` field must be correct, so downstream dependencies do not fetch the remote version.
 
+The `staged_dependencies.yaml` files are only used to discover upstream and downstream packages. These are called
+internal packages. Then, the true dependency graph based on the `DESCRIPTION` files is constructed. All 
+listed upstream dependencies that are not internal are called external dependencies.
+There exists a function to check that the `staged_dependencies.yaml` files are consistent: if package `x` lists 
+`y` as a downstream package, then `y` should list `x` as an upstream package.
+
 When testing the addins, note that they run in a separate R process, so they pick up the currently installed version
 of `staged.dependencies` rather than the one loaded with `devtools::load_all()`.
 
