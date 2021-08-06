@@ -110,9 +110,7 @@ install_deps <- function(project = ".", feature = NULL,
   install_order <- get_install_order(deps[["upstream_deps"]])
   if (identical(direction, "upstream")) {
     # if installing upstream dependencies, project should appear last
-    if (utils::tail(install_order, 1)[[1]] != repo_deps_info$current_repo)
-      stop("current package", repo_deps_info$current_repo,
-           "does not appear last. Last packate to install seems to be", utils::tail(install_order, 1)[[1]])
+    stopifnot(all.equal(utils::tail(install_order, 1)[[1]], repo_deps_info$current_repo))
   }
   if (!install_project) {
     install_order <- utils::head(install_order, -1)
