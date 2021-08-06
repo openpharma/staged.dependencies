@@ -65,6 +65,7 @@ require_pkgs <- function(pkgs) {
 # stopifnot(dir.exists(..)) does not print a useful error message,
 # so use this function instead
 check_dir_exists <- function(direc, prefix = "") {
+  stopifnot(is.character(direc))
   if (!dir.exists(direc)) {
     stop(prefix, "Directory ", direc, " does not exist.")
   }
