@@ -60,6 +60,10 @@ add_project_to_local_repos <- function(project, local_repos) {
 #' @param dry_install (`logical`) dry run that lists packages that would be
 #'   installed without installing; this still checks out the git repos to
 #'   match `feature`
+#' @param install_external_deps logical to describe whether to install
+#'   external dependencies of package using `remotes::install_deps`.
+#' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
+#'   is set to "never" and shouldn't be passed into this function.
 #' @inheritParams rec_checkout_internal_deps
 #'
 #' @return installed packages in installation order
@@ -78,7 +82,8 @@ add_project_to_local_repos <- function(project, local_repos) {
 install_deps <- function(project = ".", feature = NULL,
                                   local_repos = get_local_pkgs_from_config(),
                                   direction = "upstream",
-                                  install_project = TRUE, dry_install = FALSE, verbose = 0) {
+                                  install_project = TRUE, dry_install = FALSE, verbose = 0,
+                                  install_external_deps = TRUE, ...) {
   stopifnot(
     is.data.frame(local_repos) || is.null(local_repos),
     is.logical(install_project),
@@ -119,7 +124,7 @@ install_deps <- function(project = ".", feature = NULL,
     is_local <- hash_repo_and_host(repo_and_host) %in% names(hashed_repo_to_dir)
     repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
     if (!dry_install) {
-      install_repo_add_sha(repo_dir)
+      install_repo_add_sha(repo_dir, install_external_deps, ...)
     } else if (verbose >= 1) {
       cat_nl("(Dry run) Skipping installation of ", repo_dir)
     }
@@ -141,7 +146,7 @@ install_deps <- function(project = ".", feature = NULL,
 #' @param default_feature (`character`) default feature, see also the parameter
 #'   `feature` of `\link{install_deps}`
 #' @param run_gadget (`logical`) whether to run the app as a gadget
-#' @param run_as_job (`logical`) whether to run the installation as an RStudio job
+#' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
 #' @inheritParams install_deps
 #' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
@@ -149,7 +154,7 @@ install_deps <- function(project = ".", feature = NULL,
 install_deps_app <- function(project = ".", default_feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              run_gadget = TRUE, run_as_job = TRUE,
-                             verbose = 1) {
+                             verbose = 1, install_external_deps = TRUE, ...) {
   require_pkgs(c("shiny", "miniUI"))
 
   # take local version of project (rather than remote)
@@ -235,7 +240,6 @@ install_deps_app <- function(project = ".", default_feature = NULL,
           repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
 
           repo_dirs_to_install <- c(repo_dirs_to_install, repo_dir)
-          #install_repo_add_sha(repo_dir)
         }
 
         if (verbose >= 1) {
@@ -245,13 +249,19 @@ install_deps_app <- function(project = ".", default_feature = NULL,
           # note: this uses the currently installed version of this package because
           # it spans a new R process (not the loaded version)
           args_str <- paste(deparse(repo_dirs_to_install), collapse = "\n")
+
+          other_args <- c(list(install_external_deps = install_external_deps), list(...))
+          other_args_str <- paste(deparse(other_args), collapse = "\n")
+
           script <- glue::glue(
-            "lapply({args_str}, staged.dependencies:::install_repo_add_sha)"
+            "do.call(
+              function(...) lapply({args_str}, staged.dependencies:::install_repo_add_sha, ...),
+            {other_args_str})"
           )
           run_job(script, "install_deps_app",
                   paste0("Install selection of deps of ", basename(project)))
         } else {
-          lapply(repo_dirs_to_install, install_repo_add_sha)
+          lapply(repo_dirs_to_install, install_repo_add_sha, install_external_deps, ...)
         }
         if (verbose >= 1) {
           message("Installed directories in order: ", repo_dirs_to_install)
@@ -317,7 +327,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
                              local_repos = get_local_pkgs_from_config(),
                              recursive = TRUE, dry_install_and_check = FALSE, check_args = NULL,
                              only_tests = FALSE,
-                             verbose = 0) {
+                             verbose = 0, install_external_deps = TRUE, ...) {
   stopifnot(
     is.data.frame(local_repos) || is.null(local_repos),
     is.logical(recursive),
@@ -408,7 +418,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
       }
     }
     if (!dry_install_and_check) {
-      install_repo_add_sha(repo_dir)
+      install_repo_add_sha(repo_dir, install_external_deps, ...)
     } else if (verbose >= 1) {
       cat_nl("(Dry run): Would install ", repo_dir)
     }

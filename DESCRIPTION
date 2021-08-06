@@ -15,6 +15,7 @@ Imports:
     git2r,
     glue,
     rcmdcheck,
+    remotes,
     rlang,
     stats,
     utils,

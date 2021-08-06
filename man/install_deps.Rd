@@ -11,7 +11,9 @@ install_deps(
   direction = "upstream",
   install_project = TRUE,
   dry_install = FALSE,
-  verbose = 0
+  verbose = 0,
+  install_external_deps = TRUE,
+  ...
 )
 }
 \arguments{
@@ -38,6 +40,12 @@ match \code{feature}}
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
+
+\item{install_external_deps}{logical to describe whether to install
+external dependencies of package using \code{remotes::install_deps}.}
+
+\item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
+is set to "never" and shouldn't be passed into this function.}
 }
 \value{
 installed packages in installation order
