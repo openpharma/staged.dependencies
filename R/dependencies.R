@@ -64,7 +64,7 @@ add_project_to_local_repos <- function(project, local_repos) {
 #'   external dependencies of package using `remotes::install_deps`.
 #' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
-#' @inheritParams rec_checkout_repos
+#' @inheritParams rec_checkout_internal_deps
 #'
 #' @return installed packages in installation order
 #'
@@ -100,10 +100,12 @@ install_deps <- function(project = ".", feature = NULL,
 
   repo_deps_info <- get_deps_info(project)
 
-  deps <- rec_checkout_repos(
+  internal_deps <- rec_checkout_internal_deps(
     list(repo_deps_info$current_repo), feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
+
+  deps <- get_true_deps_graph(internal_deps, direction = direction)
 
   install_order <- get_install_order(deps[["upstream_deps"]])
   if (identical(direction, "upstream")) {
@@ -346,10 +348,14 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     downstream_repos <- if (!recursive) {
       get_deps_info(project)$downstream_repos
     } else {
-      deps <- rec_checkout_repos(
-        list(repo_deps_info$current_repo), feature, verbose = verbose,
-        direction = "downstream", local_repos = local_repos
+
+      internal_deps <- rec_checkout_internal_deps(
+        list(repo_deps_info$current_repo), feature, direction = "downstream",
+        local_repos = local_repos, verbose = verbose
       )
+
+      deps <- get_true_deps_graph(internal_deps, direction = "downstream")
+
       lapply(get_descendants(
         deps[["downstream_deps"]], hash_repo_and_host(repo_deps_info$current_repo)
       ), unhash_repo_and_host)
@@ -362,10 +368,13 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     }, logical(1)))
   )
 
-  deps <- rec_checkout_repos(
-    downstream_repos, feature, verbose = verbose,
-    local_repos = local_repos, direction = "upstream"
+  internal_deps <- rec_checkout_internal_deps(
+    list(repo_deps_info$current_repo), feature, direction = "upstream",
+    local_repos = local_repos, verbose = verbose
   )
+
+  deps <- get_true_deps_graph(internal_deps, direction = "upstream")
+
   install_order <- get_install_order(deps[["upstream_deps"]])
 
   hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
@@ -487,30 +496,41 @@ dependency_structure <- function(project = ".", feature = NULL,
 
   repo_deps_info <- get_deps_info(project)
 
-  deps <- rec_checkout_repos(
+  internal_deps <- rec_checkout_internal_deps(
     list(repo_deps_info$current_repo), feature, direction = c("upstream", "downstream"),
     local_repos = local_repos, verbose = verbose
   )
+
+  deps <- get_true_deps_graph(
+    internal_deps,
+    direction = c("upstream", "downstream")
+  )
+
   hashed_cur_repo <- hash_repo_and_host(repo_deps_info$current_repo)
-  hashed_upstream_nodes <- get_descendants(deps[["upstream_deps"]], hashed_cur_repo)
-  hashed_downstream_nodes <- get_descendants(deps[["downstream_deps"]], hashed_cur_repo)
+  hashed_upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], hashed_cur_repo)
+  hashed_downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], hashed_cur_repo)
   hashed_remaining_nodes <- setdiff(
     union(names(deps[["upstream_deps"]]), names(deps[["downstream_deps"]])),
-    union(union(hashed_upstream_nodes, hashed_downstream_nodes), hashed_cur_repo)
+    union(union(hashed_upstream_nodes$id, hashed_downstream_nodes$id), hashed_cur_repo)
   )
 
   df <- rbind(
+    data.frame(unhash_repo_and_host(hashed_cur_repo),
+               distance = 0, type = "current", stringsAsFactors = FALSE),
     cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_cur_repo), stringsAsFactors = FALSE), type = "current"
+      data.frame(unhash_repo_and_host(hashed_upstream_nodes$id),
+                 distance = hashed_upstream_nodes$distance,
+                 stringsAsFactors = FALSE), type = "upstream"
     ),
     cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_upstream_nodes), stringsAsFactors = FALSE), type = "upstream"
+      data.frame(unhash_repo_and_host(hashed_downstream_nodes$id),
+                 distance = hashed_downstream_nodes$distance,
+                 stringsAsFactors = FALSE), type = "downstream"
     ),
     cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_downstream_nodes), stringsAsFactors = FALSE), type = "downstream"
-    ),
-    cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_remaining_nodes), stringsAsFactors = FALSE), type = "other"
+      data.frame(unhash_repo_and_host(hashed_remaining_nodes),
+                 stringsAsFactors = FALSE),
+      distance = as.numeric(NA), type = "other"
     )
   )
   # add checked out branch
@@ -707,6 +727,101 @@ get_local_pkgs_from_config <- function() {
 }
 
 
+# Given a named list of packages of the form
+# list(name = <<path to package>>), create a dependency graph
+# using the R DESCRIPTION files, rather than the
+# staged_dependencies.yaml files
+# The dependency graph is defined over the names
+get_true_deps_graph <- function(pkgs,
+                                    direction = "upstream") {
+
+  # get the package names from the DESCRIPTION files
+  # (they may not be the same name as the repo name)
+  package_names <- vapply(pkgs,
+    function(repo_dir) {
+      desc::desc_get_field("Package", file = repo_dir)
+    },
+    FUN.VALUE = character(1)
+  )
+
+  # get the Imports, Suggests, Depends for each package
+  # from the package DESCRIPTION files, filter for only
+  # the internal packages and name in form hashed_repo_and_host
+  upstream_deps <- lapply(pkgs,
+    function(repo_dir) {
+      names(package_names)[
+        package_names %in% desc::desc_get_deps(file = repo_dir)$package
+      ]
+    }
+  )
+
+  res <- list()
+  if ("upstream" %in% direction) {
+    res[["upstream_deps"]] <- upstream_deps
+  }
+  if ("downstream" %in% direction) {
+    downstream_deps <- lapply(upstream_deps, function(x) list())
+    for (x in names(upstream_deps)) {
+      for (y in upstream_deps[[x]]) {
+        downstream_deps[[y]] <- c(downstream_deps[[y]], x)
+      }
+    }
+
+    res[["downstream_deps"]] <- downstream_deps
+  }
+
+  res
+
+}
 
 
+# dep_table: dependency table as returned by `dependency_structure`
+yaml_from_dep_table <- function(dep_table) {
+  upstream_repos <- dep_table[dep_table$type == "upstream" & dep_table$distance == 1, c("repo", "host")]
+  downstream_repos <- dep_table[dep_table$type == "downstream" & dep_table$distance == 1, c("repo", "host")]
+  list(
+    current_repo = list(
+      repo = dep_table[dep_table$type == "current",]$repo,
+      host = dep_table[dep_table$type == "current",]$host
+    ),
+    upstream_repos = Map(
+      function(repo, host) list(repo = repo, host = host),
+      upstream_repos$repo, upstream_repos$host
+    ),
+    downstream_repos = Map(
+      function(repo, host) list(repo = repo, host = host),
+      downstream_repos$repo, downstream_repos$host
+    )
+  )
+}
+
+
+#' Update existing stage_dependencies yaml file
+#'
+#' Using the existing stage_dependencies yaml file
+#' 'graph' to define internal dependencies, update the
+#' project yaml file to include to include all direct
+#' (i.e. distance 1) upstream and downstream repos
+#' @inheritParams dependency_structure
+#' @export
+update_with_direct_deps <- function(project = ".",
+                                    feature = NULL,
+                                    local_repos = get_local_pkgs_from_config(),
+                                    verbose = 0){
+  dep_table <- dependency_structure(
+    project = project,
+    feature = feature,
+    local_repos = local_repos,
+    return_table_only = TRUE,
+    verbose = verbose
+  )
+
+  yaml_contents <- yaml_from_dep_table(dep_table)
+  yaml::write_yaml(
+    list(current_repo = yaml_contents$current_repo,
+         upstream_repos = yaml_contents$upstream_repos,
+         downstream_repos = yaml_contents$downstream_repos),
+    file = file.path(project, STAGEDDEPS_FILENAME)
+  )
+}
 

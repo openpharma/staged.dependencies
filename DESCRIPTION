@@ -7,6 +7,7 @@ Authors@R: c(
   person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = "aut")
   )
 Imports:
+    desc,
     devtools,
     digest,
     dplyr,
@@ -16,6 +17,7 @@ Imports:
     rcmdcheck,
     remotes,
     rlang,
+    stats,
     utils,
     yaml,
 Description: When developing multiple dependent packages, it is often useful to introduce development
