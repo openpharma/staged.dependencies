@@ -19,6 +19,7 @@ Imports:
     rlang,
     stats,
     utils,
+    withr,
     yaml,
 Description: When developing multiple dependent packages, it is often useful to introduce development
   stages (devel, pre-release, release) that synchronize these packages. 
