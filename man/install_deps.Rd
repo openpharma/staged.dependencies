@@ -2,7 +2,7 @@
 % Please edit documentation in R/dependencies.R
 \name{install_deps}
 \alias{install_deps}
-\title{Install upstream dependencies of project corresponding to feature}
+\title{Install dependencies of project corresponding to feature}
 \usage{
 install_deps(
   project = ".",
@@ -51,8 +51,10 @@ is set to "never" and shouldn't be passed into this function.}
 installed packages in installation order
 }
 \description{
-This reads the upstream dependencies for the project (recursively) and
+This reads the dependencies for the project (recursively) and
 installs the right branches based on the feature.
+The dependencies can be upstream (by default) and downstream (to
+install downstream packages as well).
 }
 \details{
 It throws a warning if the currently checked out branch in the project
