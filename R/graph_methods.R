@@ -62,6 +62,37 @@ topological_sort <- function(graph) {
   }
 }
 
+# get the descendants (all children) of node,
+# given list mapping parent to children
+# and their distances
+get_descendants_distance <- function(parents_to_children, starting_node) {
+
+  # implement BFS
+  nodes_to_treat <- c(starting_node) # ordered queue
+  distances <- list()
+  distances[[starting_node]] <- 0
+  while (length(nodes_to_treat) > 0) {
+    cur_node <- nodes_to_treat[[1]]
+    nodes_to_treat <- nodes_to_treat[-1]
+    for (child_node in parents_to_children[[cur_node]]) {
+      if (!child_node %in% names(distances)) {
+        nodes_to_treat <- c(nodes_to_treat, child_node)
+        distances[[child_node]] <- distances[[cur_node]] + 1
+      }
+      # otherwise, child_node was already visited before with lower distance
+    }
+  }
+  distances[[starting_node]] <- NULL # remove starting_node
+
+  return(
+    data.frame(
+      id = names(distances),
+      distance = unlist(unname(distances)),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
 # get the descendants (all children) of node, given list mapping parent to children
 get_descendants <- function(parents_to_children, node) {
   nodes_to_process <- c(node)

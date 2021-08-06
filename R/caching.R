@@ -114,13 +114,14 @@ get_deps_info <- function(repo_dir) {
   }
 }
 
+
 error_if_stageddeps_inexistent <- function(project) {
   fpath <- normalizePath(
     file.path(project, STAGEDDEPS_FILENAME),
     winslash = "/", mustWork = FALSE # output error, see below
   )
   if (!file.exists(fpath)) {
-    stop("file staged_dependencies.yaml does not exist in project folder: not restoring anything")
+    stop("file ", STAGEDDEPS_FILENAME, " does not exist in project folder: not restoring anything")
   }
 }
 
@@ -141,6 +142,13 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #' Recursively check out all repos to match branch determined by feature
 #' starting from repos_to_process.
 #'
+#' This uses the `staged_dependencies.yaml` to discover the upstream
+#' and downstream packages.
+#' Another function allows to check that only (and all) direct upstream
+#' and downstream packages are listed there.
+#' The packages listed there are internal packages. All other dependencies
+#' listed in the `DESCRIPTION` file are external dependencies.
+#'
 #' @md
 #' @param repos_to_process `list` of `list(repo, host)`
 #' @param feature (`character`) feature to build
@@ -152,10 +160,13 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
 #'
-#' @return the upstream and/or downstream dependency graphs
-rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstream"),
-                               local_repos = get_local_pkgs_from_config(),
-                               verbose = 0) {
+#' @return A list, on entry per checkout out repository whose name is
+#'   the name of the repo in the form `repo @ host` (`hash(repo, host)`)
+#'   and whose value is the directory to which it has been checked out into
+rec_checkout_internal_deps <- function(repos_to_process, feature,
+                                      direction = c("upstream"),
+                                      local_repos = get_local_pkgs_from_config(),
+                                      verbose = 0) {
   stopifnot(
     is.list(repos_to_process),
     all(direction %in% c("upstream", "downstream")), length(direction) >= 1
@@ -168,10 +179,7 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
   hashed_repos_to_process <- vapply(repos_to_process, hash_repo_and_host, character(1))
   rm(repos_to_process)
 
-  # only one of them may be filled depending on the direction
-  # should not be c() since assigned to list below removes element otherwise
-  upstream_deps_graph <- list()
-  downstream_deps_graph <- list()
+  hashed_processed_repos <- list()
 
   while (length(hashed_repos_to_process) > 0) {
     hashed_repo_and_host <- hashed_repos_to_process[[1]]
@@ -200,30 +208,18 @@ rec_checkout_repos <- function(repos_to_process, feature, direction = c("upstrea
 
     hashed_new_repos <- c()
     if ("upstream" %in% direction) {
-      # Attention: use lapply because with vapply, vector may be NULL, otherwise assignment to
-      # upstream_deps_graph removes the element
       hashed_upstream_repos <- lapply(get_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
-      upstream_deps_graph[[hashed_repo_and_host]] <- hashed_upstream_repos
       hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
     }
     if ("downstream" %in% direction) {
       hashed_downstream_repos <- lapply(get_deps_info(repo_dir)$downstream_repos, hash_repo_and_host)
-      downstream_deps_graph[[hashed_repo_and_host]] <- hashed_downstream_repos
       hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
     }
-    hashed_processed_repos <- union(names(upstream_deps_graph), names(downstream_deps_graph))
+    hashed_processed_repos[[hashed_repo_and_host]] <- repo_dir
     hashed_repos_to_process <- union(
-      hashed_repos_to_process, setdiff(hashed_new_repos, hashed_processed_repos)
+      hashed_repos_to_process, setdiff(hashed_new_repos, names(hashed_processed_repos))
     )
   }
 
-  res <- list()
-  if ("upstream" %in% direction) {
-    res[["upstream_deps"]] <- upstream_deps_graph
-  }
-  if ("downstream" %in% direction) {
-    res[["downstream_deps"]] <- downstream_deps_graph
-  }
-
-  res
+  return(hashed_processed_repos)
 }
