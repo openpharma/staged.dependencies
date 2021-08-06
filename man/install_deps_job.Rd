@@ -25,6 +25,8 @@ package (\code{project})}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
 installed without installing; this still checks out the git repos to
 match \code{feature}}
+    \item{\code{install_external_deps}}{logical to describe whether to install
+external dependencies of package using \code{remotes::install_deps}.}
     \item{\code{local_repos}}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
     \item{\code{direction}}{(\code{character}) either or both of "upstream" and "downstream"

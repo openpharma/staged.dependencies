@@ -4,10 +4,16 @@
 \alias{install_repo_add_sha}
 \title{Install a git repository}
 \usage{
-install_repo_add_sha(repo_dir)
+install_repo_add_sha(repo_dir, install_external_deps = TRUE, ...)
 }
 \arguments{
 \item{repo_dir}{directory of repo}
+
+\item{install_external_deps}{logical to describe whether to install
+external dependencies of package using `remotes::install_deps`}
+
+\item{...}{Additional args passed to `remotes::install_deps`. Note `upgrade`
+is set to "never" and shouldn't be passed into this function.}
 }
 \description{
 It adds the git SHA to the DESCRIPTION file, so that the package

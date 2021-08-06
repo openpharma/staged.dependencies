@@ -62,7 +62,11 @@ add_project_to_local_repos <- function(project, local_repos) {
 #' @param dry_install (`logical`) dry run that lists packages that would be
 #'   installed without installing; this still checks out the git repos to
 #'   match `feature`
-#' @inheritParams rec_checkout_repos
+#' @param install_external_deps logical to describe whether to install
+#'   external dependencies of package using `remotes::install_deps`.
+#' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
+#'   is set to "never" and shouldn't be passed into this function.
+#' @inheritParams rec_checkout_internal_deps
 #'
 #' @return installed packages in installation order
 #'
@@ -80,7 +84,8 @@ add_project_to_local_repos <- function(project, local_repos) {
 install_deps <- function(project = ".", feature = NULL,
                                   local_repos = get_local_pkgs_from_config(),
                                   direction = "upstream",
-                                  install_project = TRUE, dry_install = FALSE, verbose = 0) {
+                                  install_project = TRUE, dry_install = FALSE, verbose = 0,
+                                  install_external_deps = TRUE, ...) {
   stopifnot(
     is.data.frame(local_repos) || is.null(local_repos),
     is.logical(install_project),
@@ -97,10 +102,12 @@ install_deps <- function(project = ".", feature = NULL,
 
   repo_deps_info <- get_deps_info(project)
 
-  deps <- rec_checkout_repos(
+  internal_deps <- rec_checkout_internal_deps(
     list(repo_deps_info$current_repo), feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
+
+  deps <- get_true_deps_graph(internal_deps, direction = direction)
 
   install_order <- get_install_order(deps[["upstream_deps"]])
   if (identical(direction, "upstream")) {
@@ -119,7 +126,7 @@ install_deps <- function(project = ".", feature = NULL,
     is_local <- hash_repo_and_host(repo_and_host) %in% names(hashed_repo_to_dir)
     repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
     if (!dry_install) {
-      install_repo_add_sha(repo_dir)
+      install_repo_add_sha(repo_dir, install_external_deps, ...)
     } else if (verbose >= 1) {
       cat_nl("(Dry run) Skipping installation of ", repo_dir)
     }
@@ -141,7 +148,7 @@ install_deps <- function(project = ".", feature = NULL,
 #' @param default_feature (`character`) default feature, see also the parameter
 #'   `feature` of `\link{install_deps}`
 #' @param run_gadget (`logical`) whether to run the app as a gadget
-#' @param run_as_job (`logical`) whether to run the installation as an RStudio job
+#' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
 #' @inheritParams install_deps
 #' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
@@ -149,7 +156,7 @@ install_deps <- function(project = ".", feature = NULL,
 install_deps_app <- function(project = ".", default_feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              run_gadget = TRUE, run_as_job = TRUE,
-                             verbose = 1) {
+                             verbose = 1, install_external_deps = TRUE, ...) {
   require_pkgs(c("shiny", "miniUI"))
 
   # take local version of project (rather than remote)
@@ -235,7 +242,6 @@ install_deps_app <- function(project = ".", default_feature = NULL,
           repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
 
           repo_dirs_to_install <- c(repo_dirs_to_install, repo_dir)
-          #install_repo_add_sha(repo_dir)
         }
 
         if (verbose >= 1) {
@@ -245,13 +251,19 @@ install_deps_app <- function(project = ".", default_feature = NULL,
           # note: this uses the currently installed version of this package because
           # it spans a new R process (not the loaded version)
           args_str <- paste(deparse(repo_dirs_to_install), collapse = "\n")
+
+          other_args <- c(list(install_external_deps = install_external_deps), list(...))
+          other_args_str <- paste(deparse(other_args), collapse = "\n")
+
           script <- glue::glue(
-            "lapply({args_str}, staged.dependencies:::install_repo_add_sha)"
+            "do.call(
+              function(...) lapply({args_str}, staged.dependencies:::install_repo_add_sha, ...),
+            {other_args_str})"
           )
           run_job(script, "install_deps_app",
                   paste0("Install selection of deps of ", basename(project)))
         } else {
-          lapply(repo_dirs_to_install, install_repo_add_sha)
+          lapply(repo_dirs_to_install, install_repo_add_sha, install_external_deps, ...)
         }
         if (verbose >= 1) {
           message("Installed directories in order: ", repo_dirs_to_install)
@@ -317,7 +329,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
                              local_repos = get_local_pkgs_from_config(),
                              recursive = TRUE, dry_install_and_check = FALSE, check_args = NULL,
                              only_tests = FALSE,
-                             verbose = 0) {
+                             verbose = 0, install_external_deps = TRUE, ...) {
   stopifnot(
     is.data.frame(local_repos) || is.null(local_repos),
     is.logical(recursive),
@@ -338,10 +350,14 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     downstream_repos <- if (!recursive) {
       get_deps_info(project)$downstream_repos
     } else {
-      deps <- rec_checkout_repos(
-        list(repo_deps_info$current_repo), feature, verbose = verbose,
-        direction = "downstream", local_repos = local_repos
+
+      internal_deps <- rec_checkout_internal_deps(
+        list(repo_deps_info$current_repo), feature, direction = "downstream",
+        local_repos = local_repos, verbose = verbose
       )
+
+      deps <- get_true_deps_graph(internal_deps, direction = "downstream")
+
       lapply(get_descendants(
         deps[["downstream_deps"]], hash_repo_and_host(repo_deps_info$current_repo)
       ), unhash_repo_and_host)
@@ -354,10 +370,13 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     }, logical(1)))
   )
 
-  deps <- rec_checkout_repos(
-    downstream_repos, feature, verbose = verbose,
-    local_repos = local_repos, direction = "upstream"
+  internal_deps <- rec_checkout_internal_deps(
+    list(repo_deps_info$current_repo), feature, direction = "upstream",
+    local_repos = local_repos, verbose = verbose
   )
+
+  deps <- get_true_deps_graph(internal_deps, direction = "upstream")
+
   install_order <- get_install_order(deps[["upstream_deps"]])
 
   hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
@@ -401,7 +420,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
       }
     }
     if (!dry_install_and_check) {
-      install_repo_add_sha(repo_dir)
+      install_repo_add_sha(repo_dir, install_external_deps, ...)
     } else if (verbose >= 1) {
       cat_nl("(Dry run): Would install ", repo_dir)
     }
@@ -480,10 +499,16 @@ dependency_structure <- function(project = ".", feature = NULL,
 
   repo_deps_info <- get_deps_info(project)
 
-  deps <- rec_checkout_repos(
+  internal_deps <- rec_checkout_internal_deps(
     list(repo_deps_info$current_repo), feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
+
+  deps <- get_true_deps_graph(
+    internal_deps,
+    direction = c("upstream", "downstream")
+  )
+
   hashed_cur_repo <- hash_repo_and_host(repo_deps_info$current_repo)
   hashed_upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], hashed_cur_repo)
   hashed_downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], hashed_cur_repo)
@@ -495,10 +520,8 @@ dependency_structure <- function(project = ".", feature = NULL,
   )
 
   df <- rbind(
-    cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_cur_repo),
-                 distance = 0, stringsAsFactors = FALSE), type = "current"
-    ),
+    data.frame(unhash_repo_and_host(hashed_cur_repo),
+               distance = 0, type = "current", stringsAsFactors = FALSE),
     cbind_handle_empty(
       data.frame(unhash_repo_and_host(hashed_upstream_nodes$id),
                  distance = hashed_upstream_nodes$distance,
@@ -511,7 +534,8 @@ dependency_structure <- function(project = ".", feature = NULL,
     ),
     cbind_handle_empty(
       data.frame(unhash_repo_and_host(hashed_remaining_nodes),
-                 stringsAsFactors = FALSE), distance = as.numeric(NA), type = "other"
+                 stringsAsFactors = FALSE),
+      distance = as.numeric(NA), type = "other"
     )
   )
   # add checked out branch
@@ -714,12 +738,87 @@ get_local_pkgs_from_config <- function() {
 }
 
 
+# Given a named list of packages of the form
+# list(name = <<path to package>>), create a dependency graph
+# using the R DESCRIPTION files, rather than the
+# staged_dependencies.yaml files
+# The dependency graph is defined over the names
+get_true_deps_graph <- function(pkgs,
+                                    direction = "upstream") {
 
-#' TODO roxygen
+  # get the package names from the DESCRIPTION files
+  # (they may not be the same name as the repo name)
+  package_names <- vapply(pkgs,
+    function(repo_dir) {
+      desc::desc_get_field("Package", file = repo_dir)
+    },
+    FUN.VALUE = character(1)
+  )
+
+  # get the Imports, Suggests, Depends for each package
+  # from the package DESCRIPTION files, filter for only
+  # the internal packages and name in form hashed_repo_and_host
+  upstream_deps <- lapply(pkgs,
+    function(repo_dir) {
+      names(package_names)[
+        package_names %in% desc::desc_get_deps(file = repo_dir)$package
+      ]
+    }
+  )
+
+  res <- list()
+  if ("upstream" %in% direction) {
+    res[["upstream_deps"]] <- upstream_deps
+  }
+  if ("downstream" %in% direction) {
+    downstream_deps <- lapply(upstream_deps, function(x) list())
+    for (x in names(upstream_deps)) {
+      for (y in upstream_deps[[x]]) {
+        downstream_deps[[y]] <- c(downstream_deps[[y]], x)
+      }
+    }
+
+    res[["downstream_deps"]] <- downstream_deps
+  }
+
+  res
+
+}
+
+
+# dep_table: dependency table as returned by `dependency_structure`
+yaml_from_dep_table <- function(dep_table) {
+  upstream_repos <- dep_table[dep_table$type == "upstream" & dep_table$distance == 1, c("repo", "host")]
+  downstream_repos <- dep_table[dep_table$type == "downstream" & dep_table$distance == 1, c("repo", "host")]
+  list(
+    current_repo = list(
+      repo = dep_table[dep_table$type == "current",]$repo,
+      host = dep_table[dep_table$type == "current",]$host
+    ),
+    upstream_repos = Map(
+      function(repo, host) list(repo = repo, host = host),
+      upstream_repos$repo, upstream_repos$host
+    ),
+    downstream_repos = Map(
+      function(repo, host) list(repo = repo, host = host),
+      downstream_repos$repo, downstream_repos$host
+    )
+  )
+}
+
+
+#' Update existing stage_dependencies yaml file
+#'
+#' Using the existing stage_dependencies yaml file
+#' 'graph' to define internal dependencies, update the
+#' project yaml file to include to include all direct
+#' (i.e. distance 1) upstream and downstream repos
+#' @inheritParams dependency_structure
 #' @export
-update_stage_dep_yaml_with_direct_deps <- function(project = ".", feature = NULL,
-                                                   local_repos = get_local_pkgs_from_config(),
-                                                   verbose = 0){
+update_with_direct_deps <- function(project = ".",
+                                    feature = NULL,
+                                    local_repos = get_local_pkgs_from_config(),
+                                    verbose = 0){
   dep_table <- dependency_structure(
     project = project,
     feature = feature,
@@ -728,19 +827,12 @@ update_stage_dep_yaml_with_direct_deps <- function(project = ".", feature = NULL
     verbose = verbose
   )
 
-  #TODO tidy this add error handling, dry run etc.
-  current_repo <- list("repo" = dep_table[dep_table$type == "current",]$repo,
-                       "host" = dep_table[dep_table$type == "current",]$host)
-
-  upstream_repos <- dep_table[dep_table$type == "upstream" & dep_table$distance == 1, c("repo", "host")]
-  upstream_repos = setNames(apply(upstream_repos, 1, FUN = function(row) row = list(repo=row["repo"], host = row["host"])), NULL)
-
-  downstream_repos <- dep_table[dep_table$type == "downstream" & dep_table$distance == 1, c("repo", "host")]
-  downstream_repos <- setNames(apply(downstream_repos, 1, FUN = function(row) row = list(repo=row["repo"], host = row["host"])), NULL)
-
+  yaml_contents <- yaml_from_dep_table(dep_table)
   yaml::write_yaml(
-    list(current_repo = current_repo,
-      upstream_repos = upstream_repos,
-      downstream_repos = downstream_repos), file = file.path(project, "staged_dependencies.yaml"))
+    list(current_repo = yaml_contents$current_repo,
+         upstream_repos = yaml_contents$upstream_repos,
+         downstream_repos = yaml_contents$downstream_repos),
+    file = file.path(project, STAGEDDEPS_FILENAME)
+  )
 }
 

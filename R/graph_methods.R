@@ -62,32 +62,35 @@ topological_sort <- function(graph) {
   }
 }
 
-# get the descendants (all children) of node, given list mapping parent to children
+# get the descendants (all children) of node,
+# given list mapping parent to children
 # and their distances
-# returns a data.frame with columns id, distance
-get_descendants_distance <- function(parents_to_children, node) {
-  # todo: please rewrite this function in a nicer way in PR #48
-  # dirty fix
-  if (length(parents_to_children) == 0) {
-    return(data.frame(id = character(0), distance = character(0), stringsAsFactors = FALSE))
-  }
-  internal_recursive_fun <- function(parents_to_children, node, distance = 0L) {
-    if (is.null(parents_to_children[[node]])) {
-      return()
+get_descendants_distance <- function(parents_to_children, starting_node) {
+
+  # implement BFS
+  nodes_to_treat <- c(starting_node) # ordered queue
+  distances <- list()
+  distances[[starting_node]] <- 0
+  while (length(nodes_to_treat) > 0) {
+    cur_node <- nodes_to_treat[[1]]
+    nodes_to_treat <- nodes_to_treat[-1]
+    for (child_node in parents_to_children[[cur_node]]) {
+      if (!child_node %in% names(distances)) {
+        nodes_to_treat <- c(nodes_to_treat, child_node)
+        distances[[child_node]] <- distances[[cur_node]] + 1
+      }
+      # otherwise, child_node was already visited before with lower distance
     }
-    c(
-      lapply(parents_to_children[[node]], list, distance + 1L),
-      unlist(lapply(parents_to_children[[node]],
-                    internal_recursive_fun, parents_to_children = parents_to_children,
-                    distance = distance + 1L), recursive = FALSE)
-    )
   }
-  internal_recursive_fun(parents_to_children, node) %>%
-    c(stringsAsFactors = FALSE) %>%
-    do.call(rbind.data.frame, .) %>%
-    setNames(c("id", "distance")) %>%
-    group_by(id) %>%
-    dplyr::summarise(distance = min(distance))
+  distances[[starting_node]] <- NULL # remove starting_node
+
+  return(
+    data.frame(
+      id = names(distances),
+      distance = unlist(unname(distances)),
+      stringsAsFactors = FALSE
+    )
+  )
 }
 
 # get the descendants (all children) of node, given list mapping parent to children

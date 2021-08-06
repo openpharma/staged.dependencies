@@ -16,7 +16,9 @@ Imports:
     gh,
     glue,
     rcmdcheck,
+    remotes,
     rlang,
+    stats,
     utils,
     yaml,
 Description: When developing multiple dependent packages, it is often useful to introduce development
