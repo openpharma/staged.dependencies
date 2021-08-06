@@ -59,7 +59,7 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
         if (!identical(httr::status_code(httr::HEAD("https://github.com")), 200L)) {
           stop("Host https://github.com not reachable")
         }
-        repo <- paste(tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
+        repo <- paste(utils::tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
         repo <- substr(repo, start = 0, stop = nchar(repo) - nchar(".git"))
         tryCatch({
           # does not work for some reason

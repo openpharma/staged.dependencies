@@ -445,6 +445,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 #'
 #' @param return_table_only (`logical`) whether to return a table or (table, graph, deps)
 #' @inheritParams install_deps
+#' @inheritParams rec_checkout_internal_deps
 #' @export
 #' @seealso determine_branch
 #'
