@@ -20,5 +20,5 @@ install_deps_addin <- function(...) {
 }
 
 upgrade_package_addin <- function(...) {
-  remotes::install_github("openpharma/staged.dependencies", ref = "main", upgrade = "always")
+  remotes::install_github("openpharma/staged.dependencies", ref = "main", upgrade = "never")
 }
