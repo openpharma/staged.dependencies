@@ -4,13 +4,21 @@
 \alias{install_repo_add_sha}
 \title{Install a git repository}
 \usage{
-install_repo_add_sha(repo_dir, install_external_deps = TRUE, ...)
+install_repo_add_sha(
+  repo_dir,
+  install_external_deps = TRUE,
+  internal_pkg_deps = character(0),
+  ...
+)
 }
 \arguments{
 \item{repo_dir}{directory of repo}
 
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of package using `remotes::install_deps`}
+
+\item{internal_pkg_deps}{(`character` vector) package names that are internal
+and which should be skipped when installing dependencies}
 
 \item{...}{Additional args passed to `remotes::install_deps`. Note `upgrade`
 is set to "never" and shouldn't be passed into this function.}

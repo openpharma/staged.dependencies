@@ -77,6 +77,9 @@ add_project_to_local_repos <- function(project, local_repos) {
 #'
 #' # install all dependencies
 #' install_deps(direction = c("upstream", "downstream"))
+#'
+#' remove.packages("utils.nest")
+#' install_deps("../scratch1/utils.nest")
 #' }
 #'
 install_deps <- function(project = ".", feature = NULL,
@@ -120,11 +123,16 @@ install_deps <- function(project = ".", feature = NULL,
     message("Installing packages in order: ", toString(extract_str_field(install_order, "repo")))
   }
   hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
+  internal_pkg_deps <- unname(vapply(
+    internal_deps, function(path) desc::desc_get_field("Package", file = path), character(1)
+  ))
+
   for (repo_and_host in install_order) {
     is_local <- hash_repo_and_host(repo_and_host) %in% names(hashed_repo_to_dir)
     repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
     if (!dry_install) {
-      install_repo_add_sha(repo_dir, install_external_deps, ...)
+      install_repo_add_sha(repo_dir, install_external_deps = install_external_deps,
+                           internal_pkg_deps = internal_pkg_deps, ...)
     } else if (verbose >= 1) {
       cat_nl("(Dry run) Skipping installation of ", repo_dir)
     }
@@ -231,6 +239,10 @@ install_deps_app <- function(project = ".", default_feature = NULL,
         # rstudio job script
         repo_dirs_to_install <- c()
         hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
+        internal_pkg_deps <- unname(vapply(
+          compute_dep_structure()$internal_deps,
+          function(path) desc::desc_get_field("Package", file = path), character(1)
+        ))
         for (repo_and_host in install_order) {
           if (hash_repo_and_host(repo_and_host) %in% selected_hashed_pkgs) {
             # the selected nodes are NOT installed
@@ -250,7 +262,10 @@ install_deps_app <- function(project = ".", default_feature = NULL,
           # it spans a new R process (not the loaded version)
           args_str <- paste(deparse(repo_dirs_to_install), collapse = "\n")
 
-          other_args <- c(list(install_external_deps = install_external_deps), list(...))
+          other_args <- c(list(
+            install_external_deps = install_external_deps,
+            internal_pkg_deps = internal_pkg_deps
+          ), list(...))
           other_args_str <- paste(deparse(other_args), collapse = "\n")
 
           script <- glue::glue(
@@ -261,7 +276,9 @@ install_deps_app <- function(project = ".", default_feature = NULL,
           run_job(script, "install_deps_app",
                   paste0("Install selection of deps of ", basename(project)))
         } else {
-          lapply(repo_dirs_to_install, install_repo_add_sha, install_external_deps, ...)
+          lapply(repo_dirs_to_install, install_repo_add_sha,
+                 install_external_deps = install_external_deps,
+                 internal_pkg_deps = internal_pkg_deps, ...)
         }
         if (verbose >= 1) {
           message("Installed directories in order: ", repo_dirs_to_install)
@@ -378,6 +395,9 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
   install_order <- get_install_order(deps[["upstream_deps"]])
 
   hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
+  internal_pkg_deps <- unname(vapply(
+    internal_deps, function(path) desc::desc_get_field("Package", file = path), character(1)
+  ))
   if (verbose >= 1) {
     message("Installing packages in order: ", toString(extract_str_field(install_order, "repo")))
   }
@@ -418,7 +438,8 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
       }
     }
     if (!dry_install_and_check) {
-      install_repo_add_sha(repo_dir, install_external_deps, ...)
+      install_repo_add_sha(repo_dir, install_external_deps = install_external_deps,
+                           internal_pkg_deps = internal_pkg_deps, ...)
     } else if (verbose >= 1) {
       cat_nl("(Dry run): Would install ", repo_dir)
     }
@@ -643,7 +664,7 @@ dependency_structure <- function(project = ".", feature = NULL,
       )
     ); graph
 
-  list(df = df, graph = graph, deps = deps)
+  list(df = df, graph = graph, deps = deps, internal_deps = internal_deps)
 }
 
 #' Get the dependency structure as a table
