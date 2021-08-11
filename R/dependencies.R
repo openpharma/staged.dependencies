@@ -110,17 +110,23 @@ install_deps <- function(project = ".", feature = NULL,
   install_order <- get_install_order(deps[["upstream_deps"]])
   if (identical(direction, "upstream")) {
     # if installing upstream dependencies, project should appear last
+    # if only direct upstream and downstream dependencies are listed in
+    # the yaml. Otherwise, more packages may also get installed, so we
+    # issue a warning.
     if (!isTRUE(all.equal(utils::tail(install_order, 1)[[1]], repo_deps_info$current_repo))){
-      stop("The staged dependency yaml files of your packages imply ",
+      warning("The staged dependency yaml files of your packages imply ",
            utils::tail(install_order, 1)[[1]]$repo,
            " is an upstream dependency of ",
            repo_deps_info$current_repo$repo,
-           "; however the R package DESCRIPTION files do not agree ",
-           "please fix and re-run the command")
+           "; this is not consistent with the dependencies given in the",
+           "DESCRIPTION files.",
+           " You can safely ignore this warning, it just means that more ",
+           "packages than necessary are installed.")
     }
   }
+
   if (!install_project) {
-    install_order <- utils::head(install_order, -1)
+    install_order <- Filter(function(x) !identical(x, repo_deps_info$current_repo), install_order)
   }
 
   if (verbose >= 1) {
