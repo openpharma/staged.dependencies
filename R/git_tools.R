@@ -55,29 +55,37 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
     }, error = function(e) {
       # catch some common errors
       # only do this when cloning because the API calls introduce quite some time overhead
-      if (grepl("https://github.com", repo_url, fixed = TRUE)) {
-        if (!identical(httr::status_code(httr::HEAD("https://github.com")), 200L)) {
-          stop("Host https://github.com not reachable")
-        }
-        repo <- paste(utils::tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
-        repo <- substr(repo, start = 0, stop = nchar(repo) - nchar(".git"))
-        tryCatch({
-          # does not work for some reason
-          # httr::HEAD(
-          #   "https://api.github.com/repos/insightsengineering/teal.devel", token = token
-          # )
+      host <- paste(utils::head(strsplit(repo_url, "/", fixed = TRUE)[[1]], -2), collapse = "/")
+      repo <- paste(utils::tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
+      repo <- substr(repo, start = 0, stop = nchar(repo) - nchar(".git"))
 
-          # will error if URL not reachable
-          gh::gh(paste0("/repos/", repo), token = Sys.getenv(token_envvar))
-        }, error = function(e) {
-          stop(
-            paste0("Could not access repo 'https://github.com/", repo,
-                   "'. Check that repo and token in envvar '", token_envvar,
-                   "' are correct.\n"),
-            e
+      if (!identical(httr::status_code(httr::HEAD(host)), 200L)) {
+        stop("Host ", host, " not reachable")
+      }
+
+      if (identical("https://github.com", host) || identical("https://code.roche.com", host)) {
+        # these queries should also work for Enterprise hosts
+        if (identical("https://github.com", host)) {
+          resp <- httr::GET(
+            paste0("https://api.github.com/repos/", repo),
+            # `token` argument not working
+            httr::add_headers(c(Authorization = paste("token", Sys.getenv(token_envvar))))
+          )
+        } else if (identical("https://code.roche.com", host)) {
+          resp <- httr::GET(
+            paste0(
+              "https://code.roche.com/api/v4/projects/",
+              utils::URLencode(repo, reserved = TRUE)
+            ),
+            httr::add_headers(c(Authorization = paste("Bearer", Sys.getenv(token_envvar))))
           )
         }
-        )
+        if (!identical(resp$status, 200L)) {
+          stop(paste0("Could not access repo ", repo, " at host ", host,
+                      "'. Check that repo and token in envvar '", token_envvar,
+                      "' are correct.\n",
+                      "The response's content was:\n", paste(httr::content(resp), collapse = "\n")))
+        }
       }
     })
 

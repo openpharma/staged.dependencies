@@ -13,7 +13,6 @@ Imports:
     dplyr,
     fs,
     git2r,
-    gh,
     glue,
     httr,
     rcmdcheck,

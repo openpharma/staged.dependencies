@@ -513,8 +513,9 @@ dependency_structure <- function(project = ".", feature = NULL,
   hashed_cur_repo <- hash_repo_and_host(repo_deps_info$current_repo)
   hashed_upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], hashed_cur_repo)
   hashed_downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], hashed_cur_repo)
-  # the 'other' nodes are the other nodes among the upstream dependencies of the
-  # downstream dependencies and their upstream and downstream dependencies
+  # If direction = c("upstream", "downstream") then there can be nodes in the internal
+  # dependencies list which are neither upstream nor downstream from the current repo.
+  # For example other downstream dependencies from an upstream dependency of the current repo
   hashed_remaining_nodes <- setdiff(
     union(names(deps[["upstream_deps"]]), names(deps[["downstream_deps"]])),
     union(union(hashed_upstream_nodes$id, hashed_downstream_nodes$id), hashed_cur_repo)
