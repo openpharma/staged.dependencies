@@ -28,7 +28,7 @@ add_project_to_local_repos <- function(project, local_repos) {
   )
   check_dir_exists(project)
 
-  repo_deps_info <- get_deps_info(project)
+  repo_deps_info <- get_yaml_deps_info(project)
   rbind(
     local_repos,
     data.frame(
@@ -98,7 +98,7 @@ install_deps <- function(project = ".", feature = NULL,
   # take local version of project (rather than remote)
   local_repos <- add_project_to_local_repos(project, local_repos)
 
-  repo_deps_info <- get_deps_info(project)
+  repo_deps_info <- get_yaml_deps_info(project)
 
   internal_deps <- rec_checkout_internal_deps(
     list(repo_deps_info$current_repo), feature, direction = direction,
@@ -121,7 +121,8 @@ install_deps <- function(project = ".", feature = NULL,
            "; this is not consistent with the dependencies given in the",
            "DESCRIPTION files.",
            " You can safely ignore this warning, it just means that more ",
-           "packages than necessary are installed.")
+           "packages than necessary are installed.",
+           " Use the function 'check_yamls_consistent' to find out why.")
     }
   }
 
@@ -355,11 +356,11 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
   # take local version of project (rather than remote)
   local_repos <- add_project_to_local_repos(project, local_repos)
 
-  repo_deps_info <- get_deps_info(project)
+  repo_deps_info <- get_yaml_deps_info(project)
 
   if (is.null(downstream_repos)) {
     downstream_repos <- if (!recursive) {
-      get_deps_info(project)$downstream_repos
+      get_yaml_deps_info(project)$downstream_repos
     } else {
 
       internal_deps <- rec_checkout_internal_deps(
@@ -507,7 +508,7 @@ dependency_structure <- function(project = ".", feature = NULL,
   # take local version of project (rather than remote)
   local_repos <- add_project_to_local_repos(project, local_repos)
 
-  repo_deps_info <- get_deps_info(project)
+  repo_deps_info <- get_yaml_deps_info(project)
 
   internal_deps <- rec_checkout_internal_deps(
     list(repo_deps_info$current_repo), feature, direction = c("upstream", "downstream"),
@@ -838,3 +839,48 @@ update_with_direct_deps <- function(project = ".",
   )
 }
 
+#' Checks that the staged dependency yamls are consistent with
+#' the dependencies listed in the DESCRIPTION files
+#'
+#' @md
+#' @inheritParams rec_checkout_internal_deps
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' check_yamls_consistent(
+#' list(list(repo = "insightsengineering/osprey",
+#'           host = "https://github.com")),
+#' feature = "main",
+#' local_repos = data.frame(
+#'   repo = "insightsengineering/osprey",
+#'   host = "https://github.com",
+#'   directory = "../scratch1/osprey",
+#'   stringsAsFactors = FALSE
+#' )
+#' )
+#' }
+check_yamls_consistent <- function(repos_to_process, feature,
+                                       direction = c("upstream", "downstream"),
+                                       local_repos = get_local_pkgs_from_config(),
+                                       verbose = 0) {
+  internal_deps <- rec_checkout_internal_deps(
+    repos_to_process, feature, direction, local_repos, verbose
+  )
+  deps <- get_true_deps_graph(internal_deps, direction = c("upstream", "downstream"))
+  for (hashed_repo_and_host in names(internal_deps)) {
+    package_path <- internal_deps[[hashed_repo_and_host]]
+    yaml_deps <- get_yaml_deps_info(package_path)
+
+    check_set_equal(
+      deps[["upstream_deps"]][[hashed_repo_and_host]],
+      vapply(unname(yaml_deps[["upstream_repos"]]), hash_repo_and_host, character(1)),
+      pre_msg = paste0(
+        "For package '", hashed_repo_and_host,
+        "':\nExpected dependencies 'x' from DESCRIPTION files vs dependencies 'y'",
+        " from staged dependency yaml file:\n"
+      )
+    )
+  }
+  return(invisible(NULL))
+}
