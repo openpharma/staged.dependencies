@@ -204,6 +204,8 @@ of `staged.dependencies` rather than the one loaded with `devtools::load_all()`.
 `git2r::clone` may fail. Check that the git host is reachable (VPN may be needed) and that the access token 
 has read privileges for the repositories.
 
+When you run `remotes::install_deps` for a package that was installed with this package, issues may arise because not all repositories are publicly accessible. Make sure to provide auth tokens.
+
 ## Example Setup
 
 This package can also be tested on a more complex setup of packages.
