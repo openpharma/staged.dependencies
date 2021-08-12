@@ -368,7 +368,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
         local_repos = local_repos, verbose = verbose
       )
 
-      deps <- get_true_deps_graph(internal_deps, direction = "upstream")
+      deps <- get_true_deps_graph(internal_deps, direction = "downstream")
 
       lapply(get_descendants(
         deps[["downstream_deps"]], hash_repo_and_host(repo_deps_info$current_repo)
@@ -383,7 +383,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
   )
 
   internal_deps <- rec_checkout_internal_deps(
-    list(repo_deps_info$current_repo), feature, direction = "upstream",
+    list(repo_deps_info$current_repo), feature, direction = "downstream",
     local_repos = local_repos, verbose = verbose
   )
 
