@@ -48,9 +48,47 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
       message(paste("clone", repo_url, "to directory", repo_dir))
     }
 
-    git_repo <- git2r::clone(
-      url = repo_url, local_path = repo_dir, credentials = creds, progress = verbose >= 2
-    )
+    tryCatch({
+      git_repo <- git2r::clone(
+        url = repo_url, local_path = repo_dir, credentials = creds, progress = verbose >= 2
+      )
+    }, error = function(e) {
+      # catch some common errors
+      # only do this when cloning because the API calls introduce quite some time overhead
+      host <- paste(utils::head(strsplit(repo_url, "/", fixed = TRUE)[[1]], -2), collapse = "/")
+      repo <- paste(utils::tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
+      repo <- substr(repo, start = 0, stop = nchar(repo) - nchar(".git"))
+
+      if (!identical(httr::status_code(httr::HEAD(host)), 200L)) {
+        stop("Host ", host, " not reachable")
+      }
+
+      if (identical("https://github.com", host) || identical("https://code.roche.com", host)) {
+        # these queries should also work for Enterprise hosts
+        if (identical("https://github.com", host)) {
+          resp <- httr::GET(
+            paste0("https://api.github.com/repos/", repo),
+            # `token` argument not working
+            httr::add_headers(c(Authorization = paste("token", Sys.getenv(token_envvar))))
+          )
+        } else if (identical("https://code.roche.com", host)) {
+          resp <- httr::GET(
+            paste0(
+              "https://code.roche.com/api/v4/projects/",
+              utils::URLencode(repo, reserved = TRUE)
+            ),
+            httr::add_headers(c(Authorization = paste("Bearer", Sys.getenv(token_envvar))))
+          )
+        }
+        if (!identical(resp$status, 200L)) {
+          stop(paste0("Could not access repo ", repo, " at host ", host,
+                      "'. Check that repo and token in envvar '", token_envvar,
+                      "' are correct.\n",
+                      "The response's content was:\n", paste(httr::content(resp), collapse = "\n")))
+        }
+      }
+    })
+
     # git automatically created local tracking branch (for master or main), checkout
     # corresponding remote branch and delete local branch, so we only have remote
     # branches

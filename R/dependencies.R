@@ -40,10 +40,12 @@ add_project_to_local_repos <- function(project, local_repos) {
 }
 
 
-#' Install upstream dependencies of project corresponding to feature
+#' Install dependencies of project corresponding to feature
 #'
-#' This reads the upstream dependencies for the project (recursively) and
+#' This reads the dependencies for the project (recursively) and
 #' installs the right branches based on the feature.
+#' The dependencies can be upstream (by default) and downstream (to
+#' install downstream packages as well).
 #'
 #' It throws a warning if the currently checked out branch in the project
 #' is not the one that would be taken based on `feature`.
@@ -457,6 +459,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 #'
 #' @param return_table_only (`logical`) whether to return a table or (table, graph, deps)
 #' @inheritParams install_deps
+#' @inheritParams rec_checkout_internal_deps
 #' @export
 #' @seealso determine_branch
 #'
@@ -494,6 +497,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 #' }
 dependency_structure <- function(project = ".", feature = NULL,
                                  local_repos = get_local_pkgs_from_config(),
+                                 direction = c("upstream", "downstream"),
                                  return_table_only = FALSE, verbose = 0) {
   stopifnot(
     is.data.frame(local_repos) || is.null(local_repos),
@@ -511,7 +515,7 @@ dependency_structure <- function(project = ".", feature = NULL,
   repo_deps_info <- get_yaml_deps_info(project)
 
   internal_deps <- rec_checkout_internal_deps(
-    list(repo_deps_info$current_repo), feature, direction = c("upstream", "downstream"),
+    list(repo_deps_info$current_repo), feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
 
@@ -523,6 +527,9 @@ dependency_structure <- function(project = ".", feature = NULL,
   hashed_cur_repo <- hash_repo_and_host(repo_deps_info$current_repo)
   hashed_upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], hashed_cur_repo)
   hashed_downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], hashed_cur_repo)
+  # If direction = c("upstream", "downstream") then there can be nodes in the internal
+  # dependencies list which are neither upstream nor downstream from the current repo.
+  # For example other downstream dependencies from an upstream dependency of the current repo
   hashed_remaining_nodes <- setdiff(
     union(names(deps[["upstream_deps"]]), names(deps[["downstream_deps"]])),
     union(union(hashed_upstream_nodes$id, hashed_downstream_nodes$id), hashed_cur_repo)
@@ -675,12 +682,16 @@ dependency_structure <- function(project = ".", feature = NULL,
 #' @examples
 #' \dontrun{
 #' dependency_table()
+#'
+#' dependency_table(direction = "upstream")
 #' }
 dependency_table <- function(project = ".", feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
+                             direction = c("upstream", "downstream"),
                              verbose = 0) {
   dependency_structure(
-    project = project, feature = feature, local_repos = local_repos, return_table_only = TRUE, verbose = verbose
+    project = project, feature = feature, local_repos = local_repos,
+    return_table_only = TRUE, direction = direction, verbose = verbose
   )
 }
 
@@ -702,9 +713,11 @@ dependency_table <- function(project = ".", feature = NULL,
 #' }
 dependency_graph <- function(project = ".", feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
+                             direction = c("upstream", "downstream"),
                              verbose = 0) {
   dependency_structure(
-    project = project, feature = feature, local_repos = local_repos, return_table_only = FALSE, verbose = verbose
+    project = project, feature = feature, local_repos = local_repos,
+    return_table_only = FALSE, direction = direction, verbose = verbose
   )$graph
 }
 
