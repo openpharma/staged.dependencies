@@ -14,6 +14,7 @@ Imports:
     fs,
     git2r,
     glue,
+    httr,
     rcmdcheck,
     remotes,
     rlang,

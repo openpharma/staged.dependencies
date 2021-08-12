@@ -18,7 +18,8 @@ rec_checkout_internal_deps(
 
 \item{feature}{(\code{character}) feature to build}
 
-\item{direction}{(\code{character}) either or both of "upstream" and "downstream"
+\item{direction}{(\code{character}) direction in which to discover packages
+either or both of "upstream" and "downstream"
 to recursively checkout upstream and/or downstream dependencies}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
