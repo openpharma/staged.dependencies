@@ -320,7 +320,8 @@ install_deps_app <- function(project = ".", default_feature = NULL,
 #'   dependencies and check/test downstream repos; otherwise just reports
 #'   what would be installed
 #' @param recursive (`logical`) whether to recursively check the downstream
-#'   dependencies of the downstream dependencies
+#'   dependencies of the downstream dependencies;
+#'   ignored if `downstream_repos` is set
 #' @param check_args (`list`) arguments passed to `rcmdcheck`
 #' @param only_tests (`logical`) whether to only run tests (rather than checks)
 #' @inheritParams install_deps
@@ -383,7 +384,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
   )
 
   internal_deps <- rec_checkout_internal_deps(
-    list(repo_deps_info$current_repo), feature, direction = "downstream",
+    downstream_repos, feature, direction = "upstream",
     local_repos = local_repos, verbose = verbose
   )
 
