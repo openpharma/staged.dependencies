@@ -136,3 +136,10 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
   })
   return(invisible(NULL))
 }
+
+# given paths, return names of packages located at these paths
+get_pkg_names_from_paths <- function(paths) {
+  unname(vapply(
+    paths, function(path) desc::desc_get_field("Package", file = path), character(1)
+  ))
+}

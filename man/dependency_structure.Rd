@@ -58,6 +58,9 @@ Tooltips give more information about nodes and edges.
 
 \code{deps}:
 deps: upstream and downstream dependencies of each node
+
+\code{internal_deps}:
+internal dependencies, named list mapping hash to path where they were cloned to
 }
 \description{
 Compute the dependency structure starting from project
