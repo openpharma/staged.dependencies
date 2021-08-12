@@ -18,3 +18,7 @@ test_downstream_addin <- function(...) {
 install_deps_addin <- function(...) {
   install_deps_job(...)
 }
+
+upgrade_package_addin <- function(...) {
+  remotes::install_github("openpharma/staged.dependencies", ref = "main", upgrade = "never")
+}

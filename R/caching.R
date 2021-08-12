@@ -99,7 +99,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
 
 # get upstream repos and downstream repos according to yaml file in repo directory
 # if yaml file does not exist, returns empty lists
-get_deps_info <- function(repo_dir) {
+get_yaml_deps_info <- function(repo_dir) {
   check_dir_exists(repo_dir, "deps_info: ")
 
   yaml_file <- file.path(repo_dir, STAGEDDEPS_FILENAME)
@@ -152,7 +152,8 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #' @md
 #' @param repos_to_process `list` of `list(repo, host)` repos to start from
 #' @param feature (`character`) feature to build
-#' @param direction (`character`) either or both of "upstream" and "downstream"
+#' @param direction (`character`) direction in which to discover packages
+#'   either or both of "upstream" and "downstream"
 #'   to recursively checkout upstream and/or downstream dependencies
 #' @param local_repos (`data.frame`) repositories that should be taken from
 #'   local rather than cloned; columns are `repo, host, directory`
@@ -208,11 +209,11 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
 
     hashed_new_repos <- c()
     if ("upstream" %in% direction) {
-      hashed_upstream_repos <- lapply(get_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
+      hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
       hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
     }
     if ("downstream" %in% direction) {
-      hashed_downstream_repos <- lapply(get_deps_info(repo_dir)$downstream_repos, hash_repo_and_host)
+      hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_dir)$downstream_repos, hash_repo_and_host)
       hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
     }
     hashed_processed_repos[[hashed_repo_and_host]] <- repo_dir
