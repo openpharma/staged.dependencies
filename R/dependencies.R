@@ -39,10 +39,10 @@ add_project_to_local_repos <- function(project, local_repos) {
   )
 }
 
-
-#' Install dependencies of project corresponding to feature
+# generic function to install dependencies
+#' Install dependencies of repository
 #'
-#' This reads the dependencies for the project (recursively) and
+#' This reads the dependencies for the repos or project (recursively) and
 #' installs the right branches based on the feature.
 #' The dependencies can be upstream (by default) and downstream (to
 #' install downstream packages as well).
@@ -52,13 +52,11 @@ add_project_to_local_repos <- function(project, local_repos) {
 #' The checked out branch should be a local branch.
 #'
 #' @md
-#' @param project (`character`) directory of project (for which to restore the
-#'   dependencies according to feature); must be a git repository.
 #' @param feature (`character`) feature we want to build; inferred from the
 #'   branch of the project if not provided; warning if not consistent with
 #'   current branch of project
-#' @param install_project (`logical`) whether to also install the current
-#'   package (`project`)
+#' @param install_repos_to_process (`logical`) whether to also install the
+#'   repos passed in `repos_to_process`
 #' @param dry_install (`logical`) dry run that lists packages that would be
 #'   installed without installing; this still checks out the git repos to
 #'   match `feature`
@@ -75,64 +73,43 @@ add_project_to_local_repos <- function(project, local_repos) {
 #'
 #' @examples
 #' \dontrun{
-#' install_deps()
-#'
-#' # install all dependencies
-#' install_deps(direction = c("upstream", "downstream"))
-#'
-#' remove.packages("utils.nest")
-#' install_deps("../scratch1/utils.nest")
+#' install_deps(list(list(
+#' repo = "insightsengineering/utils.nest",
+#' host = "https://github.com"
+#' )), feature = "main")
 #' }
-#'
-install_deps <- function(project = ".", feature = NULL,
-                                  local_repos = get_local_pkgs_from_config(),
-                                  direction = "upstream",
-                                  install_project = TRUE, dry_install = FALSE, verbose = 0,
-                                  install_external_deps = TRUE, ...) {
+install_deps <- function(repos_to_process,
+                         feature,
+                         local_repos = get_local_pkgs_from_config(),
+                         direction = "upstream",
+                         install_repos_to_process = TRUE, dry_install = FALSE, verbose = 0,
+                         install_external_deps = TRUE, ...) {
+
   stopifnot(
+    is.list(repos_to_process),
+    all(vapply(repos_to_process, function(x) {
+      all(c("repo", "host") %in% names(x))
+    }, logical(1))),
+    is.character(feature), # should be non-NULL
     is.data.frame(local_repos) || is.null(local_repos),
-    is.logical(install_project),
+    is.logical(install_repos_to_process),
     is.logical(dry_install)
   )
-  check_dir_exists(project)
-  check_verbose_arg(verbose)
-  error_if_stageddeps_inexistent(project)
-
-  feature <- infer_feature_from_branch(feature, project)
-
-  # take local version of project (rather than remote)
-  local_repos <- add_project_to_local_repos(project, local_repos)
-
-  repo_deps_info <- get_yaml_deps_info(project)
 
   internal_deps <- rec_checkout_internal_deps(
-    list(repo_deps_info$current_repo), feature, direction = direction,
+    repos_to_process, feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
 
   deps <- get_true_deps_graph(internal_deps, direction = direction)
 
   install_order <- get_install_order(deps[["upstream_deps"]])
-  if (identical(direction, "upstream")) {
-    # if installing upstream dependencies, project should appear last
-    # if only direct upstream and downstream dependencies are listed in
-    # the yaml. Otherwise, more packages may also get installed, so we
-    # issue a warning.
-    if (!isTRUE(all.equal(utils::tail(install_order, 1)[[1]], repo_deps_info$current_repo))){
-      warning("The staged dependency yaml files of your packages imply ",
-           utils::tail(install_order, 1)[[1]]$repo,
-           " is an upstream dependency of ",
-           repo_deps_info$current_repo$repo,
-           "; this is not consistent with the dependencies given in the",
-           " DESCRIPTION files.",
-           " You can safely ignore this warning, it just means that more ",
-           "packages than necessary are installed.",
-           " Use the function 'check_yamls_consistent' to find out why.")
-    }
-  }
 
-  if (!install_project) {
-    install_order <- Filter(function(x) !identical(x, repo_deps_info$current_repo), install_order)
+  if (!install_repos_to_process) {
+    is_in_repos <- function(x) {
+      any(vapply(repos_to_process, function(y) identical(x, y), logical(1)))
+    }
+    install_order <- Filter(function(x) !is_in_repos(x), install_order)
   }
 
   if (verbose >= 1) {
@@ -158,6 +135,50 @@ install_deps <- function(project = ".", feature = NULL,
   install_order
 }
 
+#' @md
+#' @param project (`character`) directory of project (for which to restore the
+#'   dependencies according to feature); must be a git repository.
+#' @param install_project (`logical`) whether to also install the current
+#'   package (`project`)
+#' @export
+#' @examples
+#' \dontrun{
+#' install_deps_project()
+#'
+#' # install all dependencies
+#' install_deps_project(direction = c("upstream", "downstream"))
+#'
+#' remove.packages("utils.nest")
+#' install_deps_project("../scratch1/utils.nest", dry_install = TRUE)
+#' install_deps_project("../scratch1/utils.nest")
+#' }
+#' @describeIn install_deps specify project by path
+install_deps_project <- function(project = ".",
+                         feature = NULL,
+                         local_repos = get_local_pkgs_from_config(),
+                         direction = "upstream",
+                         install_project = TRUE, dry_install = FALSE, verbose = 0,
+                         install_external_deps = TRUE, ...) {
+  check_dir_exists(project)
+  check_verbose_arg(verbose)
+  error_if_stageddeps_inexistent(project)
+
+  feature <- infer_feature_from_branch(feature, project)
+
+  # take local version of project (rather than remote)
+  local_repos <- add_project_to_local_repos(project, local_repos)
+
+  repo_deps_info <- get_yaml_deps_info(project)
+
+  install_deps(
+    repos_to_process = list(repo_deps_info$current_repo),
+    feature = feature, local_repos = local_repos, direction = direction,
+    install_repos_to_process = install_project, dry_install = dry_install,
+    verbose = verbose, install_external_deps = install_external_deps, ...
+  )
+
+}
+
 
 #' Gadget or Shiny app to select the dependencies to install
 #'
@@ -166,10 +187,10 @@ install_deps <- function(project = ".", feature = NULL,
 #'
 #' @md
 #' @param default_feature (`character`) default feature, see also the parameter
-#'   `feature` of `\link{install_deps}`
+#'   `feature` of `\link{install_deps_project}`
 #' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
-#' @inheritParams install_deps
+#' @inheritParams install_deps_project
 #' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
 #'
@@ -337,7 +358,7 @@ install_deps_app <- function(project = ".", default_feature = NULL,
 #'   dependencies of the downstream dependencies
 #' @param check_args (`list`) arguments passed to `rcmdcheck`
 #' @param only_tests (`logical`) whether to only run tests (rather than checks)
-#' @inheritParams install_deps
+#' @inheritParams install_deps_project
 #' @export
 #' @seealso determine_branch
 #'
@@ -472,7 +493,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 #' @md
 #'
 #' @param return_table_only (`logical`) whether to return a table or (table, graph, deps)
-#' @inheritParams install_deps
+#' @inheritParams install_deps_project
 #' @inheritParams rec_checkout_internal_deps
 #' @export
 #' @seealso determine_branch

@@ -2,9 +2,22 @@
 % Please edit documentation in R/dependencies.R
 \name{install_deps}
 \alias{install_deps}
-\title{Install dependencies of project corresponding to feature}
+\alias{install_deps_project}
+\title{Install dependencies of repository}
 \usage{
 install_deps(
+  repos_to_process,
+  feature,
+  local_repos = get_local_pkgs_from_config(),
+  direction = "upstream",
+  install_repos_to_process = TRUE,
+  dry_install = FALSE,
+  verbose = 0,
+  install_external_deps = TRUE,
+  ...
+)
+
+install_deps_project(
   project = ".",
   feature = NULL,
   local_repos = get_local_pkgs_from_config(),
@@ -17,8 +30,7 @@ install_deps(
 )
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
+\item{repos_to_process}{\code{list} of \code{list(repo, host)}}
 
 \item{feature}{(\code{character}) feature we want to build; inferred from the
 branch of the project if not provided; warning if not consistent with
@@ -31,8 +43,8 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 either or both of "upstream" and "downstream"
 to recursively checkout upstream and/or downstream dependencies}
 
-\item{install_project}{(\code{logical}) whether to also install the current
-package (\code{project})}
+\item{install_repos_to_process}{(\code{logical}) whether to also install the
+repos passed in \code{repos_to_process}}
 
 \item{dry_install}{(\code{logical}) dry run that lists packages that would be
 installed without installing; this still checks out the git repos to
@@ -47,12 +59,18 @@ external dependencies of package using \code{remotes::install_deps}.}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}
+
+\item{project}{(\code{character}) directory of project (for which to restore the
+dependencies according to feature); must be a git repository.}
+
+\item{install_project}{(\code{logical}) whether to also install the current
+package (\code{project})}
 }
 \value{
 installed packages in installation order
 }
 \description{
-This reads the dependencies for the project (recursively) and
+This reads the dependencies for the repos or project (recursively) and
 installs the right branches based on the feature.
 The dependencies can be upstream (by default) and downstream (to
 install downstream packages as well).
@@ -62,17 +80,28 @@ It throws a warning if the currently checked out branch in the project
 is not the one that would be taken based on \code{feature}.
 The checked out branch should be a local branch.
 }
+\section{Functions}{
+\itemize{
+\item \code{install_deps_project}: specify project by path
+}}
+
 \examples{
 \dontrun{
-install_deps()
+install_deps(list(list(
+repo = "insightsengineering/utils.nest",
+host = "https://github.com"
+)), feature = "main")
+}
+\dontrun{
+install_deps_project()
 
 # install all dependencies
-install_deps(direction = c("upstream", "downstream"))
+install_deps_project(direction = c("upstream", "downstream"))
 
 remove.packages("utils.nest")
-install_deps("../scratch1/utils.nest")
+install_deps_project("../scratch1/utils.nest", dry_install = TRUE)
+install_deps_project("../scratch1/utils.nest")
 }
-
 }
 \seealso{
 determine_branch
