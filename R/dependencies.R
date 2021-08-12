@@ -119,7 +119,7 @@ install_deps <- function(project = ".", feature = NULL,
            " is an upstream dependency of ",
            repo_deps_info$current_repo$repo,
            "; this is not consistent with the dependencies given in the",
-           "DESCRIPTION files.",
+           " DESCRIPTION files.",
            " You can safely ignore this warning, it just means that more ",
            "packages than necessary are installed.",
            " Use the function 'check_yamls_consistent' to find out why.")
