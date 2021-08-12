@@ -193,6 +193,16 @@ of `staged.dependencies` rather than the one loaded with `devtools::load_all()`.
 `git2r::clone` may fail. Check that the git host is reachable (VPN may be needed) and that the access token 
 has read privileges for the repositories.
 
+Do the following if you encounter the Error `Error in 'git2r_clone': there is no TLS stream available`:
+```
+apt-get update && apt-get install -y libgit2-dev
+```
+Then in R
+```
+remove.packages("git2r")
+install.packages("git2r")
+```
+
 ## Example Setup
 
 This package can also be tested on a more complex setup of packages.
