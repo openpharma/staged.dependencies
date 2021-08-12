@@ -253,7 +253,7 @@ install_deps_app <- function(project = ".", default_feature = NULL,
         # rstudio job script
         repo_dirs_to_install <- c()
         hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
-        internal_pkg_deps <- get_pkg_names_from_paths(internal_deps)
+        internal_pkg_deps <- get_pkg_names_from_paths(compute_dep_structure()$internal_deps)
         for (repo_and_host in install_order) {
           if (hash_repo_and_host(repo_and_host) %in% selected_hashed_pkgs) {
             # the selected nodes are NOT installed
