@@ -368,7 +368,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
         local_repos = local_repos, verbose = verbose
       )
 
-      deps <- get_true_deps_graph(internal_deps, direction = "downstream")
+      deps <- get_true_deps_graph(internal_deps, direction = "upstream")
 
       lapply(get_descendants(
         deps[["downstream_deps"]], hash_repo_and_host(repo_deps_info$current_repo)
