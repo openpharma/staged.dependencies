@@ -2,6 +2,7 @@
 
 export(check_downstream)
 export(check_downstream_job)
+export(check_yamls_consistent)
 export(clear_cache)
 export(dependency_graph)
 export(dependency_structure)
