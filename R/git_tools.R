@@ -87,6 +87,8 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
                       "The response's content was:\n", paste(httr::content(resp), collapse = "\n")))
         }
       }
+
+      stop(e)
     })
 
     # git automatically created local tracking branch (for master or main), checkout
