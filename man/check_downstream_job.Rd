@@ -23,7 +23,8 @@ of \code{project}}
 dependencies and check/test downstream repos; otherwise just reports
 what would be installed}
     \item{\code{recursive}}{(\code{logical}) whether to recursively check the downstream
-dependencies of the downstream dependencies}
+dependencies of the downstream dependencies;
+ignored if \code{downstream_repos} is set}
     \item{\code{check_args}}{(\code{list}) arguments passed to \code{rcmdcheck}}
     \item{\code{only_tests}}{(\code{logical}) whether to only run tests (rather than checks)}
     \item{\code{feature}}{(\code{character}) feature we want to build; inferred from the
