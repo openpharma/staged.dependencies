@@ -68,6 +68,9 @@ install_deps()
 
 # install all dependencies
 install_deps(direction = c("upstream", "downstream"))
+
+remove.packages("utils.nest")
+install_deps("../scratch1/utils.nest")
 }
 
 }
