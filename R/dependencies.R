@@ -966,8 +966,8 @@ build_check_install_repos <- function(repos_to_process, feature = "main",
       })
     }
   )
-  
-  return(invisible(NULL))
+
+  return(artifact_dir)
 }
 
 
@@ -1015,5 +1015,5 @@ check_yamls_consistent <- function(repos_to_process, feature,
     )
   }
 
-  return(artifact_dir)
+  return(invisible(NULL))
 }
