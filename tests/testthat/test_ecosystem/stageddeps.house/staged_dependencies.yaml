@@ -1,0 +1,17 @@
+---
+upstream_repos:
+  openpharma/stageddeps.water:
+    repo: openpharma/stageddeps.water
+    host: https://github.com
+  openpharma/stageddeps.electricity:
+    repo: openpharma/stageddeps.electricity
+    host: https://github.com
+  openpharma/stageddeps.food:
+    repo: openpharma/stageddeps.food
+    host: https://github.com
+
+downstream_repos:
+
+current_repo:
+  repo: openpharma/stageddeps.house
+  host: https://github.com

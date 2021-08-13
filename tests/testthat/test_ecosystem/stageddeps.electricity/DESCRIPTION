@@ -1,0 +1,17 @@
+Package: stageddeps.electricity
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Authors@R: c(
+  person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = c("cre", "aut"))
+  )
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: file LICENSE
+Imports:
+  stageddeps.elecinfra
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    testthat (>= 2.1.0)
+RoxygenNote: 7.1.0

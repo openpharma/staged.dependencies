@@ -1,0 +1,17 @@
+---
+upstream_repos:
+  openpharma/stageddeps.elecinfra:
+    repo: openpharma/stageddeps.elecinfra
+    host: https://github.com
+
+downstream_repos:
+  openpharma/stageddeps.house:
+    repo: openpharma/stageddeps.house
+    host: https://github.com
+  openpharma/stageddeps.food:
+    repo: openpharma/stageddeps.food
+    host: https://github.com
+
+current_repo:
+  repo: openpharma/stageddeps.electricity
+  host: https://github.com

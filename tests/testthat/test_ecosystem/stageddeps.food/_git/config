@@ -1,0 +1,11 @@
+[core]
+	bare = false
+	repositoryformatversion = 0
+	filemode = true
+	ignorecase = true
+	precomposeunicode = true
+	logallrefupdates = true
+[remote "origin"]
+	url = https://github.com/openpharma/stageddeps.food.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
