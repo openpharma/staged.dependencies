@@ -847,6 +847,7 @@ update_with_direct_deps <- function(project = ".",
 #'   to the `R CMD` commands
 #' @param artifact_dir (`character`) directory where build
 #'   tarball and logs go to
+#' @return `artifact_dir` directory with log files
 #' @export
 #' @examples
 #' \dontrun{
@@ -876,7 +877,7 @@ update_with_direct_deps <- function(project = ".",
 #' # also adds commit SHA
 #' install_deps(someArgs, direction = c("upstream", "downstream"))
 #' }
-build_check_install_repos <- function(repos_to_process, feature,
+build_check_install_repos <- function(repos_to_process, feature = "main",
                                       direction = c("upstream", "downstream"),
                                       local_repos = get_local_pkgs_from_config(),
                                       verbose = 0,
@@ -899,8 +900,12 @@ build_check_install_repos <- function(repos_to_process, feature,
     install_order, function(x) internal_deps[[hash_repo_and_host(x)]], character(1)
   )
 
-  dir.create(file.path(artifact_dir, "build_logs"))
-  dir.create(file.path(artifact_dir, "install_logs"))
+  if ("build" %in% steps) {
+    dir.create(file.path(artifact_dir, "build_logs"))
+  }
+  if ("install" %in% steps) {
+    dir.create(file.path(artifact_dir, "install_logs"))
+  }
 
   cat(paste0("Installing packages from paths ", toString(install_order_paths)), "\n")
 
@@ -935,5 +940,5 @@ build_check_install_repos <- function(repos_to_process, feature,
     }
   )
 
-  return(invisible(NULL))
+  return(artifact_dir)
 }
