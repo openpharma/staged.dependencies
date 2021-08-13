@@ -134,6 +134,26 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
   repo_dir
 }
 
+# Install the external deps required for a package
+# does not install dependencies that appear in `internal_pkg_deps`
+install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
+  # `remotes::install_deps` only makes use of the package DESCRIPTION file via
+  # `remotes:::load_pkg_description`
+  # So we create a temp directory containing this file and then call this function
+  repo_dir_external <- tempfile(paste0(basename(repo_dir), "_externalDeps"))
+  fs::dir_create(repo_dir_external)
+  fs::file_copy(file.path(repo_dir, "DESCRIPTION"),
+                file.path(repo_dir_external, "DESCRIPTION"))
+
+  # remove internal_pkg_deps from DESCRIPTION file
+  desc_obj <- desc::desc(file.path(repo_dir_external, "DESCRIPTION"))
+  new_deps <- desc_obj$get_deps()[!desc_obj$get_deps()$package %in% internal_pkg_deps,]
+  desc_obj$set_deps(new_deps)
+  desc_obj$write()
+
+  remotes::install_deps(repo_dir_external, ...)
+}
+
 #' Install a git repository
 #'
 #' It adds the git SHA to the DESCRIPTION file, so that the package
@@ -143,9 +163,14 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
 #' @param repo_dir directory of repo
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of package using `remotes::install_deps`
+#' @param internal_pkg_deps (`character` vector) package names that are internal
+#'   and which should be skipped when installing dependencies
 #' @param ... Additional args passed to `remotes::install_deps`. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
-install_repo_add_sha <- function(repo_dir, install_external_deps = TRUE, ...) {
+install_repo_add_sha <- function(repo_dir,
+                                 install_external_deps = TRUE,
+                                 internal_pkg_deps = character(0),
+                                 ...) {
   check_dir_exists(repo_dir)
 
   read_dcf <- function(path) {
@@ -211,7 +236,8 @@ install_repo_add_sha <- function(repo_dir, install_external_deps = TRUE, ...) {
   }
 
   if (install_external_deps) {
-    remotes::install_deps(repo_dir, dependencies = TRUE, upgrade = "never", ...)
+    install_external_deps(repo_dir, internal_pkg_deps = internal_pkg_deps,
+                          dependencies = TRUE, upgrade = "never", ...)
   }
   utils::install.packages(repo_dir, repos = NULL, type = "source")
 

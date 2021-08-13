@@ -147,3 +147,10 @@ check_set_equal <- function(x, y, pre_msg = "") {
     )
   }
 }
+
+# given paths, return names of packages located at these paths
+get_pkg_names_from_paths <- function(paths) {
+  unname(vapply(
+    paths, function(path) desc::desc_get_field("Package", file = path), character(1)
+  ))
+}
