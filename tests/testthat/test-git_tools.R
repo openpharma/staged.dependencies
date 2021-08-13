@@ -59,13 +59,6 @@ test_that("checkout_repo works", {
 
 })
 
-# zip_dir <- function(zipfile, dir, flags = "-r9Xqq", ...) {
-#   # zip(zipfile, dir) preserves path to dir (from current working dir), which is undesired
-#   zipfile <- fs::path_abs(zipfile)
-#   print(zipfile)
-#   withr::with_dir(dir, zip(zipfile, ".", flags, ...))
-# }
-
 test_that("checkout_repo with mocking works", {
   # mock git clone
 

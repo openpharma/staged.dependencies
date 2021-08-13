@@ -23,7 +23,8 @@ current branch of project}
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
 
-\item{direction}{(\code{character}) either or both of "upstream" and "downstream"
+\item{direction}{(\code{character}) direction in which to discover packages
+either or both of "upstream" and "downstream"
 to recursively checkout upstream and/or downstream dependencies}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
