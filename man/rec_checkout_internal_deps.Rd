@@ -14,7 +14,7 @@ rec_checkout_internal_deps(
 )
 }
 \arguments{
-\item{repos_to_process}{\code{list} of \code{list(repo, host)}}
+\item{repos_to_process}{\code{list} of \code{list(repo, host)} repos to start from}
 
 \item{feature}{(\code{character}) feature to build}
 

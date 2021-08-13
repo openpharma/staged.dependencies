@@ -85,10 +85,10 @@ add_project_to_local_repos <- function(project, local_repos) {
 #' }
 #'
 install_deps <- function(project = ".", feature = NULL,
-                                  local_repos = get_local_pkgs_from_config(),
-                                  direction = "upstream",
-                                  install_project = TRUE, dry_install = FALSE, verbose = 0,
-                                  install_external_deps = TRUE, ...) {
+                         local_repos = get_local_pkgs_from_config(),
+                         direction = "upstream",
+                         install_project = TRUE, dry_install = FALSE, verbose = 0,
+                         install_external_deps = TRUE, ...) {
   stopifnot(
     is.data.frame(local_repos) || is.null(local_repos),
     is.logical(install_project),
@@ -110,7 +110,9 @@ install_deps <- function(project = ".", feature = NULL,
     local_repos = local_repos, verbose = verbose
   )
 
-  deps <- get_true_deps_graph(internal_deps, direction = direction)
+  # we need the upstream direction (rather than variable direction) to
+  # compute the installation order
+  deps <- get_true_deps_graph(internal_deps, direction = "upstream")
 
   install_order <- get_install_order(deps[["upstream_deps"]])
   if (identical(direction, "upstream")) {
@@ -775,29 +777,33 @@ get_local_pkgs_from_config <- function() {
 # Given a named list of packages of the form
 # list(name = <<path to package>>), create a dependency graph
 # using the R DESCRIPTION files, rather than the
-# staged_dependencies.yaml files
-# The dependency graph is defined over the names
+# staged_dependencies.yaml files.
+# The dependency graph is defined over the names in the list.
+# The direction can be "upstream", "downstream" or both. The "upstream_deps"
+# graph is the graph where edges point from a package to its upstream
+# dependencies. The "downstream_deps" graph is the graph with the edge
+# direction flipped.
 get_true_deps_graph <- function(pkgs,
-                                    direction = "upstream") {
+                                direction = "upstream") {
 
   # get the package names from the DESCRIPTION files
   # (they may not be the same name as the repo name)
   package_names <- vapply(pkgs,
-    function(repo_dir) {
-      desc::desc_get_field("Package", file = repo_dir)
-    },
-    FUN.VALUE = character(1)
+                          function(repo_dir) {
+                            desc::desc_get_field("Package", file = repo_dir)
+                          },
+                          FUN.VALUE = character(1)
   )
 
   # get the Imports, Suggests, Depends for each package
   # from the package DESCRIPTION files, filter for only
   # the internal packages and name in form hashed_repo_and_host
   upstream_deps <- lapply(pkgs,
-    function(repo_dir) {
-      names(package_names)[
-        package_names %in% desc::desc_get_deps(file = repo_dir)$package
-      ]
-    }
+                          function(repo_dir) {
+                            names(package_names)[
+                              package_names %in% desc::desc_get_deps(file = repo_dir)$package
+                              ]
+                          }
   )
 
   res <- list()
@@ -870,6 +876,119 @@ update_with_direct_deps <- function(project = ".",
   )
 }
 
+#' Recursively discover and build, check and install
+#' internal dependencies
+#'
+#' It discovers all dependencies starting from the repositories,
+#' determines the installation order and then
+#' builds, checks and installs them in order.
+#'
+#' @md
+#' @inheritParams rec_checkout_internal_deps
+#' @param steps (`character` vector) subset of "build", "check", "install";
+#'   useful to skip checking for example
+#' @param rcmd_args (`list`) with names `build`, `check`,
+#'   `install` which are vectors that are passed as separate arguments
+#'   to the `R CMD` commands
+#' @param artifact_dir (`character`) directory where build
+#'   tarball and logs go to
+#' @return `artifact_dir` directory with log files
+#' @export
+#' @examples
+#' \dontrun{
+#' build_check_install_repos(
+#'   list(list(repo = "insightsengineering/teal", host = "https://github.com")),
+#'   feature = "main",
+#'   direction = "upstream",
+#'   local_repos = data.frame(repo = "insightsengineering/teal",
+#'   host = "https://github.com", directory = "../scratch1/teal/",
+#'   stringsAsFactors = FALSE)
+#' )
+#' build_check_install_repos(
+#'   list(list(repo = "maximilian_oliver.mordig/stageddeps.electricity",
+#'   host = "https://code.roche.com")),
+#'   feature = "master",
+#'   direction = "upstream",
+#'   local_repos = data.frame(repo = "maximilian_oliver.mordig/stageddeps.electricity",
+#'   host = "https://code.roche.com",
+#'   directory = "../example_ecosystem/stageddeps.electricity/",
+#'   stringsAsFactors = FALSE),
+#'   artifact_dir = "/tmp/test112"
+#' )
+#'
+#' # to install all packages
+#' build_check_install_repos(someArgs, steps = "install")
+#' # alternatively with slightly different arguments (e.g. dry_run),
+#' # also adds commit SHA
+#' install_deps(someArgs, direction = c("upstream", "downstream"))
+#' }
+build_check_install_repos <- function(repos_to_process, feature = "main",
+                                      direction = c("upstream", "downstream"),
+                                      local_repos = get_local_pkgs_from_config(),
+                                      verbose = 0,
+                                      steps = c("build", "check", "install"),
+                                      rcmd_args = list(check = c("--no-manual")),
+                                      artifact_dir = tempfile()) {
+  steps <- match.arg(steps, several.ok = TRUE)
+  if (!dir.exists(artifact_dir)) {
+    dir.create(artifact_dir)
+  }
+
+  internal_deps <- rec_checkout_internal_deps(
+    repos_to_process, feature, direction, local_repos, verbose
+  )
+  # we need the upstream direction (rather than variable direction) to
+  # compute the installation order
+  deps <- get_true_deps_graph(internal_deps, direction = "upstream")
+  install_order <- get_install_order(deps[["upstream_deps"]])
+  install_order_paths <- vapply(
+    install_order, function(x) internal_deps[[hash_repo_and_host(x)]], character(1)
+  )
+
+  if ("build" %in% steps) {
+    dir.create(file.path(artifact_dir, "build_logs"))
+  }
+  if ("install" %in% steps) {
+    dir.create(file.path(artifact_dir, "install_logs"))
+  }
+
+  cat(paste0("Installing packages from paths ", toString(install_order_paths)), "\n")
+
+  lapply(
+    install_order_paths,
+    function(pkg_source_dir) {
+      withr::with_dir(artifact_dir, {
+        pkg_name <- desc::desc_get_field("Package", file = pkg_source_dir)
+        if ("build" %in% steps) {
+          system2(
+            "R", args = c("CMD", "build", rcmd_args$build, pkg_source_dir),
+            stdout = file.path("build_logs", paste0(pkg_name, "_stdout.txt")),
+            stderr = file.path("build_logs", paste0(pkg_name, "_stderr.txt"))
+          )
+          pkg_file <- Sys.glob(paste0(pkg_name, "_*.tar.gz"))
+        } else {
+          pkg_name
+        }
+
+        if ("check" %in% steps) {
+          system2("R", args = c("CMD", "check", rcmd_args$check, pkg_file))
+        }
+
+        if ("install" %in% steps) {
+          system2(
+            "R", args = c("CMD", "INSTALL", rcmd_args$install, pkg_file),
+            stdout = file.path("install_logs", paste0(pkg_name, "_stdout.txt")),
+            stderr = file.path("install_logs", paste0(pkg_name, "_stderr.txt"))
+          )
+        }
+      })
+    }
+  )
+
+  return(artifact_dir)
+}
+
+
 #' Checks that the staged dependency yamls are consistent with
 #' the dependencies listed in the DESCRIPTION files
 #'
@@ -913,5 +1032,6 @@ check_yamls_consistent <- function(repos_to_process, feature,
       )
     )
   }
+
   return(invisible(NULL))
 }
