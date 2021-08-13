@@ -28,10 +28,6 @@ The package also provides:
 - Install all dependencies app: A Shiny application to un-select those 
   dependencies that should not be installed. 
 
-A simple example of usage can be found with the [synthetic.cdisc.data](https://github.com/Roche/synthetic.cdisc.data) 
-package and its (upstream) dependency [respectables](https://github.com/Roche/respectables).
-A public github example will be available shortly.
-
 ## Usage
 
 The directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and 
@@ -70,13 +66,6 @@ options(
 )
 ```
 
-For example within Roche the following would be added:
-
-```
-"https://github.roche.com" = "ROCHE_GITHUB_PAT",
-"https://code.roche.com" = "ROCHE_GITLAB_PAT"
-```
-
 ### RStudio Addins
 
 The easiest way to use `staged.dependencies`, once installed, 
@@ -100,7 +89,7 @@ install_upstream_deps(project = "../stageddeps.electricity", verbose = 1)
 
 check_downstream(
   project = "../stageddeps.electricity", 
-  downstream_repos = list(list(repo = "maximilian_oliver.mordig/stageddeps.house", host = "https://code.roche.com"))
+  downstream_repos = list(list(repo = "maximilian_oliver.mordig/stageddeps.house", host = "https://code.example.com"))
 )
 
 install_upstream_deps(
@@ -163,10 +152,10 @@ upstream_repos:
   host: https://github.com
 
 downstream_repos:
-- repo: NEST/test.nest
-  host: https://github.roche.com
-- repo: nest/tlg.standards
-  host: https://code.roche.com
+- repo: example1/repo1
+  host: https://github.example.com
+- repo: example1/repo2
+  host: https://code.example.com
 
 current_repo:
   repo: openpharma/staged.dependencies
@@ -210,8 +199,6 @@ When you run `remotes::install_deps` for a package that was installed with this 
 
 This package can also be tested on a more complex setup of packages.
 ![Dependencies. Arrow point from upstream to downstream packages](man/figures/README-StagedDepsExample.png)
-
-See https://code.roche.com/maximilian_oliver.mordig/stageddeps.water and the related packages.
 
 You can check that the right branches of the packages are installed with:
 

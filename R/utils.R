@@ -137,3 +137,13 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
   })
   return(invisible(NULL))
 }
+
+# check that two sets agree and throw an error message detailing difference otherwise
+check_set_equal <- function(x, y, pre_msg = "") {
+  if (!setequal(x, y)) {
+    stop(pre_msg, "Sets do not agree, ",
+         "setdiff x \\ y is '", toString(setdiff(x, y)), "'",
+         ", setdiff y \\ x is '", toString(setdiff(y, x)), "'"
+    )
+  }
+}

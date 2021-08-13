@@ -8,6 +8,7 @@ dependency_structure(
   project = ".",
   feature = NULL,
   local_repos = get_local_pkgs_from_config(),
+  direction = c("upstream", "downstream"),
   return_table_only = FALSE,
   verbose = 0
 )
@@ -22,6 +23,9 @@ current branch of project}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
+
+\item{direction}{(\code{character}) either or both of "upstream" and "downstream"
+to recursively checkout upstream and/or downstream dependencies}
 
 \item{return_table_only}{(\code{logical}) whether to return a table or (table, graph, deps)}
 
