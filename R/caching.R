@@ -86,6 +86,10 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
   # in the cache
   fs::dir_create(repo_dir)
   fs::file_copy(fs::dir_ls(local_dir, type = "file", all = TRUE), repo_dir)
+  # we also do not want the .Rprofile file
+  if (fs::file_exists(fs::path_join(c(repo_dir, ".Rprofile")))) {
+    fs::file_delete(fs::path_join(c(repo_dir, ".Rprofile")))
+  }
 
   lapply(fs::dir_ls(local_dir, type = "directory", all = TRUE), function(dir) {
     directory_to_copy <- utils::tail(strsplit(dir, .Platform$file.sep)[[1]], 1)
