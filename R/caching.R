@@ -81,7 +81,17 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
     message(paste("Copying local dir", local_dir, "to cache dir", repo_dir))
   }
   # file.copy copies a directory inside an existing directory
-  fs::dir_copy(local_dir, repo_dir)
+  # we ignore the renv directory as it is large (so slow), has long
+  # path names (so causes problems on Windows) and is not needed
+  # in the cache
+  fs::dir_create(repo_dir)
+  fs::file_copy(fs::dir_ls(local_dir, type = "file", all = TRUE), repo_dir)
+  lapply(fs::dir_ls(local_dir, type = "directory", all = TRUE), function(dir) {
+    directory_to_copy <- utils::tail(strsplit(dir, .Platform$file.sep)[[1]], 1)
+    if(directory_to_copy != "renv"){
+      fs::dir_copy(directory_to_copy, repo_dir)
+    }
+  })
 
   if ((length(git2r::status(repo_dir)$staged) > 0) ||
       (length(git2r::status(repo_dir)$unstaged) > 0) ||
