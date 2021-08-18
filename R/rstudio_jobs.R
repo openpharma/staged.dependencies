@@ -17,7 +17,7 @@ run_job <- function(text, tempfile_prefix = "file", jobname_prefix = "Job", ...)
 #' @examples
 #' \dontrun{
 #' install_deps_job()
-#' install_deps_job(feature = "6_makegraph@main@master")
+#' install_deps_job(feature = "6_makegraph@main")
 #'
 #' # install all dependencies
 #' install_deps_job(direction = c("upstream", "downstream"))
@@ -41,7 +41,7 @@ install_deps_job <- function(project = ".", verbose = 1, ...) {
 #' @examples
 #' \dontrun{
 #' check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"))
-#' check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"), feature = "6_makegraph@main@master")
+#' check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"), feature = "6_makegraph@main")
 #' check_downstream_job(only_tests = TRUE)
 #' }
 check_downstream_job <- function(project = ".", verbose = 1, ...) {
