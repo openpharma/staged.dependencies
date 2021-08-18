@@ -4,7 +4,7 @@
 # todo: replace git2r by gert
 # todo: cached repos, add examples
 # todo: rstudio addin to format doc
-# todo: add project field (scope) in yaml: to restrict to projects (e.g. nest only)
+# todo: add project field (scope) in yaml: to restrict to projects
 # todo: option to also fetch project from remote
 
 
@@ -80,8 +80,8 @@ add_project_to_local_repos <- function(project, local_repos) {
 #' # install all dependencies
 #' install_deps(direction = c("upstream", "downstream"))
 #'
-#' remove.packages("utils.nest")
-#' install_deps("../scratch1/utils.nest")
+#' remove.packages("stageddeps.food")
+#' install_deps("../scratch1/stageddeps.food")
 #' }
 #'
 install_deps <- function(project = ".", feature = NULL,
@@ -419,7 +419,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
     if (hash_repo_and_host(repo_and_host) %in% lapply(downstream_repos, hash_repo_and_host)) {
       if (!dry_install_and_check) {
         if (only_tests) {
-          # testthat::test_dir and devtools::test do not agree for test.nest@master
+          # testthat::test_dir and devtools::test do not always agree
           # testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
           # stop_on_failure argument cannot be passed to devtools::test
           if (dir.exists(file.path(repo_dir, "tests"))) {
@@ -897,20 +897,20 @@ update_with_direct_deps <- function(project = ".",
 #' @examples
 #' \dontrun{
 #' build_check_install_repos(
-#'   list(list(repo = "insightsengineering/teal", host = "https://github.com")),
+#'   list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
 #'   feature = "main",
 #'   direction = "upstream",
-#'   local_repos = data.frame(repo = "insightsengineering/teal",
-#'   host = "https://github.com", directory = "../scratch1/teal/",
+#'   local_repos = data.frame(repo = "openpharma/stageddeps.food",
+#'   host = "https://github.com", directory = "../scratch1/stageddeps.food/",
 #'   stringsAsFactors = FALSE)
 #' )
 #' build_check_install_repos(
-#'   list(list(repo = "maximilian_oliver.mordig/stageddeps.electricity",
-#'   host = "https://code.roche.com")),
-#'   feature = "master",
+#'   list(list(repo = "openpharma/stageddeps.electricity",
+#'   host = "https://github.com")),
+#'   feature = "main",
 #'   direction = "upstream",
-#'   local_repos = data.frame(repo = "maximilian_oliver.mordig/stageddeps.electricity",
-#'   host = "https://code.roche.com",
+#'   local_repos = data.frame(repo = "openpharma/stageddeps.electricity",
+#'   host = "https://github.com",
 #'   directory = "../example_ecosystem/stageddeps.electricity/",
 #'   stringsAsFactors = FALSE),
 #'   artifact_dir = "/tmp/test112"
@@ -999,13 +999,13 @@ build_check_install_repos <- function(repos_to_process, feature = "main",
 #' @examples
 #' \dontrun{
 #' check_yamls_consistent(
-#' list(list(repo = "insightsengineering/osprey",
+#' list(list(repo = "openpharma/stageddeps.food",
 #'           host = "https://github.com")),
 #' feature = "main",
 #' local_repos = data.frame(
-#'   repo = "insightsengineering/osprey",
+#'   repo = "openpharma/stageddeps.food",
 #'   host = "https://github.com",
-#'   directory = "../scratch1/osprey",
+#'   directory = "../scratch1/stageddeps.food",
 #'   stringsAsFactors = FALSE
 #' )
 #' )

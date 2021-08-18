@@ -7,7 +7,7 @@ internal dependencies}
 \usage{
 build_check_install_repos(
   repos_to_process,
-  feature,
+  feature = "main",
   direction = c("upstream", "downstream"),
   local_repos = get_local_pkgs_from_config(),
   verbose = 0,
@@ -21,7 +21,8 @@ build_check_install_repos(
 
 \item{feature}{(\code{character}) feature to build}
 
-\item{direction}{(\code{character}) either or both of "upstream" and "downstream"
+\item{direction}{(\code{character}) direction in which to discover packages
+either or both of "upstream" and "downstream"
 to recursively checkout upstream and/or downstream dependencies}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
@@ -41,6 +42,9 @@ to the \verb{R CMD} commands}
 \item{artifact_dir}{(\code{character}) directory where build
 tarball and logs go to}
 }
+\value{
+\code{artifact_dir} directory with log files
+}
 \description{
 It discovers all dependencies starting from the repositories,
 determines the installation order and then
@@ -49,20 +53,20 @@ builds, checks and installs them in order.
 \examples{
 \dontrun{
 build_check_install_repos(
-  list(list(repo = "insightsengineering/teal", host = "https://github.com")),
+  list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
   feature = "main",
   direction = "upstream",
-  local_repos = data.frame(repo = "insightsengineering/teal",
-  host = "https://github.com", directory = "../scratch1/teal/",
+  local_repos = data.frame(repo = "openpharma/stageddeps.food",
+  host = "https://github.com", directory = "../scratch1/stageddeps.food/",
   stringsAsFactors = FALSE)
 )
 build_check_install_repos(
-  list(list(repo = "maximilian_oliver.mordig/stageddeps.electricity",
-  host = "https://code.roche.com")),
-  feature = "master",
+  list(list(repo = "openpharma/stageddeps.electricity",
+  host = "https://github.com")),
+  feature = "main",
   direction = "upstream",
-  local_repos = data.frame(repo = "maximilian_oliver.mordig/stageddeps.electricity",
-  host = "https://code.roche.com",
+  local_repos = data.frame(repo = "openpharma/stageddeps.electricity",
+  host = "https://github.com",
   directory = "../example_ecosystem/stageddeps.electricity/",
   stringsAsFactors = FALSE),
   artifact_dir = "/tmp/test112"
