@@ -150,7 +150,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #' listed in the `DESCRIPTION` file are external dependencies.
 #'
 #' @md
-#' @param repos_to_process `list` of `list(repo, host)`
+#' @param repos_to_process `list` of `list(repo, host)` repos to start from
 #' @param feature (`character`) feature to build
 #' @param direction (`character`) direction in which to discover packages
 #'   either or both of "upstream" and "downstream"

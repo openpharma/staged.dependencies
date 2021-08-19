@@ -40,7 +40,7 @@ Install dependencies job
 \examples{
 \dontrun{
 install_deps_job()
-install_deps_job(feature = "6_makegraph@main@master")
+install_deps_job(feature = "6_makegraph@main")
 
 # install all dependencies
 install_deps_job(direction = c("upstream", "downstream"))

@@ -10,7 +10,7 @@ install_deps_from_repos(
   feature,
   local_repos = get_local_pkgs_from_config(),
   direction = "upstream",
-  install_repos_to_process = TRUE,
+  install_project = TRUE,
   dry_install = FALSE,
   verbose = 0,
   install_external_deps = TRUE,
@@ -30,7 +30,7 @@ install_deps(
 )
 }
 \arguments{
-\item{repos_to_process}{\code{list} of \code{list(repo, host)}}
+\item{repos_to_process}{\code{list} of \code{list(repo, host)} repos to start from}
 
 \item{feature}{(\code{character}) feature we want to build; inferred from the
 branch of the project if not provided; warning if not consistent with
@@ -43,8 +43,8 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 either or both of "upstream" and "downstream"
 to recursively checkout upstream and/or downstream dependencies}
 
-\item{install_repos_to_process}{(\code{logical}) whether to also install the
-repos passed in \code{repos_to_process}}
+\item{install_project}{(\code{logical}) whether to also install the current
+package (\code{project})}
 
 \item{dry_install}{(\code{logical}) dry run that lists packages that would be
 installed without installing; this still checks out the git repos to
@@ -63,8 +63,8 @@ is set to "never" and shouldn't be passed into this function.}
 \item{project}{(\code{character}) directory of project (for which to restore the
 dependencies according to feature); must be a git repository.}
 
-\item{install_project}{(\code{logical}) whether to also install the current
-package (\code{project})}
+\item{install_repos_to_process}{(\code{logical}) whether to also install the
+repos passed in \code{repos_to_process}}
 }
 \value{
 installed packages in installation order
