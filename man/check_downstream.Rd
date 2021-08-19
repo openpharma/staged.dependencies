@@ -33,7 +33,8 @@ of \code{project}}
 local rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{recursive}{(\code{logical}) whether to recursively check the downstream
-dependencies of the downstream dependencies}
+dependencies of the downstream dependencies;
+ignored if \code{downstream_repos} is set}
 
 \item{dry_install_and_check}{(\code{logical}) whether to install upstream
 dependencies and check/test downstream repos; otherwise just reports

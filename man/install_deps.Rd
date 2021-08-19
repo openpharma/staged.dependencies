@@ -101,6 +101,8 @@ install_deps_project(direction = c("upstream", "downstream"))
 remove.packages("utils.nest")
 install_deps_project("../scratch1/utils.nest", dry_install = TRUE)
 install_deps_project("../scratch1/utils.nest")
+remove.packages("stageddeps.food")
+install_deps("../scratch1/stageddeps.food")
 }
 }
 \seealso{

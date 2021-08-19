@@ -14,7 +14,7 @@ check_yamls_consistent(
 )
 }
 \arguments{
-\item{repos_to_process}{\code{list} of \code{list(repo, host)}}
+\item{repos_to_process}{\code{list} of \code{list(repo, host)} repos to start from}
 
 \item{feature}{(\code{character}) feature to build}
 
@@ -36,13 +36,13 @@ the dependencies listed in the DESCRIPTION files
 \examples{
 \dontrun{
 check_yamls_consistent(
-list(list(repo = "insightsengineering/osprey",
+list(list(repo = "openpharma/stageddeps.food",
           host = "https://github.com")),
 feature = "main",
 local_repos = data.frame(
-  repo = "insightsengineering/osprey",
+  repo = "openpharma/stageddeps.food",
   host = "https://github.com",
-  directory = "../scratch1/osprey",
+  directory = "../scratch1/stageddeps.food",
   stringsAsFactors = FALSE
 )
 )
