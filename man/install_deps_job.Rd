@@ -17,9 +17,6 @@ dependencies according to feature); must be a git repository.}
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
-    \item{\code{feature}}{(\code{character}) feature we want to build; inferred from the
-branch of the project if not provided; warning if not consistent with
-current branch of project}
     \item{\code{install_project}}{(\code{logical}) whether to also install the current
 package (\code{project})}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
@@ -27,11 +24,6 @@ installed without installing; this still checks out the git repos to
 match \code{feature}}
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of package using \code{remotes::install_deps}.}
-    \item{\code{local_repos}}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
-    \item{\code{direction}}{(\code{character}) direction in which to discover packages
-either or both of "upstream" and "downstream"
-to recursively checkout upstream and/or downstream dependencies}
   }}
 }
 \description{

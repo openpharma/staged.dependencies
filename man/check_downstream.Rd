@@ -29,9 +29,6 @@ current branch of project}
 \item{downstream_repos}{(\code{list}) to overwrite the downstream repos to check
 of \code{project}}
 
-\item{local_repos}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
-
 \item{recursive}{(\code{logical}) whether to recursively check the downstream
 dependencies of the downstream dependencies;
 ignored if \code{downstream_repos} is set}

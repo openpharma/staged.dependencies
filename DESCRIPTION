@@ -43,6 +43,7 @@ Collate:
     'branching_strategy.R'
     'caching.R'
     'dependencies.R'
+    'dependencies_helper.R'
     'git_tools.R'
     'graph_methods.R'
     'rstudio_jobs.R'

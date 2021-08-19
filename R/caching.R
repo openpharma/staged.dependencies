@@ -161,9 +161,8 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
 #'
-#' @return A list, on entry per checkout out repository whose name is
-#'   the name of the repo in the form `repo @ host` (`hash(repo, host)`)
-#'   and whose value is the directory to which it has been checked out into
+#' @return A data frame, one row per checkouted out repository with columns
+#' repo, host and cache_dir
 rec_checkout_internal_deps <- function(repos_to_process, feature,
                                       direction = c("upstream"),
                                       local_repos = get_local_pkgs_from_config(),
@@ -222,5 +221,7 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
     )
   }
 
-  return(hashed_processed_repos)
+  df <- data.frame(unhash_repo_and_host(names(hashed_processed_repos)))
+  df$cache_dir <- unname(hashed_processed_repos)
+  return(df)
 }

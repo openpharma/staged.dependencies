@@ -4,27 +4,7 @@
 \alias{update_with_direct_deps}
 \title{Update existing stage_dependencies yaml file}
 \usage{
-update_with_direct_deps(
-  project = ".",
-  feature = NULL,
-  local_repos = get_local_pkgs_from_config(),
-  verbose = 0
-)
-}
-\arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
-
-\item{feature}{(\code{character}) feature we want to build; inferred from the
-branch of the project if not provided; warning if not consistent with
-current branch of project}
-
-\item{local_repos}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
-
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+update_with_direct_deps(dep_structure)
 }
 \description{
 Using the existing stage_dependencies yaml file

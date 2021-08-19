@@ -5,32 +5,16 @@
 \title{Install dependencies of project corresponding to feature}
 \usage{
 install_deps(
-  project = ".",
-  feature = NULL,
-  local_repos = get_local_pkgs_from_config(),
-  direction = "upstream",
+  dep_structure,
   install_project = TRUE,
   dry_install = FALSE,
   verbose = 0,
   install_external_deps = TRUE,
+  install_direction = "upstream",
   ...
 )
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
-
-\item{feature}{(\code{character}) feature we want to build; inferred from the
-branch of the project if not provided; warning if not consistent with
-current branch of project}
-
-\item{local_repos}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
-
-\item{direction}{(\code{character}) direction in which to discover packages
-either or both of "upstream" and "downstream"
-to recursively checkout upstream and/or downstream dependencies}
-
 \item{install_project}{(\code{logical}) whether to also install the current
 package (\code{project})}
 
@@ -47,6 +31,13 @@ external dependencies of package using \code{remotes::install_deps}.}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}
+
+\item{project}{(\code{character}) directory of project (for which to restore the
+dependencies according to feature); must be a git repository.}
+
+\item{feature}{(\code{character}) feature we want to build; inferred from the
+branch of the project if not provided; warning if not consistent with
+current branch of project}
 }
 \value{
 installed packages in installation order

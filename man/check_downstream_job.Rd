@@ -30,8 +30,6 @@ ignored if \code{downstream_repos} is set}
     \item{\code{feature}}{(\code{character}) feature we want to build; inferred from the
 branch of the project if not provided; warning if not consistent with
 current branch of project}
-    \item{\code{local_repos}}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of package using \code{remotes::install_deps}.}
   }}
