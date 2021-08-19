@@ -20,7 +20,7 @@ install_deps_app(
 dependencies according to feature); must be a git repository.}
 
 \item{default_feature}{(\code{character}) default feature, see also the parameter
-\code{feature} of \verb{\link{install_deps_project}}}
+\code{feature} of \verb{\link{install_deps}}}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}

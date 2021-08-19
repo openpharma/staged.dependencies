@@ -9,9 +9,9 @@ run_job <- function(text, tempfile_prefix = "file", jobname_prefix = "Job", ...)
 
 #' Install dependencies job
 #'
-#' @inheritParams install_deps_project
-#' @inheritDotParams install_deps_project
-#' @seealso install_deps_project
+#' @inheritParams install_deps
+#' @inheritDotParams install_deps
+#' @seealso install_deps
 #' @export
 #'
 #' @examples
@@ -27,8 +27,8 @@ install_deps_job <- function(project = ".", verbose = 1, ...) {
   project <- normalizePath(project)
   args <- c(list(project = project, verbose = verbose), list(...))
   args_str <- paste(deparse(args), collapse = "\n")
-  script <- glue::glue('do.call(staged.dependencies::install_deps_project, {args_str})')
-  run_job(script, "install_deps_project", paste0("Install deps of ", basename(project)))
+  script <- glue::glue('do.call(staged.dependencies::install_deps, {args_str})')
+  run_job(script, "install_deps", paste0("Install deps of ", basename(project)))
 }
 
 #' Check & install downstream job

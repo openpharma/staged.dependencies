@@ -73,12 +73,12 @@ add_project_to_local_repos <- function(project, local_repos) {
 #'
 #' @examples
 #' \dontrun{
-#' install_deps(list(list(
+#' install_deps_from_repos(list(list(
 #' repo = "insightsengineering/utils.nest",
 #' host = "https://github.com"
 #' )), feature = "main")
 #' }
-install_deps <- function(repos_to_process,
+install_deps_from_repos <- function(repos_to_process,
                          feature,
                          local_repos = get_local_pkgs_from_config(),
                          direction = "upstream",
@@ -143,17 +143,17 @@ install_deps <- function(repos_to_process,
 #' @export
 #' @examples
 #' \dontrun{
-#' install_deps_project()
+#' install_deps()
 #'
 #' # install all dependencies
-#' install_deps_project(direction = c("upstream", "downstream"))
+#' install_deps(direction = c("upstream", "downstream"))
 #'
 #' remove.packages("utils.nest")
-#' install_deps_project("../scratch1/utils.nest", dry_install = TRUE)
-#' install_deps_project("../scratch1/utils.nest")
+#' install_deps("../scratch1/utils.nest", dry_install = TRUE)
+#' install_deps("../scratch1/utils.nest")
 #' }
-#' @describeIn install_deps specify project by path
-install_deps_project <- function(project = ".",
+#' @describeIn install_deps_from_repos specify project by path
+install_deps <- function(project = ".",
                          feature = NULL,
                          local_repos = get_local_pkgs_from_config(),
                          direction = "upstream",
@@ -170,7 +170,7 @@ install_deps_project <- function(project = ".",
 
   repo_deps_info <- get_yaml_deps_info(project)
 
-  install_deps(
+  install_deps_from_repos(
     repos_to_process = list(repo_deps_info$current_repo),
     feature = feature, local_repos = local_repos, direction = direction,
     install_repos_to_process = install_project, dry_install = dry_install,
@@ -187,10 +187,10 @@ install_deps_project <- function(project = ".",
 #'
 #' @md
 #' @param default_feature (`character`) default feature, see also the parameter
-#'   `feature` of `\link{install_deps_project}`
+#'   `feature` of `\link{install_deps}`
 #' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
-#' @inheritParams install_deps_project
+#' @inheritParams install_deps
 #' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
 #'
@@ -358,7 +358,7 @@ install_deps_app <- function(project = ".", default_feature = NULL,
 #'   dependencies of the downstream dependencies
 #' @param check_args (`list`) arguments passed to `rcmdcheck`
 #' @param only_tests (`logical`) whether to only run tests (rather than checks)
-#' @inheritParams install_deps_project
+#' @inheritParams install_deps
 #' @export
 #' @seealso determine_branch
 #'
@@ -493,7 +493,7 @@ check_downstream <- function(project = ".", feature = NULL, downstream_repos = N
 #' @md
 #'
 #' @param return_table_only (`logical`) whether to return a table or (table, graph, deps)
-#' @inheritParams install_deps_project
+#' @inheritParams install_deps
 #' @inheritParams rec_checkout_internal_deps
 #' @export
 #' @seealso determine_branch

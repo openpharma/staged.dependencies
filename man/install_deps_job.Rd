@@ -15,7 +15,7 @@ dependencies according to feature); must be a git repository.}
 2: includes git checkout infos)}
 
 \item{...}{
-  Arguments passed on to \code{\link[=install_deps_project]{install_deps_project}}
+  Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
     \item{\code{feature}}{(\code{character}) feature we want to build; inferred from the
 branch of the project if not provided; warning if not consistent with
@@ -48,5 +48,5 @@ install_deps_job(dry_install = TRUE)
 }
 }
 \seealso{
-install_deps_project
+install_deps
 }
