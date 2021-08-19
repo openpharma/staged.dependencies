@@ -5,8 +5,11 @@ Version: 0.1.0
 Authors@R: c(
   person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = c("cre", "aut"))
   )
+biocViews:
 Imports:
-  stageddeps.electricity
+  desc,
+  stageddeps.electricity,
+  SummarizedExperiment
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 License: file LICENSE
