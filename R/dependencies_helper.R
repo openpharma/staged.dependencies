@@ -83,6 +83,10 @@ get_true_deps_graph <- function(pkgs,
 
   names(upstream_deps) <- pkgs$package_name
 
+  # order the dependencies
+  install_order <- topological_sort(upstream_deps)
+  upstream_deps <- upstream_deps[install_order]
+
   res <- list()
   if ("upstream" %in% direction) {
     res[["upstream_deps"]] <- upstream_deps
@@ -95,7 +99,7 @@ get_true_deps_graph <- function(pkgs,
       }
     }
 
-    res[["downstream_deps"]] <- downstream_deps
+    res[["downstream_deps"]] <- downstream_deps[rev(install_order)]
   }
 
   res

@@ -30,7 +30,7 @@ dependency_table <- function(project = ".", feature = NULL,
 
   repo_deps_info <- get_yaml_deps_info(project)
 
-  # a dataframe with columns repo, host, cache_dir
+  # a dataframe with columns repo, host, branch, cache_dir
   internal_deps <- rec_checkout_internal_deps(
     list(repo_deps_info$current_repo), feature, direction = direction,
     local_repos = local_repos, verbose = verbose
@@ -38,83 +38,49 @@ dependency_table <- function(project = ".", feature = NULL,
 
   internal_deps$package_name <- get_pkg_names_from_paths(internal_deps$cache_dir)
 
-  # TODO check that package names are unique and if not throw error
+  if (length(internal_deps$package_name) != length(unique(internal_deps$package_name))) {
+    stop("Each R package must have a unique name")
+  }
+
+  internal_deps$type <- factor("other", levels = c("current", "upstream", "downstream", "other"))
+  internal_deps$distance <- as.numeric(NA)
 
   # deps$upstream_deps[["a"]] is vector of upstream_deps of "a"
   # deps$downstream_deps[["a"]] is a vector of downstream_deps of "a"
   # where the elements of the lists are the package names found in internal_deps
-  deps <- get_true_deps_graph(
-    internal_deps,
-    direction = c("upstream", "downstream")
-  )
+  # deps is ordered topologically
+  deps <- get_true_deps_graph(internal_deps, direction = c("upstream", "downstream"))
 
+  current_repo <- internal_deps$package_name[internal_deps$repo == repo_deps_info$current_repo$repo &
+                                             internal_deps$host == repo_deps_info$current_repo$host]
 
-  hashed_cur_repo <- hash_repo_and_host(repo_deps_info$current_repo)
-  hashed_upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], hashed_cur_repo)
-  hashed_downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], hashed_cur_repo)
-  # If direction = c("upstream", "downstream") then there can be nodes in the internal
-  # dependencies list which are neither upstream nor downstream from the current repo.
-  # For example other downstream dependencies from an upstream dependency of the current repo
-  hashed_remaining_nodes <- setdiff(
-    union(names(deps[["upstream_deps"]]), names(deps[["downstream_deps"]])),
-    union(union(hashed_upstream_nodes$id, hashed_downstream_nodes$id), hashed_cur_repo)
-  )
+  internal_deps$type[internal_deps$package_name == current_repo] <- "current"
+  internal_deps$distance[internal_deps$package_name == current_repo] <- 0
 
-  df <- rbind(
-    data.frame(unhash_repo_and_host(hashed_cur_repo),
-               distance = 0, type = "current", stringsAsFactors = FALSE),
-    cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_upstream_nodes$id),
-                 distance = hashed_upstream_nodes$distance,
-                 stringsAsFactors = FALSE), type = "upstream"
-    ),
-    cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_downstream_nodes$id),
-                 distance = hashed_downstream_nodes$distance,
-                 stringsAsFactors = FALSE), type = "downstream"
-    ),
-    cbind_handle_empty(
-      data.frame(unhash_repo_and_host(hashed_remaining_nodes),
-                 stringsAsFactors = FALSE),
-      distance = as.numeric(NA), type = "other"
-    )
-  )
-  # add checked out branch
-  hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
-  df$branch <- Map(function(repo, host) {
-    is_local <- hash_repo_and_host(list(repo = repo, host = host)) %in% names(hashed_repo_to_dir)
-    if (is_local) {
-      branch <- get_active_branch_in_cache(repo, host, local = is_local)
-      paste0("local (", branch, ")")
-    } else {
-      # HEAD is detached, so we infer the branch name from the branch rule (we cannot handle it
-      # as in the previous case since a SHA can correspond to multiple branches)
-      repo_dir <- get_repo_cache_dir(repo, host)
-      available_branches <- names(git2r::branches(repo_dir))
-      available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
-      branch <- determine_branch(feature, available_branches)
-      # check sha of remote branch agrees with currently checked out commit (in detached HEAD mode)
-      stopifnot(
-        git2r::revparse_single(repo_dir, paste0("origin/", branch))$sha ==
-          git2r::repository_head(repo_dir)$sha
-      )
-      branch
-    }
-  }, df$repo, df$host)
+  upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], current_repo)
+  internal_deps$type[internal_deps$package_name %in% upstream_nodes$id] <- "upstream"
+  internal_deps$distance[match(upstream_nodes$id, internal_deps$package_name)] <- upstream_nodes$distance
 
-  df$cache_dir <- apply(df, 1,
-                        function(y)
-                          internal_deps[[hash_repo_and_host(list(repo = y["repo"], host = y["host"]))]]
-  )
+  downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], current_repo)
+  internal_deps$type[internal_deps$package_name %in% downstream_nodes$id] <- "downstream"
+  internal_deps$distance[match(downstream_nodes$id, internal_deps$package_name)] <- downstream_nodes$distance
 
-  df$package_name <- get_pkg_names_from_paths(df$cache_dir)
+  # sort the table
+  internal_deps <- internal_deps[order(internal_deps$type, internal_deps$distance),
+                                 c("package_name", "type", "distance", "branch",
+                                   "repo", "host", "cache_dir")]
+  rownames(internal_deps) <- NULL
+  internal_deps$type <- as.character(internal_deps$type)
 
+  internal_deps$install_index <- vapply(internal_deps$package_name,
+                                        function(y) which(names(deps[["upstream_deps"]]) == y),
+                                        FUN.VALUE = numeric(1))
   structure(
     list(
-      project = project,
-      current_repo = repo_deps_info$current_repo,
+      project = fs::path_abs(project),
+      current_repo = current_repo,
       local_repos = local_repos,
-      table = df,
+      table = internal_deps,
       deps = deps,
       direction = direction
     ),
@@ -125,31 +91,29 @@ dependency_table <- function(project = ".", feature = NULL,
 
 #' @export
 print.dependency_structure <- function(x, ...) {
-  # do not show the package name when printing
+  # do not show the cache dir or install order when printing
   table <- x$table
   table$cache_dir <- NULL
+  table$install_index <- NULL
   print(table)
 }
 
 
+#' @importFrom dplyr %>%
 #' @export
 plot.dependency_structure <- function(x, y, ...){
-  short_repo_name <- function(repo_name) {
-    # removes owner from reponame
-    vapply(strsplit(repo_name, "/", fixed = TRUE), function(x) utils::tail(x, 1), character(1))
-  }
 
   # construct visNetwork graph
   require_pkgs(c("dplyr", "visNetwork"))
   # todo: put branch below node: https://github.com/almende/vis/issues/3436
-  nodes <- x$table %>% mutate(
-    id = hash_repo_and_host(list(repo = .data$repo, host = .data$host)),
+  nodes <- x$table %>% dplyr::mutate(
+    id = .data$package_name,
     # label does not support html tags
-    label = paste0(short_repo_name(.data$repo), "\n", .data$branch),
-    title = paste0("<p>", .data$repo, "<br/>", .data$host, "<br/>", .data$type, "<br/>", .data$branch, "</p"),
+    label = paste0(.data$package_name, "\n", .data$branch),
+    title = paste0("<p>", .data$package_name,  "<br/>", .data$type, "<br/>", .data$branch, "</p>"),
     value = 3,
     group = .data$type
-  ) %>% select(c("id", "label", "title", "value", "group"))
+  ) %>% dplyr::select(c("id", "label", "title", "value", "group"))
 
   edges <- rbind(
     cbind_handle_empty(
@@ -157,7 +121,7 @@ plot.dependency_structure <- function(x, y, ...){
       arrows = "to", listed_by = "from"
     ),
     cbind_handle_empty(
-      adj_list_to_edge_df(x$deps[["downstream_deps"]]) %>% rename(to = .data$from, from = .data$to),
+      adj_list_to_edge_df(x$deps[["downstream_deps"]]) %>% dplyr::rename(to = .data$from, from = .data$to),
       arrows = "to", listed_by = "to"
     )
   )
@@ -174,8 +138,8 @@ plot.dependency_structure <- function(x, y, ...){
     }
   }
   get_edge_tooltip <- function(from, to, listed_by) {
-    from <- short_repo_name(unhash_repo_and_host(from[[1]])$repo)
-    to <- short_repo_name(unhash_repo_and_host(to[[1]])$repo)
+    from <- from[[1]]
+    to <- to[[1]]
     if (setequal(listed_by, c("from", "to"))) {
       ""
     } else if (setequal(listed_by, c("from"))) {
@@ -186,14 +150,14 @@ plot.dependency_structure <- function(x, y, ...){
       stop("Unexpected listed_by: ", listed_by)
     }
   }
-  edges <- edges %>% group_by(.data$from, .data$to) %>%
-    mutate(color = get_edge_color(.data$listed_by)) %>%
-    mutate(title = get_edge_tooltip(.data$from, .data$to, .data$listed_by)) %>%
-    mutate(dashes = !setequal(.data$listed_by, c("from", "to"))) %>%
-    ungroup() %>%
-    select(-one_of("listed_by"))
+  edges <- edges %>% dplyr::group_by(.data$from, .data$to) %>%
+    dplyr::mutate(color = get_edge_color(.data$listed_by)) %>%
+    dplyr::mutate(title = get_edge_tooltip(.data$from, .data$to, .data$listed_by)) %>%
+    dplyr::mutate(dashes = !setequal(.data$listed_by, c("from", "to"))) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-one_of("listed_by"))
 
-  plot_title <- paste0("Dependency graph starting from ", x$current_repo$repo)
+  plot_title <- paste0("Dependency graph starting from ", x$current_repo)
   graph <- visNetwork::visNetwork(nodes, edges, width = "100%", main = plot_title) %>%
     # topological sort
     visNetwork::visHierarchicalLayout(sortMethod = "directed", direction = "RL") %>%
@@ -282,25 +246,8 @@ install_deps <- function(dep_structure,
     stop("Invalid install_direction argument for this dependency object")
   }
 
-  install_order <- get_install_order(dep_structure$deps[["upstream_deps"]])
-
-  allowed_type <- NULL
-  # This will be refactored to be much nicer
-  if (identical(install_direction, "upstream")) {
-    allowed_type <- c("current", "upstream")
-  }
-  if (identical(install_direction, "downstream")) {
-    allowed_type <- c("current", "downstream")
-  }
-
-  if (!is.null(allowed_type)) {
-    hashed_repos_to_consider <- unlist(apply(dep_structure$table, 1,
-                                           function(row) if(row["type"] %in% allowed_type)
-                                             hash_repo_and_host(list(repo=row["repo"], host=row["host"]))))
-
-    install_order <- Filter(function(x) hash_repo_and_host(x) %in% hashed_repos_to_consider, install_order)
-  }
-
+  # get the packages to install
+  #TODO
 
 
   if (identical(install_direction, "upstream")) {
@@ -315,7 +262,7 @@ install_deps <- function(dep_structure,
            dep_structure$current_repo$repo,
            "; this is not consistent with the dependencies given in the",
            " DESCRIPTION files.",
-           " You can safely ignore this warning, it just means that more ",
+           " You can safely ignore this warning, but more ",
            "packages than necessary are installed.",
            " Use the function 'check_yamls_consistent' to find out why.")
     }

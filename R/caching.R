@@ -94,7 +94,8 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
     )
   }
 
-  repo_dir
+  branch <-  git2r::repository_head(repo_dir)$name
+  return(list(dir = repo_dir, branch = paste0("local (", branch, ")")))
 }
 
 # get upstream repos and downstream repos according to yaml file in repo directory
@@ -180,6 +181,7 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
   rm(repos_to_process)
 
   hashed_processed_repos <- list()
+  hashed_repos_branches <- list()
 
   while (length(hashed_repos_to_process) > 0) {
     hashed_repo_and_host <- hashed_repos_to_process[[1]]
@@ -190,12 +192,12 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
     stopifnot(!is.null(repo_and_host$host))
 
     if (hashed_repo_and_host %in% names(local_repo_to_dir)) {
-      repo_dir <- copy_local_repo_to_cachedir(
+      repo_info <- copy_local_repo_to_cachedir(
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
         verbose = verbose
       )
     } else {
-      repo_dir <- checkout_repo(
+      repo_info <- checkout_repo(
         get_repo_cache_dir(repo_and_host$repo, repo_and_host$host),
         get_repo_url(repo_and_host$repo, repo_and_host$host),
         token_envvar = get_authtoken_envvar(repo_and_host$host),
@@ -208,14 +210,15 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
 
     hashed_new_repos <- c()
     if ("upstream" %in% direction) {
-      hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
+      hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$upstream_repos, hash_repo_and_host)
       hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
     }
     if ("downstream" %in% direction) {
-      hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_dir)$downstream_repos, hash_repo_and_host)
+      hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$downstream_repos, hash_repo_and_host)
       hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
     }
-    hashed_processed_repos[[hashed_repo_and_host]] <- repo_dir
+    hashed_processed_repos[[hashed_repo_and_host]] <- repo_info$dir
+    hashed_repos_branches[[hashed_repo_and_host]] <- repo_info$branch
     hashed_repos_to_process <- union(
       hashed_repos_to_process, setdiff(hashed_new_repos, names(hashed_processed_repos))
     )
@@ -223,5 +226,6 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
 
   df <- data.frame(unhash_repo_and_host(names(hashed_processed_repos)))
   df$cache_dir <- unname(hashed_processed_repos)
+  df$branch <- unname(hashed_repos_branches)
   return(df)
 }

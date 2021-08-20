@@ -113,9 +113,9 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
   check_only_remote_branches(git_repo)
   available_branches <- names(git2r::branches(git_repo))
   available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
-  branch <- select_branch_rule(available_branches)
-  stopifnot(branch %in% available_branches)
-  branch <- paste0("origin/", branch)
+  branch_without_prefix <- select_branch_rule(available_branches)
+  stopifnot(branch_without_prefix %in% available_branches)
+  branch <- paste0("origin/", branch_without_prefix)
 
 
   # force = TRUE to discard any changes (which should not happen)
@@ -130,7 +130,7 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
   }
   git2r::checkout(git_repo, branch = branch, force = TRUE)
 
-  repo_dir
+  return(list(dir = repo_dir, branch = branch_without_prefix))
 }
 
 # Install the external deps required for a package
