@@ -482,45 +482,68 @@ build_check_install_repos <- function(repos_to_process, feature = "main",
 #' Checks that the staged dependency yamls are consistent with
 #' the dependencies listed in the DESCRIPTION files
 #'
-#' @md
-#' @inheritParams rec_checkout_internal_deps
+#' @details This function explicitly checks that for all packages in the
+#'   \code{dependency_structure} object: all upstream and downstream packages specified in each yaml
+#'   file are found in the appropriate package DESCRIPTION file
+#'
+#' @param dep_structure \code{dependency_structure} object
+#' @return NULL if successful. An error is thrown if inconsistencies found
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' check_yamls_consistent(
-#' list(list(repo = "openpharma/stageddeps.food",
-#'           host = "https://github.com")),
-#' feature = "main",
-#' local_repos = data.frame(
-#'   repo = "openpharma/stageddeps.food",
-#'   host = "https://github.com",
-#'   directory = "../scratch1/stageddeps.food",
-#'   stringsAsFactors = FALSE
-#' )
-#' )
+#' x <- dependency_table(project = ".")
+#' check_yamls_consistent(x)
 #' }
-check_yamls_consistent <- function(repos_to_process, feature,
-                                       direction = c("upstream", "downstream"),
-                                       local_repos = get_local_pkgs_from_config(),
-                                       verbose = 0) {
-  internal_deps <- rec_checkout_internal_deps(
-    repos_to_process, feature, direction, local_repos, verbose
-  )
-  deps <- get_true_deps_graph(internal_deps, direction = c("upstream", "downstream"))
-  for (hashed_repo_and_host in names(internal_deps)) {
-    package_path <- internal_deps[[hashed_repo_and_host]]
-    yaml_deps <- get_yaml_deps_info(package_path)
+check_yamls_consistent <- function(dep_structure) {
 
-    check_set_equal(
-      deps[["upstream_deps"]][[hashed_repo_and_host]],
-      vapply(unname(yaml_deps[["upstream_repos"]]), hash_repo_and_host, character(1)),
-      pre_msg = paste0(
-        "For package '", hashed_repo_and_host,
-        "':\nExpected dependencies 'x' from DESCRIPTION files vs dependencies 'y'",
-        " from staged dependency yaml file:\n"
-      )
-    )
+  stopifnot("dependency_structure" %in% class(dep_structure))
+  if (length(dep_structure$direction) == 1) {
+    stop("direction must include both 'upstream' and 'downstream'")
+  }
+
+
+  extract_package_name <- function(repo_and_host, table){
+    table$package_name[table$repo == repo_and_host$repo & table$host == repo_and_host$host]
+  }
+
+  error_msg <- ""
+
+  for (index in seq_len(nrow(dep_structure$table))) {
+    package_name <- dep_structure$table$package_name[index]
+    yaml_deps <- get_yaml_deps_info(unlist(dep_structure$table$cache_dir[index]))
+
+    # check that packages upstream in the yaml file are upstream deps
+    upstream_packages_in_yaml <- vapply(yaml_deps$upstream_repos, extract_package_name, dep_structure$table,
+                                        FUN.VALUE = character(1))
+    upstream_packages_in_desc <- dep_structure$deps[["upstream_deps"]][[package_name]]
+    if (!all(upstream_packages_in_yaml %in% upstream_packages_in_desc)) {
+      error_msg <- paste(
+                     error_msg,
+                     "The staged dependencies yaml file for package", package_name,
+                     "has upstream repo(s):",
+                     toString(upstream_packages_in_yaml[!upstream_packages_in_yaml %in% upstream_packages_in_desc]),
+                     "which are not specified in the DESCRIPTION file.\n"
+                   )
+    }
+
+    # check that packages downstream in the yaml file are downstream deps
+    downstream_packages_in_yaml <- vapply(yaml_deps$downstream_repos, extract_package_name, dep_structure$table,
+                                          FUN.VALUE = character(1))
+    downstream_packages_in_desc <-  dep_structure$deps[["downstream_deps"]][[package_name]]
+    if (!all(downstream_packages_in_yaml %in% downstream_packages_in_desc)) {
+      error_msg <- paste(
+                     error_msg,
+                    "The staged dependencies yaml file for package", package_name,
+                    "has downstream repo(s):",
+                    toString(downstream_packages_in_yaml[!downstream_packages_in_yaml %in% downstream_packages_in_desc]),
+                    "which are not specified in the appropriate DESCRIPTION file(s).\n"
+                   )
+    }
+  }
+
+  if (nchar(error_msg) != 0) {
+    stop(error_msg)
   }
 
   return(invisible(NULL))
