@@ -79,7 +79,6 @@ dependency_table <- function(project = ".", feature = NULL,
     list(
       project = fs::path_abs(project),
       current_repo = current_repo,
-      local_repos = local_repos,
       table = internal_deps,
       deps = deps,
       direction = direction
@@ -247,51 +246,23 @@ install_deps <- function(dep_structure,
   }
 
   # get the packages to install
-  #TODO
-
-
-  if (identical(install_direction, "upstream")) {
-    # if installing upstream dependencies, project should appear last
-    # if only direct upstream and downstream dependencies are listed in
-    # the yaml. Otherwise, more packages may also get installed, so we
-    # issue a warning.
-    if (!isTRUE(all.equal(utils::tail(install_order, 1)[[1]], dep_structure$current_repo))){
-      warning("The staged dependency yaml files of your packages imply ",
-           utils::tail(install_order, 1)[[1]]$repo,
-           " is an upstream dependency of ",
-           dep_structure$current_repo$repo,
-           "; this is not consistent with the dependencies given in the",
-           " DESCRIPTION files.",
-           " You can safely ignore this warning, but more ",
-           "packages than necessary are installed.",
-           " Use the function 'check_yamls_consistent' to find out why.")
-    }
+  pkg_df <- dep_structure$table[order(dep_structure$table$install_index), ]
+  # filter by install_direction
+  if (length(install_direction) == 1) {
+    pkg_df <- pkg_df[, pkg_df$type %in% c("current", install_direction)]
   }
 
   if (!install_project) {
-    install_order <- Filter(function(x) !identical(x, dep_structure$current_repo), install_order)
+    pkg_df <- pkg_df[, pkg_df$type != "current"]
   }
 
-  if (verbose >= 1) {
-    message("Installing packages in order: ", toString(extract_str_field(install_order, "repo")))
-  }
-  hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(dep_structure$local_repos)
 
-  for (repo_and_host in install_order) {
-    is_local <- hash_repo_and_host(repo_and_host) %in% names(hashed_repo_to_dir)
-    repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
-    if (!dry_install) {
-      install_repo_add_sha(repo_dir, install_external_deps = install_external_deps,
-                           internal_pkg_deps = dep_structure$table$package_name, ...)
-    } else if (verbose >= 1) {
-      cat_nl("(Dry run) Skipping installation of ", repo_dir)
-    }
-  }
-  if (verbose >= 1) {
-    message("Installed packages in order: ", toString(extract_str_field(install_order, "repo")))
-  }
 
-  install_order
+  run_package_actions(pkg_df, type = "install", dry = dry_install,
+                      install_external_deps = install_external_deps,
+                      internal_pkg_deps = dep_structure$table$package_name,
+                      verbose = verbose, ...)
+  pkg_df$package_name
 }
 
 
@@ -488,19 +459,18 @@ install_deps_app <- function(project = ".", default_feature = NULL,
 #'   project = "../stageddeps.electricity"
 #' )
 #' }
-check_downstream <- function(project = ".", feature = NULL, downstream_repos = NULL,
-                             local_repos = get_local_pkgs_from_config(),
-                             recursive = TRUE, dry_install_and_check = FALSE, check_args = NULL,
+check_downstream <- function(dep_structure,
+                             downstream_packages = NULL,
+                             distance = NULL, dry_install_and_check = FALSE, check_args = NULL,
                              only_tests = FALSE,
                              verbose = 0, install_external_deps = TRUE, ...) {
   stopifnot(
-    is.data.frame(local_repos) || is.null(local_repos),
-    is.logical(recursive),
+    is.null(distance) || (is.numeric(distance) && distance > 0),
     is.logical(dry_install_and_check)
   )
-  check_dir_exists(project)
+
   check_verbose_arg(verbose)
-  error_if_stageddeps_inexistent(project)
+
 
   feature <- infer_feature_from_branch(feature, project)
 

@@ -1,15 +1,32 @@
 #' @include caching.R
 NULL
 
-# returns the order in which the repos must be installed, unhashing the dependencies
-get_install_order <- function(upstream_deps) {
-  stopifnot(
-    is.list(upstream_deps)
-  )
 
-  install_order <- topological_sort(upstream_deps)
-  lapply(install_order, unhash_repo_and_host)
+run_package_actions <- function(pkg_df, type, dry,
+                                install_external_deps,
+                                internal_pkg_deps,
+                                verbose = verbose, ...) {
+
+  if ("install" %in% type) {
+    if (verbose >= 1) {
+      message("Installing packages in order: ", toString(pkg_df$package_name))
+    }
+
+    for (cache_dir in pkg_df$cache_dir) {
+      if (!dry) {
+        install_repo_add_sha(cache_dir, install_external_deps = install_external_deps,
+                             internal_pkg_deps = internal_pkg_deps, ...)
+      } else if (verbose >= 1) {
+        cat_nl("(Dry run) Skipping installation of ", cache_dir)
+      }
+    }
+    if (verbose >= 1) {
+      message("Installed packages in order: ", toString(pkg_df$package_name))
+    }
+  }
 }
+
+
 
 # add the specified project to the local repos
 add_project_to_local_repos <- function(project, local_repos) {
