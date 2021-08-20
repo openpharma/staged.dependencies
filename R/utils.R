@@ -2,6 +2,13 @@
 cat_nl <- function(...) cat(paste0(paste(...), "\n"))
 # cat_nl("fff", "gg")
 
+# output message if verbose argument is at least required_verbose
+message_if_verbose <- function(..., verbose, required_verbose = 1){
+  if (verbose >= required_verbose) {
+    message(...)
+  }
+}
+
 extract_str_field <- function(lst, field) {
   vapply(lst, function(x) x[[field]], character(1))
 }

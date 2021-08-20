@@ -5,11 +5,9 @@
 \title{Check & install downstream dependencies}
 \usage{
 check_downstream(
-  project = ".",
-  feature = NULL,
-  downstream_repos = NULL,
-  local_repos = get_local_pkgs_from_config(),
-  recursive = TRUE,
+  dep_structure,
+  downstream_packages = NULL,
+  distance = NULL,
   dry_install_and_check = FALSE,
   check_args = NULL,
   only_tests = FALSE,
@@ -19,20 +17,6 @@ check_downstream(
 )
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
-
-\item{feature}{(\code{character}) feature we want to build; inferred from the
-branch of the project if not provided; warning if not consistent with
-current branch of project}
-
-\item{downstream_repos}{(\code{list}) to overwrite the downstream repos to check
-of \code{project}}
-
-\item{recursive}{(\code{logical}) whether to recursively check the downstream
-dependencies of the downstream dependencies;
-ignored if \code{downstream_repos} is set}
-
 \item{dry_install_and_check}{(\code{logical}) whether to install upstream
 dependencies and check/test downstream repos; otherwise just reports
 what would be installed}
@@ -50,6 +34,13 @@ external dependencies of package using \code{remotes::install_deps}.}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}
+
+\item{downstream_repos}{(\code{list}) to overwrite the downstream repos to check
+of \code{project}}
+
+\item{recursive}{(\code{logical}) whether to recursively check the downstream
+dependencies of the downstream dependencies;
+ignored if \code{downstream_repos} is set}
 }
 \value{
 \code{data.frame} of installed packages (in installation order) and checked packages

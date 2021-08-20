@@ -5,25 +5,61 @@ NULL
 run_package_actions <- function(pkg_df, type, dry,
                                 install_external_deps,
                                 internal_pkg_deps,
+                                check_args = NULL,
                                 verbose = verbose, ...) {
 
-  if ("install" %in% type) {
-    if (verbose >= 1) {
-      message("Installing packages in order: ", toString(pkg_df$package_name))
-    }
+  if (nrow(pkg_df) == 0) {
+    message_if_verbose("No packages to process!", verbose = verbose)
+    return(pkg_df)
+  }
 
-    for (cache_dir in pkg_df$cache_dir) {
-      if (!dry) {
+  message_if_verbose("Processing packages in order: ", toString(pkg_df$package_name), verbose = verbose)
+
+  for (cache_dir in pkg_df$cache_dir) {
+
+    if (!dry) {
+
+      if ("test" %in% type) {
+        # testthat::test_dir and devtools::test do not always agree
+        # testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
+        # stop_on_failure argument cannot be passed to devtools::test
+        if (dir.exists(file.path(cache_dir, "tests"))) {
+          # this does not work with legacy R packages where tests are in the inst directory
+          # see devtools:::find_test_dir
+          test_res <- devtools::test(cache_dir, stop_on_warning = TRUE)
+          all_passed <- function(res) {
+            # copied from testthat:::all_passed
+            if (length(res) == 0) {
+              return(TRUE)
+            }
+            df <- as.data.frame(res)
+            sum(df$failed) == 0 && all(!df$error)
+          }
+          if (!all_passed(test_res)) {
+            stop("Tests for package in directory ", cache_dir, " failed")
+          }
+        } else {
+          message_if_verbose("No tests found for package in directory ", cache_dir, verbose = verbose)
+        }
+      }
+
+      if ("check" %in% type) {
+        rcmdcheck::rcmdcheck(cache_dir, error_on = "warning", args = check_args)
+      }
+
+      if ("install" %in% type) {
         install_repo_add_sha(cache_dir, install_external_deps = install_external_deps,
                              internal_pkg_deps = internal_pkg_deps, ...)
-      } else if (verbose >= 1) {
-        cat_nl("(Dry run) Skipping installation of ", cache_dir)
       }
+
+    } else { # dry run
+      message_if_verbose(cat_nl("(Dry run) Skipping", toString(type), "of", cache_dir), verbose = verbose)
     }
-    if (verbose >= 1) {
-      message("Installed packages in order: ", toString(pkg_df$package_name))
-    }
+
   }
+
+  message("Processed packages in order: ", toString(pkg_df$package_name), verbose = verbose)
+  pkg_df
 }
 
 
