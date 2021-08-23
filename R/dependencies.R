@@ -3,14 +3,9 @@
 # DISCUSSION POINTS:
 # todo: replace git2r by gert
 # todo: cached repos, add examples
-# todo: rstudio addin to format doc
-# todo: add project field (scope) in yaml: to restrict to projects
-# todo: option to also fetch project from remote
 
-
-#' @include caching.R
-NULL
-
+# todo: local_repos to data.frame: package name to directory: no, because this means that the package needs to be fetched from the remote first
+# dependency_table("/tmp/test_ecosystem/stageddeps.food/", "fix1@main"), 0.1.1
 #' TODO
 #' @export
 dependency_table <- function(project = ".", feature = NULL,

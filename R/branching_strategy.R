@@ -38,8 +38,10 @@
 #'   c("main", "devel", "feature1", "fix1")
 #' ) == "devel"
 #'
+#' determine_branch("feature1@release", c("main", "devel"))
+#'
 #' # error because neither `feature1@release` nor `release` branch exists
-#' # determine_branch("feature1@release", c("main", "devel"))
+#' # determine_branch("feature1@release", c("master", "devel"))
 determine_branch <- function(feature, available_branches, branch_sep = "@") {
   stopifnot(
     is_non_empty_char(feature),
@@ -70,17 +72,17 @@ infer_feature_from_branch <- function(feature = NULL, project = ".") {
     is.null(feature) || is_non_empty_char(feature)
   )
   check_dir_exists(project)
-  project_branch <- get_current_branch(project)
+  current_branch <- get_current_branch(project)
   if (is.null(feature)) {
-    feature <- project_branch
+    feature <- current_branch
   }
 
-  expected_project_branch <- determine_branch(
+  expected_current_branch <- determine_branch(
     feature, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
   )
-  if (project_branch != expected_project_branch) {
-    warning("feature ", feature, " would match ", expected_project_branch, " in project ", project,
-            ", but currently checked out branch is ", project_branch)
+  if (current_branch != expected_current_branch) {
+    warning("feature ", feature, " would match ", expected_current_branch, " in project ", project,
+            ", but currently checked out branch is ", current_branch)
   }
 
   feature
