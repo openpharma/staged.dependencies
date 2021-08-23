@@ -24,6 +24,9 @@ dependency_table <- function(project = ".", feature = NULL,
   check_direction_arg(direction)
   error_if_stageddeps_inexistent(project)
 
+  if (nchar(feature) == 0) {
+    feature <- NULL
+  }
   feature <- infer_feature_from_branch(feature, project)
 
   # take local version of project (rather than remote)
@@ -235,6 +238,7 @@ install_deps <- function(dep_structure,
                          verbose = 0,
                          install_external_deps = TRUE,
                          install_direction = "upstream",
+                         dependency_packages = NULL, #TODO get this working
                          ...) {
 
   stopifnot("dependency_structure" %in% class(dep_structure))
@@ -255,6 +259,11 @@ install_deps <- function(dep_structure,
 
   if (!install_project) {
     pkg_df <- pkg_df[, pkg_df$type != "current"]
+  }
+
+  # filter by dependency_packages
+  if (!is.null(dependency_packages)) {
+    pkg_df <- pkg_df[pkg_df$package_name %in% dependency_packages, ]
   }
 
 

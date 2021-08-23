@@ -46,22 +46,20 @@ install_deps_app <- function(project = ".", default_feature = NULL,
     },
     server = function(input, output, session) {
       compute_dep_structure <- shiny::eventReactive(input$compute_graph, {
-        feature <- input$feature
-        if (identical(feature, "")) {
-          feature <- NULL
-        }
-        if (verbose >= 1) {
-          message("Computing dependency structure for feature ", feature, " starting from project ", project)
-        }
-        dependency_structure(project, feature = feature,
-                             local_repos = local_repos, verbose = 2)
+        message_if_verbose("Computing dependency structure for feature ",
+                           input$feature, " starting from project ", project,
+                           verbose = verbose)
+
+        dependency_table(project, feature = input$feature,
+                         local_repos = local_repos, verbose = 2)
       },
       # do not ignore NULL to also compute initially with the default feature when
       # the button was not yet clicked
       ignoreNULL = FALSE)
 
       output$network_proxy_nodes <- visNetwork::renderVisNetwork({
-        compute_dep_structure()$graph %>%
+        compute_dep_structure() %>%
+          plot() %>%
           visNetwork::visInteraction(multiselect = TRUE)
       })
 
@@ -74,65 +72,41 @@ install_deps_app <- function(project = ".", default_feature = NULL,
         visNetwork::visNetworkProxy("network_proxy_nodes") %>%
           visNetwork::visGetSelectedNodes()
       })
+
       output$nodesToInstall <- shiny::renderText({
         paste(setdiff(
-          names(compute_dep_structure()$deps[["upstream_deps"]]),
+          compute_dep_structure()$table$package_name,
           input$network_proxy_nodes_selectedNodes
         ), collapse = "\n")
       })
       shiny::observeEvent(input$done, {
-        selected_hashed_pkgs <- input$network_proxy_nodes_selectedNodes
-        install_order <- get_install_order(compute_dep_structure()$deps[["upstream_deps"]])
 
-        # take local version of project (rather than remote)
-        local_repos <- add_project_to_local_repos(project, local_repos)
+        dependency_packages <- setdiff(
+          compute_dep_structure()$table$package_name,
+          input$network_proxy_nodes_selectedNodes
+        )
 
-        # subset of repo dirs to install according to selection
-        # we write the code this way so we only have to pass the repo dirs to the
-        # rstudio job script
-        repo_dirs_to_install <- c()
-        hashed_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
-        internal_pkg_deps <- get_pkg_names_from_paths(compute_dep_structure()$internal_deps)
-        for (repo_and_host in install_order) {
-          if (hash_repo_and_host(repo_and_host) %in% selected_hashed_pkgs) {
-            # the selected nodes are NOT installed
-            next
-          }
-          is_local <- hash_repo_and_host(repo_and_host) %in% names(hashed_repo_to_dir)
-          repo_dir <- get_repo_cache_dir(repo_and_host$repo, repo_and_host$host, local = is_local)
-
-          repo_dirs_to_install <- c(repo_dirs_to_install, repo_dir)
-        }
-
-        if (verbose >= 1) {
-          message("Installing directories in order: ", repo_dirs_to_install)
-        }
         if (run_as_job) {
           # note: this uses the currently installed version of this package because
-          # it spans a new R process (not the loaded version)
-          args_str <- paste(deparse(repo_dirs_to_install), collapse = "\n")
-
-          other_args <- c(list(
-            install_external_deps = install_external_deps,
-            internal_pkg_deps = internal_pkg_deps
-          ), list(...))
-          other_args_str <- paste(deparse(other_args), collapse = "\n")
-
-          script <- glue::glue(
-            "do.call(
-              function(...) lapply({args_str}, staged.dependencies:::install_repo_add_sha, ...),
-            {other_args_str})"
-          )
-          run_job(script, "install_deps_app",
-                  paste0("Install selection of deps of ", basename(project)))
-        } else {
-          lapply(repo_dirs_to_install, install_repo_add_sha,
-                 install_external_deps = install_external_deps,
-                 internal_pkg_deps = internal_pkg_deps, ...)
+          # it spans a new R process (not the loaded version) - also note for now we
+          # recreate the dep_structure object (which should be a fraction of the install time)
+          # this could be changed by using the importEnv argument
+          # to jobRunScript and creating an install_deps job if dep_structure already exists in env
+          install_deps_job(project = fs::path_abs(project), verbose = verbose,
+                           create_args = list(local_repos = local_repos, feature = input$feature),
+                           dependency_packages = dependency_packages,
+                           install_external_deps = TRUE,
+                           install_direction = c("upstream", "downstream"),
+                           ...)
+        } else{
+          install_deps(compute_dep_structure(),
+                       dependency_packages = dependency_packages,
+                       verbose = verbose,
+                       install_external_deps = TRUE,
+                       install_direction = c("upstream", "downstream"),
+                       ...)
         }
-        if (verbose >= 1) {
-          message("Installed directories in order: ", repo_dirs_to_install)
-        }
+
 
         # calling it at the top of this reactive still finishes executing
         # the reactive (so installs), so we call it down here
