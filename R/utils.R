@@ -23,6 +23,10 @@ is_non_empty_char <- function(x) {
 # is_non_empty_char(c("ff", "gg"))
 
 # if df is empty, don't add any type
+# cbind_handle_empty(data.frame(col1 = character(0), col2 = character(0), stringsAsFactors = FALSE),
+#   col3 = "hello3", col4 = "hello4")
+# cbind_handle_empty(data.frame(col1 = c("h1", "h11"), col2 = c("h2", "h22"), stringsAsFactors = FALSE),
+#   col3 = "hello3", col4 = "hello4")
 cbind_handle_empty <- function(df, ...) {
   col_and_vals <- list(...)
   if (nrow(df) == 0) {
@@ -30,11 +34,12 @@ cbind_handle_empty <- function(df, ...) {
   }
   cbind(df, do.call(data.frame, c(col_and_vals, stringsAsFactors = FALSE)))
 }
-# cbind_handle_empty(data.frame(col1 = character(0), col2 = character(0)), col3 = "hello3", col4 = "hello4")
-# cbind_handle_empty(data.frame(col1 = c("h1", "h11"), col2 = c("h2", "h22")), col3 = "hello3", col4 = "hello4")
 
 # we need these functions because R does not support tuple indices,
 # e.g. lst[[c(host=.., repo=..)]] is not possible
+# hash_repo_and_host(list())
+# hash_repo_and_host(list(repo = "repo1", host = "host1"))
+# hash_repo_and_host(list(repo = c("repo1", "repo2"), host = c("host1", "host2")))
 hash_repo_and_host <- function(repo_and_host) {
   if (length(repo_and_host) == 0) {
     c()
@@ -42,10 +47,10 @@ hash_repo_and_host <- function(repo_and_host) {
     paste0(repo_and_host$repo, " @ ", repo_and_host$host)
   }
 }
-# hash_repo_and_host(list())
-# hash_repo_and_host(list(repo = "repo1", host = "host1"))
-# hash_repo_and_host(list(repo = c("repo1", "repo2"), host = c("host1", "host2")))
 
+# unhash_repo_and_host(character(0))
+# unhash_repo_and_host("repo1 @ host1")
+# unhash_repo_and_host(c("repo1 @ host1", "repo2 @ host2"))
 unhash_repo_and_host <- function(hashed_repo_and_host) {
   repo_and_host <- strsplit(hashed_repo_and_host, " @ ", fixed = TRUE)
   list(
@@ -53,9 +58,6 @@ unhash_repo_and_host <- function(hashed_repo_and_host) {
     host = extract_str_field(repo_and_host, 2)
   )
 }
-# unhash_repo_and_host(character(0))
-# unhash_repo_and_host("repo1 @ host1")
-# unhash_repo_and_host(c("repo1 @ host1", "repo2 @ host2"))
 
 check_verbose_arg <- function(verbose) {
   stopifnot(0 <= verbose, verbose <= 2)
@@ -165,4 +167,31 @@ get_pkg_names_from_paths <- function(paths) {
   unname(vapply(
     paths, function(path) desc::desc_get_field("Package", file = path), character(1)
   ))
+}
+
+# get upstream repos and downstream repos according to yaml file in repo directory
+# if yaml file does not exist, returns empty lists
+get_yaml_deps_info <- function(repo_dir) {
+  check_dir_exists(repo_dir, "deps_info: ")
+
+  yaml_file <- file.path(repo_dir, STAGEDDEPS_FILENAME)
+  if (file.exists(yaml_file)) {
+    content <- yaml::read_yaml(yaml_file)
+    validate_staged_deps_yaml(content, file_name = yaml_file)
+    content
+  } else {
+    list(upstream_repos = list(), downstream_repos = list(),
+         # function() so it does not error immediately
+         current_repo = function() stop("Directory ", repo_dir, " has no ", STAGEDDEPS_FILENAME))
+  }
+}
+
+error_if_stageddeps_inexistent <- function(project) {
+  fpath <- normalizePath(
+    file.path(project, STAGEDDEPS_FILENAME),
+    winslash = "/", mustWork = FALSE # output error, see below
+  )
+  if (!file.exists(fpath)) {
+    stop("file ", STAGEDDEPS_FILENAME, " does not exist in project folder: not restoring anything")
+  }
 }

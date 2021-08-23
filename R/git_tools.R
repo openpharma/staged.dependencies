@@ -34,6 +34,7 @@ check_only_remote_branches <- function(git_repo) {
 # select_branch_rule is a function that is given the available branches
 # and selects one of them
 # verbose level: 0: none, 1: print high-level git operations, 2: print git clone detailed messages etc.
+# returns: list of repo_dir and checked out branch (according to branch rule)
 checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, verbose = 0) {
   stopifnot(
     is.function(select_branch_rule)

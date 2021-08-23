@@ -1,6 +1,6 @@
 test_that("check_set_equal returns no error if sets are equal", {
   expect_silent(check_set_equal(character(0), character(0)))
-  expect_silent(check_set_equal(c(4,5,6,4), c(6,5,4)))
+  expect_silent(check_set_equal(c(4, 5, 6, 4), c(6, 5, 4)))
   expect_silent(check_set_equal(c("A", "B"), c("B", "A")))
 })
 

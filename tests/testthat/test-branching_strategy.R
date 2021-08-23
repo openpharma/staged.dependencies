@@ -1,6 +1,6 @@
 test_that("infer_feature_from_branch works", {
   repo_dir <- tempfile("stageddeps.food")
-  fs::dir_copy(file.path(TEST_GIT_REPOS, "stageddeps.food"), repo_dir)
+  fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
 
   expect_equal(
     infer_feature_from_branch(NULL, repo_dir),

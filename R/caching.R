@@ -87,6 +87,10 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
       (length(git2r::status(repo_dir)$unstaged) > 0) ||
       (length(git2r::status(repo_dir)$untracked) > 0)) {
     # add all files, including untracked (all argument of git2r::commit does not do this)
+    if (verbose >= 2) {
+      message("Adding all of the following files: \n",
+              paste(capture.output(git2r::status(repo_dir)), collapse = "\n"))
+    }
     git2r::add(repo_dir, ".")
     git2r::commit(
       repo_dir,
@@ -96,34 +100,6 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
 
   branch <-  git2r::repository_head(repo_dir)$name
   return(list(dir = repo_dir, branch = paste0("local (", branch, ")")))
-}
-
-# get upstream repos and downstream repos according to yaml file in repo directory
-# if yaml file does not exist, returns empty lists
-get_yaml_deps_info <- function(repo_dir) {
-  check_dir_exists(repo_dir, "deps_info: ")
-
-  yaml_file <- file.path(repo_dir, STAGEDDEPS_FILENAME)
-  if (file.exists(yaml_file)) {
-    content <- yaml::read_yaml(yaml_file)
-    validate_staged_deps_yaml(content, file_name = yaml_file)
-    content
-  } else {
-    list(upstream_repos = list(), downstream_repos = list(),
-         # function() so it does not error immediately
-         current_repo = function() stop("Directory ", repo_dir, " has no ", STAGEDDEPS_FILENAME))
-  }
-}
-
-
-error_if_stageddeps_inexistent <- function(project) {
-  fpath <- normalizePath(
-    file.path(project, STAGEDDEPS_FILENAME),
-    winslash = "/", mustWork = FALSE # output error, see below
-  )
-  if (!file.exists(fpath)) {
-    stop("file ", STAGEDDEPS_FILENAME, " does not exist in project folder: not restoring anything")
-  }
 }
 
 # local_repos: data.frame that maps repo and host to local directory
@@ -224,8 +200,8 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
     )
   }
 
-  df <- data.frame(unhash_repo_and_host(names(hashed_processed_repos)))
-  df$cache_dir <- unname(hashed_processed_repos)
-  df$branch <- unname(hashed_repos_branches)
+  df <- data.frame(unhash_repo_and_host(names(hashed_processed_repos)), stringsAsFactors = FALSE)
+  df$cache_dir <- unlist(unname(hashed_processed_repos))
+  df$branch <- unlist(unname(hashed_repos_branches))
   return(df)
 }
