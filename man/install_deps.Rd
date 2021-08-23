@@ -11,6 +11,7 @@ install_deps(
   verbose = 0,
   install_external_deps = TRUE,
   install_direction = "upstream",
+  dependency_packages = NULL,
   ...
 )
 }

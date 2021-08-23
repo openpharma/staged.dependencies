@@ -2,15 +2,30 @@
 NULL
 
 
-run_package_actions <- function(pkg_df, type, dry,
+run_package_actions <- function(pkg_df, type, dry = FALSE,
                                 install_external_deps,
                                 internal_pkg_deps,
-                                check_args = NULL,
+                                rcmd_args = NULL,
+                                artifact_dir = NULL,
                                 verbose = verbose, ...) {
 
   if (nrow(pkg_df) == 0) {
     message_if_verbose("No packages to process!", verbose = verbose)
     return(pkg_df)
+  }
+
+  if ("build" %in% type && is.null(artifact_dir)) {
+    stop("when building a package an artifact_dir must be specified")
+  }
+
+  if (!is.null(artifact_dir)) {
+    #TODO empty directories if exist?
+    if ("build" %in% type) {
+      fs::dir_create(file.path(artifact_dir, "build_logs"))
+    }
+    if ("install" %in% type) {
+      fs::dir_create(file.path(artifact_dir, "install_logs"))
+    }
   }
 
   message_if_verbose("Processing packages in order: ", toString(pkg_df$package_name), verbose = verbose)
@@ -43,13 +58,41 @@ run_package_actions <- function(pkg_df, type, dry,
         }
       }
 
+      package_tar <- NULL
+      if ("build" %in% type) {
+        withr::with_dir(artifact_dir, {
+          pkg_name <- desc::desc_get_field("Package", file = cache_dir)
+          system2(
+            "R", args = c("CMD", "build", rcmd_args$build, cache_dir),
+            stdout = file.path("build_logs", paste0(pkg_name, "_stdout.txt")),
+            stderr = file.path("build_logs", paste0(pkg_name, "_stderr.txt"))
+          )
+          package_tar <- Sys.glob(paste0(pkg_name, "_*.tar.gz"))
+        })
+      }
+
+
       if ("check" %in% type) {
-        rcmdcheck::rcmdcheck(cache_dir, error_on = "warning", args = check_args)
+        # check tar.gz if it exists otherwise check the cache_dir
+        if (!is.null(package_tar)) {
+          system2("R", args = c("CMD", "check", rcmd_args$check, package_tar))
+        } else {
+          rcmdcheck::rcmdcheck(cache_dir, error_on = "warning", args = rcmd_args$check)
+        }
       }
 
       if ("install" %in% type) {
-        install_repo_add_sha(cache_dir, install_external_deps = install_external_deps,
+        # install the tar.gz if it exists otherwise install using staged.deps
+        if (!is.null(package_tar)) {
+          system2(
+            "R", args = c("CMD", "INSTALL", rcmd_args$install, package_tar),
+            stdout = file.path("install_logs", paste0(pkg_name, "_stdout.txt")),
+            stderr = file.path("install_logs", paste0(pkg_name, "_stderr.txt"))
+          )
+        } else {
+          install_repo_add_sha(cache_dir, install_external_deps = install_external_deps,
                              internal_pkg_deps = internal_pkg_deps, ...)
+        }
       }
 
     } else { # dry run

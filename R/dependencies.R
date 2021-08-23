@@ -24,7 +24,7 @@ dependency_table <- function(project = ".", feature = NULL,
   check_direction_arg(direction)
   error_if_stageddeps_inexistent(project)
 
-  if (nchar(feature) == 0) {
+  if (!is.null(feature) && nchar(feature) == 0) {
     feature <- NULL
   }
   feature <- infer_feature_from_branch(feature, project)
@@ -349,7 +349,7 @@ check_downstream <- function(dep_structure,
   run_package_actions(pkg_df, type = type, dry = dry_install_and_check,
                       install_external_deps = install_external_deps,
                       internal_pkg_deps = dep_structure$table$package_name,
-                      check_args = check_args,
+                      rcmd_args = list(check = check_args),
                       verbose = verbose, ...)
 
   pkg_df$package_name
@@ -422,35 +422,48 @@ update_with_direct_deps <- function(dep_structure) {
 #' # also adds commit SHA
 #' install_deps(someArgs, direction = c("upstream", "downstream"))
 #' }
-build_check_install_repos <- function(repos_to_process, feature = "main",
-                                      direction = c("upstream", "downstream"),
-                                      local_repos = get_local_pkgs_from_config(),
-                                      verbose = 0,
-                                      steps = c("build", "check", "install"),
-                                      rcmd_args = list(check = c("--no-manual")),
-                                      artifact_dir = tempfile()) {
+build_check_install<- function(dep_structure,
+                               install_direction = c("upstream", "downstream"),
+                               packages_to_process = NULL,
+                               verbose = 0,
+                               steps = c("build", "check", "install"),
+                               rcmd_args = list(check = c("--no-manual")),
+                               artifact_dir = tempfile(),
+                               install_external_deps = TRUE, ...) {
+
   steps <- match.arg(steps, several.ok = TRUE)
+  stopifnot("dependency_structure" %in% class(dep_structure))
+
+  check_verbose_arg(verbose)
+
+  if (!all(install_direction %in% dep_structure$direction)) {
+    stop("Invalid install_direction argument for this dependency object")
+  }
+
   if (!dir.exists(artifact_dir)) {
     dir.create(artifact_dir)
   }
 
-  internal_deps <- rec_checkout_internal_deps(
-    repos_to_process, feature, direction, local_repos, verbose
-  )
-  # we need the upstream direction (rather than variable direction) to
-  # compute the installation order
-  deps <- get_true_deps_graph(internal_deps, direction = "upstream")
-  install_order <- get_install_order(deps[["upstream_deps"]])
-  install_order_paths <- vapply(
-    install_order, function(x) internal_deps[[hash_repo_and_host(x)]], character(1)
-  )
+  # get the packages to process
+  pkg_df <- dep_structure$table[order(dep_structure$table$install_index), ]
+  # filter by install_direction
+  if (length(install_direction) == 1) {
+    pkg_df <- pkg_df[, pkg_df$type %in% c("current", install_direction)]
+  }
 
-  if ("build" %in% steps) {
-    dir.create(file.path(artifact_dir, "build_logs"))
+  # filter by dependency_packages
+  if (!is.null(packages_to_process)) {
+    pkg_df <- pkg_df[pkg_df$package_name %in% packages_to_process, ]
   }
-  if ("install" %in% steps) {
-    dir.create(file.path(artifact_dir, "install_logs"))
-  }
+
+  run_package_actions(pkg_df, type = steps,
+                      install_external_deps = install_external_deps,
+                      internal_pkg_deps = dep_structure$table$package_name,
+                      rcmd_args = rcmd_args,
+                      artifact_dir = artifact_dir,
+                      verbose = verbose, ...)
+
+  return(artifact_dir)
 
   cat(paste0("Installing packages from paths ", toString(install_order_paths)), "\n")
 
