@@ -1,20 +1,3 @@
-# # Preparation
-# mkdir /tmp/test_ecosystem
-# cd /tmp/test_ecosystem
-# git clone git@github.com:openpharma/stageddeps.elecinfra.git
-# git clone git@github.com:openpharma/stageddeps.electricity.git
-# git clone git@github.com:openpharma/stageddeps.food.git
-# git clone git@github.com:openpharma/stageddeps.garden.git
-# git clone git@github.com:openpharma/stageddeps.house.git
-# git clone git@github.com:openpharma/stageddeps.water.git
-# tar -czvf /tmp/ecosystem.tgz -C "$(pwd)" .
-#
-# # Extraction
-# untar("/tmp/ecosystem.tgz", list = TRUE)
-# untar("/tmp/ecosystem.tgz", exdir = "/tmp/untarred_ecosystem")
-
-TEST_GIT_REPOS <- "/tmp/test_ecosystem/"
-
 test_that("infer_feature_from_branch works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TEST_GIT_REPOS, "stageddeps.food"), repo_dir)
