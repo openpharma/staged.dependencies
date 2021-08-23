@@ -61,6 +61,11 @@ check_verbose_arg <- function(verbose) {
   stopifnot(0 <= verbose, verbose <= 2)
 }
 
+check_direction_arg <- function(direction) {
+  stopifnot(length(direction) <= 2 || length(direction) > 0)
+  stopifnot(all(direction %in% c("upstream", "downstream")))
+}
+
 require_pkgs <- function(pkgs) {
   for (pkg in pkgs) {
     if (!requireNamespace(pkg, quietly = TRUE)) {

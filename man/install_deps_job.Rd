@@ -4,15 +4,10 @@
 \alias{install_deps_job}
 \title{Install dependencies job}
 \usage{
-install_deps_job(project = ".", verbose = 1, ...)
+install_deps_job(project = ".", verbose = 1, create_args = list(), ...)
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
-
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+\item{create_args}{\code{named list} - additional arguments passed to `dependency_table` function}
 
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
@@ -24,6 +19,9 @@ installed without installing; this still checks out the git repos to
 match \code{feature}}
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of package using \code{remotes::install_deps}.}
+    \item{\code{verbose}}{(\code{numeric}) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)}
   }}
 }
 \description{
@@ -32,10 +30,10 @@ Install dependencies job
 \examples{
 \dontrun{
 install_deps_job()
-install_deps_job(feature = "6_makegraph@main")
+install_deps_job(create_args = list(feature = "6_makegraph@main"))
 
 # install all dependencies
-install_deps_job(direction = c("upstream", "downstream"))
+install_deps_job(create_args = list(direction = c("upstream", "downstream")))
 install_deps_job(dry_install = TRUE)
 }
 }

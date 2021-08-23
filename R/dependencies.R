@@ -21,6 +21,7 @@ dependency_table <- function(project = ".", feature = NULL,
   stopifnot(is.data.frame(local_repos) || is.null(local_repos))
   check_dir_exists(project)
   check_verbose_arg(verbose)
+  check_direction_arg(direction)
   error_if_stageddeps_inexistent(project)
 
   feature <- infer_feature_from_branch(feature, project)

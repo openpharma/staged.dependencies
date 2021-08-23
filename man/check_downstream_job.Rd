@@ -4,12 +4,10 @@
 \alias{check_downstream_job}
 \title{Check & install downstream job}
 \usage{
-check_downstream_job(project = ".", verbose = 1, ...)
+check_downstream_job(project = ".", verbose = 1, create_args = list(), ...)
 }
 \arguments{
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+\item{create_args}{\code{named list} - additional arguments passed to `dependency_table` function}
 
 \item{...}{
   Arguments passed on to \code{\link[=check_downstream]{check_downstream}}
@@ -19,6 +17,9 @@ dependencies and check/test downstream repos; otherwise just reports
 what would be installed}
     \item{\code{check_args}}{(\code{list}) arguments passed to \code{rcmdcheck}}
     \item{\code{only_tests}}{(\code{logical}) whether to only run tests (rather than checks)}
+    \item{\code{verbose}}{(\code{numeric}) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)}
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of package using \code{remotes::install_deps}.}
   }}
@@ -29,7 +30,8 @@ Check & install downstream job
 \examples{
 \dontrun{
 check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"))
-check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"), feature = "6_makegraph@main")
+check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"),
+                     list(create_arg = feature = "6_makegraph@main"))
 check_downstream_job(only_tests = TRUE)
 }
 }
