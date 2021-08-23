@@ -62,9 +62,6 @@ is set to "never" and shouldn't be passed into this function.}
 
 \item{project}{(\code{character}) directory of project (for which to restore the
 dependencies according to feature); must be a git repository.}
-
-\item{install_repos_to_process}{(\code{logical}) whether to also install the
-repos passed in \code{repos_to_process}}
 }
 \value{
 installed packages in installation order

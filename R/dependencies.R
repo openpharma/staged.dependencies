@@ -55,7 +55,7 @@ add_project_to_local_repos <- function(project, local_repos) {
 #' @param feature (`character`) feature we want to build; inferred from the
 #'   branch of the project if not provided; warning if not consistent with
 #'   current branch of project
-#' @param install_repos_to_process (`logical`) whether to also install the
+#' @param install_project (`logical`) whether to also install the
 #'   repos passed in `repos_to_process`
 #' @param dry_install (`logical`) dry run that lists packages that would be
 #'   installed without installing; this still checks out the git repos to
