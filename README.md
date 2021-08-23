@@ -193,9 +193,27 @@ of `staged.dependencies` rather than the one loaded with `devtools::load_all()`.
 `git2r::clone` may fail. Check that the git host is reachable (VPN may be needed) and that the access token 
 has read privileges for the repositories.
 
+When you run `remotes::install_deps` for a package that was installed with this package, issues may arise because not all repositories are publicly accessible. Make sure to provide auth tokens.
+
+## Troubleshooting (For Developers of This Package)
+For developing this package, we use `renv`. If you set environment variables such as `GITHUB_PAT` in your `~/.Rprofile`, they will
+not be available because the project `.Rprofile` does not source the global `~/.Rprofile`. To enable this, put 
+the following into `~/.Renviron`:
+```
+RENV_CONFIG_USER_PROFILE=TRUE
+```
+Make sure that `~/.Rprofile` does not set lib paths as this may interfere with `renv`. Also see the [renv doc](https://rstudio.github.io/renv/reference/config.html).
+
 ## Example Setup
 
-This package can also be tested on a more complex setup of packages.
+This package can also be tested on a more complex setup of packages available at:
+https://github.com/openpharma/stageddeps.elecinfra
+https://github.com/openpharma/stageddeps.electricity
+https://github.com/openpharma/stageddeps.food
+https://github.com/openpharma/stageddeps.garden
+https://github.com/openpharma/stageddeps.house
+https://github.com/openpharma/stageddeps.water
+
 ![Dependencies. Arrow point from upstream to downstream packages](man/figures/README-StagedDepsExample.png)
 
 You can check that the right branches of the packages are installed with:
