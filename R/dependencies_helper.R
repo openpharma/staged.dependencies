@@ -20,12 +20,10 @@ run_package_actions <- function(pkg_df, type, dry = FALSE,
 
   if (!is.null(artifact_dir)) {
     #TODO empty directories if exist?
-    if ("build" %in% type) {
-      fs::dir_create(file.path(artifact_dir, "build_logs"))
-    }
-    if ("install" %in% type) {
-      fs::dir_create(file.path(artifact_dir, "install_logs"))
-    }
+    lapply(
+      intersect(type, c("build", "install")),
+      function(type) fs::dir_create(file.path(artifact_dir, paste(type, "logs", sep = "_")))
+    )
   }
 
   message_if_verbose("Processing packages in order: ", toString(pkg_df$package_name), verbose = verbose)
@@ -71,11 +69,13 @@ run_package_actions <- function(pkg_df, type, dry = FALSE,
         })
       }
 
-
       if ("check" %in% type) {
         # check tar.gz if it exists otherwise check the cache_dir
         if (!is.null(package_tar)) {
-          system2("R", args = c("CMD", "check", rcmd_args$check, package_tar))
+          withr::with_dir(artifact_dir,
+            system2("R", args = c("CMD", "check", rcmd_args$check, package_tar),
+                    stdout = file.path("check_logs", paste0(pkg_name, "_stdout.txt")),
+                    stderr = file.path("check_logs", paste0(pkg_name, "_stderr.txt"))))
         } else {
           rcmdcheck::rcmdcheck(cache_dir, error_on = "warning", args = rcmd_args$check)
         }
@@ -84,11 +84,7 @@ run_package_actions <- function(pkg_df, type, dry = FALSE,
       if ("install" %in% type) {
         # install the tar.gz if it exists otherwise install using staged.deps
         if (!is.null(package_tar)) {
-          system2(
-            "R", args = c("CMD", "INSTALL", rcmd_args$install, package_tar),
-            stdout = file.path("install_logs", paste0(pkg_name, "_stdout.txt")),
-            stderr = file.path("install_logs", paste0(pkg_name, "_stderr.txt"))
-          )
+          withr::with_dir(artifact_dir, system2("R", args = c("CMD", "INSTALL", rcmd_args$install, package_tar)))
         } else {
           install_repo_add_sha(cache_dir, install_external_deps = install_external_deps,
                              internal_pkg_deps = internal_pkg_deps, ...)
