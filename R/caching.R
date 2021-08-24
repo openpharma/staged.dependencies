@@ -147,7 +147,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
 #'
-#' @return A data frame, one row per checkouted repository with columns
+#' @return A data frame, one row per checked out repository with columns
 #' repo, host and cache_dir
 rec_checkout_internal_deps <- function(repos_to_process, feature,
                                       direction = c("upstream"),

@@ -23,7 +23,7 @@ dependency_table <- function(project = ".", feature = NULL,
   check_direction_arg(direction)
   error_if_stageddeps_inexistent(project)
 
-  if (nchar(feature) == 0) {
+  if (!is.null(feature) && nchar(feature) == 0) {
     feature <- NULL
   }
   feature <- infer_feature_from_branch(feature, project)
@@ -77,7 +77,6 @@ dependency_table <- function(project = ".", feature = NULL,
                                  c("package_name", "type", "distance", "branch",
                                    "repo", "host", "cache_dir")]
   rownames(internal_deps) <- NULL
-  # internal_deps$type <- as.character(internal_deps$type)
 
   # install_index: order in which to install packages
   internal_deps$install_index <- vapply(internal_deps$package_name,

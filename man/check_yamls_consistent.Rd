@@ -19,8 +19,8 @@ the dependencies listed in the DESCRIPTION files
 }
 \details{
 This function explicitly checks that for all packages in the
-  \code{dependency_structure} object: all upstream and downstream packages specified in each yaml
-  file are found in the appropriate package DESCRIPTION file
+\code{dependency_structure} object: all upstream and downstream packages specified in each yaml
+file are found in the appropriate package DESCRIPTION file
 }
 \examples{
 \dontrun{

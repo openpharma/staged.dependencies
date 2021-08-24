@@ -33,6 +33,7 @@ RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     miniUI,
+    mockery,
     rmarkdown,
     rstudioapi,
     shiny,

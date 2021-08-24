@@ -1,5 +1,8 @@
+# does not require internet access, mocks git remote operations
+
 test_that("rec_checkout_internal_deps works (with mocking)", {
 
+  # mock checkout_repo by copying the appropriate directory to the repo_dir directory
   mockery::stub(rec_checkout_internal_deps, 'checkout_repo', function(repo_dir, repo_url, select_branch_rule, ...) {
     repo_name <- basename(repo_url)
     repo_name <- substr(repo_name, 0, nchar(repo_name) - nchar(".git"))
@@ -11,10 +14,10 @@ test_that("rec_checkout_internal_deps works (with mocking)", {
     available_branches <- names(git2r::branches(repo_dir))
     available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
     branch_without_prefix <- select_branch_rule(available_branches)
+    # do not do actual checkout of branch
 
     return(list(dir = repo_dir, branch = branch_without_prefix))
   })
-  # rm(list = c("rec_checkout_internal_deps"))
 
   output <- capture.output(res <- rec_checkout_internal_deps(
     list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
@@ -22,8 +25,7 @@ test_that("rec_checkout_internal_deps works (with mocking)", {
     direction = c("upstream"), local_repos = NULL, verbose = 0
   ))
 
-  expect_true(is.data.frame(res))
-
+  # check mocked functions were called in correct order
   # dput(output)
   expect_equal(
     output,
@@ -31,6 +33,9 @@ test_that("rec_checkout_internal_deps works (with mocking)", {
       "Mocking checkout_repo for stageddeps.electricity",
       "Mocking checkout_repo for stageddeps.elecinfra")
   )
+
+  # check result by comparing to ground-truth
+  expect_true(is.data.frame(res))
 
   expect_setequal(
     res$repo,
@@ -100,7 +105,9 @@ test_that("get_hashed_repo_to_dir_mapping works", {
   )
 })
 
+# whether git status is clean
 git_status_clean <- function(repo_dir) {
+  # from git2r:::print.git_status
   max(sapply(git2r::status(repo_dir), length)) == 0L
 }
 
@@ -108,6 +115,7 @@ test_that("copy_local_repo_to_cachedir works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
 
+  # add some staged, unstaged and untracked files
   withr::with_dir(repo_dir, {
     cat("newcontent1", file = "README.md", append = TRUE)
     cat("newcontent2", file = "inexistentFile1.md")
@@ -117,6 +125,7 @@ test_that("copy_local_repo_to_cachedir works", {
     git2r::add(".", "inexistentFile1.md")
   })
 
+  # ckeck all files (from above) are added to the git commit in a local cache dir
   with_tmp_cachedir({
     res <- expect_message(
       copy_local_repo_to_cachedir(
@@ -130,7 +139,10 @@ test_that("copy_local_repo_to_cachedir works", {
       regexp = "Adding all of the following", fixed = TRUE
     )
     expect_true(startsWith(res$dir, file.path(get_packages_cache_dir(), "local_")))
+    expect_true(file.exists(file.path(res$dir, "inexistentFile1.md")))
     expect_equal(res$branch, "local (main)")
     expect_true(git_status_clean(res$dir))
   })
+
+  unlink(repo_dir, recursive = TRUE)
 })

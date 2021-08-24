@@ -1,4 +1,4 @@
-# This file is executed before the tests, see https://www.r-bloggers.com/2020/11/helper-code-and-files-for-your-testthat-tests/
+# This file is executed once before all tests, see https://www.r-bloggers.com/2020/11/helper-code-and-files-for-your-testthat-tests/
 
 
 # unpack ecosystem for packages ----
@@ -23,6 +23,8 @@ unpack_ecosystem <- function(target_dir, ...) {
   # untar(tar_file, list = TRUE)
   untar(tar_file, exdir = target_dir)
 }
+
+
 # TESTS_GIT_REPOS <- "/tmp/test_ecosystem/"
 TESTS_GIT_REPOS <- tempfile("test_ecosystem")
 unpack_ecosystem(TESTS_GIT_REPOS)
@@ -34,7 +36,7 @@ for (dir in list.dirs(TESTS_GIT_REPOS, recursive = FALSE, full.names = TRUE)) {
 
 
 
-# set storage dir ----
+# set storage dir for tests ----
 TESTS_STORAGE_DIR <- tempfile("stageddeps_storage")
 setup_storage_dir(TESTS_STORAGE_DIR)
 

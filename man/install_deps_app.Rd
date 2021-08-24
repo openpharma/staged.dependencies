@@ -16,9 +16,6 @@ install_deps_app(
 )
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
-
 \item{default_feature}{(\code{character}) default feature, see also the parameter
 \code{feature} of \verb{\link{install_deps}}}
 
@@ -29,9 +26,6 @@ dependencies according to feature); must be a git repository.}
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
-
-\item{install_external_deps}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}

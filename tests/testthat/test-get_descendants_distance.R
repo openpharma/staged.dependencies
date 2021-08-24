@@ -15,7 +15,7 @@ test_that("get_descendants_distance takes minimum distance between two nodes", {
 
   result <- get_descendants_distance(parents_to_children, starting_node = "B")
   expect_equal(result$id, c("A", "C"))
-  expect_equal(result$distance, c(1,1))
+  expect_equal(result$distance, c(1, 1))
 
 })
 
@@ -29,7 +29,7 @@ test_that("get_descendants_distance only includes descendants", {
                               E = list())
   result <- get_descendants_distance(parents_to_children, starting_node = "B")
   expect_equal(result$id, c("A", "C"))
-  expect_equal(result$distance, c(1,1))
+  expect_equal(result$distance, c(1, 1))
 
   result <- get_descendants_distance(parents_to_children, starting_node = "D")
   expect_equal(result$id, "E")
@@ -61,5 +61,24 @@ test_that("get_descendants_distance node names can include symbols", {
 
   result <- get_descendants_distance(parents_to_children, starting_node = "B > C")
   expect_equal(result$id, c("A @ A", "C / D"))
-  expect_equal(result$distance, c(1,1))
+  expect_equal(result$distance, c(1, 1))
+})
+
+test_that("get_descendants_distance works - another example", {
+  # A -> B -> C -> D
+  #      |    |
+  #      |\-->\--> E
+  #      |         ^
+  #      \--> F --/
+  expect_equal(
+    get_descendants_distance(
+      list(A = "B", B = c("C", "F", "E"), C = c("D", "E"), D = c(), E = c(), F = c("E")),
+      "B"
+    ) %>% dplyr::arrange(id),
+    data.frame(
+      id = c("C", "D", "E", "F"),
+      distance = c(1, 2, 1, 1),
+      stringsAsFactors = FALSE
+    ) %>% dplyr::arrange(id)
+  )
 })

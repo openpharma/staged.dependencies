@@ -1,15 +1,14 @@
+# this file does not require internet access since it mocks git remote operations
+
+
+local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
+
 # assumes that repo stageddeps.food is local
-mock_rec_checkout_internal_deps <- function(repos_to_process, ...) {
+# copies repos from TESTS_GIT_REPOS to appropriate locations in cache_dir
+mock_rec_checkout_internal_deps <- function(source_dir) function(repos_to_process, ...) {
   cat(paste0("Mocking rec_checkout_internal_deps", "\n"))
   expect_equal(repos_to_process, list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")))
 
-  local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
-  local_repos <- data.frame(
-    repo = paste0("openpharma/", local_pkgs),
-    host = rep("https://github.com", 6),
-    directory = file.path(TESTS_GIT_REPOS, local_pkgs),
-    stringsAsFactors = FALSE
-  )
   # stageddeps.food is local
   internal_deps <- data.frame(
     pkg = local_pkgs,
@@ -20,14 +19,14 @@ mock_rec_checkout_internal_deps <- function(repos_to_process, ...) {
   ) %>% dplyr::mutate(cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", branch))))
   # fs::dir_copy does not seem to be vectorized (although stated in the doc) -> use Map
   clear_cache()
-  Map(fs::dir_copy, file.path(TESTS_GIT_REPOS, internal_deps$pkg), internal_deps$cache_dir)
+  Map(fs::dir_copy, file.path(source_dir, internal_deps$pkg), internal_deps$cache_dir)
 
   return(internal_deps %>% dplyr::select(repo, host, cache_dir, branch))
 }
 
 test_that("dependency_table works", {
 
-  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps)
+  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
 
   repo_dir <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
   with_tmp_cachedir({
@@ -36,6 +35,7 @@ test_that("dependency_table works", {
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
     )
 
+    # check output of `dependency_table` matches ground-truth
     expect_s3_class(dep_table, "dependency_structure")
     expect_equal(dep_table$current_pkg, "stageddeps.food")
     expect_equal(
@@ -57,11 +57,11 @@ test_that("dependency_table works", {
       ) %>% dplyr::select(package_name, type, distance, branch, repo, host, cache_dir, install_index)
     )
 
-    # check direction upstream only, should not matter since yamls agree with DESCRIPTION files
     expect_output(
       dep_table2 <- dependency_table(repo_dir, "main", direction = "upstream"),
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
     )
+    # check direction upstream only, should not matter since yamls agree with DESCRIPTION files
     expect_equal(dep_table[names(dep_table) != "direction"], dep_table2[names(dep_table2) != "direction"])
   })
 
@@ -80,6 +80,7 @@ test_that("dependency_table wih local_pkgs works", {
     stringsAsFactors = FALSE
   )
 
+  # stageddeps.garden has branch fixgarden@main, so it should check it out
   expect_error(
     dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos),
     regexp = "must check out branch fixgarden@main", fixed = TRUE
@@ -92,38 +93,42 @@ test_that("dependency_table wih local_pkgs works", {
 })
 
 test_that("check_yamls_consistent works", {
+  # copy to new directory, so we can modify branch which is then copied to cache_dir in rec_checkout_repos
   copied_ecosystem <- tempfile("copied_ecosystem")
   fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
+  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(copied_ecosystem))
 
-  local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
-  local_repos <- data.frame(
-    repo = paste0("openpharma/", local_pkgs),
-    host = rep("https://github.com", 6),
-    directory = file.path(copied_ecosystem, local_pkgs),
-    stringsAsFactors = FALSE
-  )
+  with_tmp_cachedir({
+    # missing staged_dependencies.yaml in stageddeps.garden
+    repo_dir <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
+    expect_output(
+      expect_error(
+        check_yamls_consistent(
+          dependency_table(repo_dir, feature = "main")
+        ),
+        regexp = "for package stageddeps.garden", fixed = TRUE
+      ),
+      regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
+    )
 
-  # missing staged_dependencies.yaml in stageddeps.garden
-  repo_dir <- file.path(copied_ecosystem, "stageddeps.food")
-  expect_error(
-    check_yamls_consistent(
-      dependency_table(repo_dir, feature = "main", local_repos = local_repos)
-    ),
-    regexp = "for package stageddeps.garden", fixed = TRUE
-  )
-
-  git2r::checkout(file.path(copied_ecosystem, "stageddeps.garden"), branch = "fixgarden@main")
-  check_yamls_consistent(
-    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos)
-  )
+    git2r::checkout(file.path(copied_ecosystem, "stageddeps.garden"), branch = "fixgarden@main")
+    expect_output(
+      check_yamls_consistent(
+        dependency_table(repo_dir, feature = "fixgarden@main")
+      ),
+      regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
+    )
+  })
 })
 
 test_that("plot.dependency_structure works", {
-  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps)
+  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
 
+  # check that it works by saving the plot to a file which requires the plot code to be
+  # executed (otherwise lazy eval)
   repo_dir <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
   expect_output(
-    dep_table <- dependency_table(repo_dir, feature = "main", local_repos = local_repos),
+    dep_table <- dependency_table(repo_dir, feature = "main"),
     regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
   )
   plot_file <- tempfile("dep_plot", fileext = ".png")

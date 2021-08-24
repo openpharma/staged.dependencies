@@ -9,13 +9,16 @@ install_deps(
   install_project = TRUE,
   dry_install = FALSE,
   verbose = 0,
-  install_external_deps = TRUE,
   install_direction = "upstream",
+  install_external_deps = TRUE,
   dependency_packages = NULL,
   ...
 )
 }
 \arguments{
+\item{dep_structure}{(\code{dependency_structure}) output of function
+\code{dependency_table}}
+
 \item{install_project}{(\code{logical}) whether to also install the current
 package (\code{project})}
 
@@ -27,18 +30,11 @@ match \code{feature}}
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 
-\item{install_external_deps}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
+\item{install_direction}{"upstream", "downstream" or both; which packages
+to install (according to dependency structure)}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}
-
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
-
-\item{feature}{(\code{character}) feature we want to build; inferred from the
-branch of the project if not provided; warning if not consistent with
-current branch of project}
 }
 \value{
 installed packages in installation order

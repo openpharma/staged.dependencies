@@ -78,28 +78,12 @@ test_that("topological sort works when parent occurs twice in graph", {
   expect_equal(sorted_deps, c("n2", "n4", "n3", "n6", "n5", "n1"))
 })
 
-# get_descendants_distance ----
-test_that("get_descendants_distance works", {
+test_that("adj_list_to_edge_df works", {
   # A -> B -> C -> D
   #      |    |
   #      |\-->\--> E
   #      |         ^
   #      \--> F --/
-  expect_equal(
-    get_descendants_distance(
-      list(A = "B", B = c("C", "F", "E"), C = c("D", "E"), D = c(), E = c(), F = c("E")),
-      "B"
-    ) %>% dplyr::arrange(id),
-    data.frame(
-      id = c("C", "D", "E", "F"),
-      distance = c(1, 2, 1, 1),
-      stringsAsFactors = FALSE
-    ) %>% dplyr::arrange(id)
-  )
-})
-
-test_that("adj_list_to_edge_df works", {
-  # same example as in get_descendants_distance
   expect_equal(
     adj_list_to_edge_df(
       list(A = "B", B = c("C", "F", "E"), C = c("D", "E"), D = c(), E = c(), F = c("E"))

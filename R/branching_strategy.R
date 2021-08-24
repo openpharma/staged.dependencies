@@ -67,6 +67,7 @@ determine_branch <- function(feature, available_branches, branch_sep = "@") {
 
 # infer the feature if it is null from the project branch
 # if feature is provided, check it is consistent with the checked out project branch
+# returns feature
 infer_feature_from_branch <- function(feature = NULL, project = ".") {
   stopifnot(
     is.null(feature) || is_non_empty_char(feature)

@@ -21,7 +21,7 @@ test_that("get_repo_url works", {
 })
 
 # ---- checkout_repo ----
-test_that("checkout_repo works", {
+test_that("checkout_repo works (requires Internet access)", {
 
   expect_silent({
     # check error when dir is not a git repo

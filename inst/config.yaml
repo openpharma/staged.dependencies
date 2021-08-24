@@ -8,4 +8,4 @@
 local_packages:
 #- repo: openpharma/stageddeps.house
 #  host: https://github.com
-#  directory: "/Users/<USERNAME>/Desktop/ClonedRepos/NESTprojects/stageddeps_test/stageddeps.house"
+#  directory: "/some/absolute/path/to/project"

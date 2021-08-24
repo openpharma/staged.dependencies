@@ -8,6 +8,7 @@ test_that("get_true_deps_graph works", {
     stringsAsFactors = FALSE
   ) %>% dplyr::mutate(cache_dir = file.path(TESTS_GIT_REPOS, package_name))
 
+  # check that the up- and downstream graphs are as expected by DESCRIPTION files
   expect_equal(
     get_true_deps_graph(pkgs_df, c("upstream", "downstream")),
     list(
@@ -43,9 +44,9 @@ test_that("get_local_pkgs_from_config works", {
       "  host: https://github.com",
       paste0("  directory: \"", fs::path_abs(repo_dir), "\"")
     ), sep = "\n", file = config_file)
-    res <- get_local_pkgs_from_config()
 
-    expect_equal(res, data.frame(
+    # check local_pkgs is read correctly from the yaml
+    expect_equal(get_local_pkgs_from_config(), data.frame(
       repo = "openpharma/stageddeps.food", host = "https://github.com",
       directory = normalize_path(repo_dir), stringsAsFactors = FALSE
     ))
@@ -55,30 +56,33 @@ test_that("get_local_pkgs_from_config works", {
 })
 
 test_that("add_project_to_local_repos works", {
+  # check that project is added to yaml
+  project <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
   expect_equal(
-    add_project_to_local_repos(file.path(TESTS_GIT_REPOS, "stageddeps.food"), NULL),
+    add_project_to_local_repos(project, local_repos = NULL),
     data.frame(repo = "openpharma/stageddeps.food", host = "https://github.com",
-               directory = normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.food")),
+               directory = normalize_path(project),
                stringsAsFactors = FALSE)
   )
 
   expect_equal(
     add_project_to_local_repos(
-      file.path(TESTS_GIT_REPOS, "stageddeps.food"),
-      data.frame(repo = "openpharma/stageddeps.electricity", host = "https://github.com",
+      project,
+      local_repos = data.frame(repo = "openpharma/stageddeps.electricity", host = "https://github.com",
                  directory = normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.electricity")), stringsAsFactors = FALSE)
     ),
     data.frame(repo = c("openpharma/stageddeps.electricity", "openpharma/stageddeps.food"),
                host = c("https://github.com", "https://github.com"),
                directory = c(
                  normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.electricity")),
-                 normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.food"))
+                 normalize_path(project)
                ),
                stringsAsFactors = FALSE)
   )
 })
 
 test_that("yaml_from_dep_table works", {
+  # check that correct yaml is generated from dep table
   expect_equal(
     yaml_from_dep_table(data.frame(
       repo = c("U1", "U2", "U3", "U4", "D1", "D2", "O1", "C"),

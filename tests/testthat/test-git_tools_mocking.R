@@ -32,6 +32,8 @@ test_that("checkout_repo with mocking works", {
     # we use "REPLACED" to make sure it really uses the mocked function and
     # does not try to download from the URL; ideally, we would cut the internet
     # for this test (how?)
+
+    # check that clone is called
     expect_output(
       checkout_repo(repo_dir,
                     "REPLACED/stageddeps.food.git",
@@ -39,6 +41,7 @@ test_that("checkout_repo with mocking works", {
       regexp = "Mocking git2r::clone", fixed = TRUE
     )
 
+    # check that fetch is called, raises error because it cannot checkout an inexistent branch
     expect_output(
       expect_error(
         checkout_repo(repo_dir,
@@ -48,21 +51,14 @@ test_that("checkout_repo with mocking works", {
       ),
       regexp = "Mocking git2r::fetch", fixed = TRUE
     )
+    # checkout an existing branch (after fetching)
     expect_output(
       checkout_repo(repo_dir,
                     "REPLACED/stageddeps.food.git",
                     function(...) "unittest_branch2", token_envvar = NULL),
       regexp = "Mocking git2r::fetch", fixed = TRUE
     )
-    unlink(repo_dir, recursive = TRUE)
 
-    repo_dir <- file.path(tempfile(), "stageddeps.food")
-    expect_output(
-      checkout_repo(repo_dir,
-                    "REPLACED/stageddeps.food.git",
-                    function(...) "main", token_envvar = NULL),
-      regexp = "Mocking git2r::clone", fixed = TRUE
-    )
     unlink(repo_dir, recursive = TRUE)
   })
 
@@ -79,9 +75,10 @@ test_that("check_only_remote_branches works", {
   git2r::checkout(repo_dir, remote_branch$name)
   git2r::branch_delete(local_branch)
 
+  # check only remote branches exist
   expect_silent(check_only_remote_branches(repo_dir))
 
-  # checkout local branch
+  # checkout local branch, now expect an error that a local branch exists
   git2r::checkout(repo_dir, branch = "main")
   expect_error(
     check_only_remote_branches(repo_dir),

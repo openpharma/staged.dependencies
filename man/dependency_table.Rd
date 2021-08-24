@@ -12,6 +12,14 @@ dependency_table(
   verbose = 0
 )
 }
+\arguments{
+\item{project}{(`character`) directory of project (for which to restore the
+dependencies according to feature); must be a git repository.}
+
+\item{feature}{(`character`) feature we want to build; inferred from the
+branch of the project if not provided; warning if not consistent with
+current branch of project}
+}
 \description{
 TODO
 }
