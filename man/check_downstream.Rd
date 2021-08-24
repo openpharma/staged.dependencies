@@ -17,6 +17,9 @@ check_downstream(
 )
 }
 \arguments{
+\item{dep_structure}{(\code{dependency_structure}) output of function
+\code{dependency_table}}
+
 \item{dry_install_and_check}{(\code{logical}) whether to install upstream
 dependencies and check/test downstream repos; otherwise just reports
 what would be installed}
@@ -28,9 +31,6 @@ what would be installed}
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
-
-\item{install_external_deps}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}

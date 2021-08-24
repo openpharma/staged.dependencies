@@ -2,27 +2,43 @@
 NULL
 
 
-run_package_actions <- function(pkg_df, type, dry = FALSE,
-                                install_external_deps,
-                                internal_pkg_deps,
+#' Run an action on the packages
+#'
+#' @param pkg_df table of packages to install, e.g. returned by
+#'   `dependency_table(...)$table`
+#' @param action a subset of "test", "build", "check", "install";
+#'  -  if test: run with devtools::test
+#'  -  if build: R CMD build
+#'  -  if check: `rcmdcheck` with output to command line (if no build action),
+#'     otherwise `R CMD check` on tarball
+#'  -  if install: R install based on remotes::install (if no build action),
+#'     otherwise `R CMD INSTALL` on tarball
+#' @param internal_pkg_deps packages to install (when `install_external_deps = TRUE`)
+#' @param install_external_deps logical to describe whether to install
+#'   external dependencies of package using `remotes::install_deps`.
+run_package_actions <- function(pkg_df, action, internal_pkg_deps,
+                                dry = FALSE,
+                                install_external_deps = TRUE,
                                 rcmd_args = NULL,
                                 artifact_dir = NULL,
                                 verbose = verbose, ...) {
+
+  stopifnot(all(action %in% c("test", "build", "check", "install")))
 
   if (nrow(pkg_df) == 0) {
     message_if_verbose("No packages to process!", verbose = verbose)
     return(pkg_df)
   }
 
-  if ("build" %in% type && is.null(artifact_dir)) {
+  if (any(c("build", "check", "install") %in% action)) {
     stop("when building a package an artifact_dir must be specified")
   }
 
   if (!is.null(artifact_dir)) {
     #TODO empty directories if exist?
     lapply(
-      intersect(type, c("build", "install")),
-      function(type) fs::dir_create(file.path(artifact_dir, paste(type, "logs", sep = "_")))
+      intersect(action, c("build", "install")),
+      function(action) fs::dir_create(file.path(artifact_dir, paste0(action, "_logs")))
     )
   }
 
@@ -32,7 +48,7 @@ run_package_actions <- function(pkg_df, type, dry = FALSE,
 
     if (!dry) {
 
-      if ("test" %in% type) {
+      if ("test" %in% action) {
         # testthat::test_dir and devtools::test do not always agree
         # testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
         # stop_on_failure argument cannot be passed to devtools::test
@@ -57,7 +73,7 @@ run_package_actions <- function(pkg_df, type, dry = FALSE,
       }
 
       package_tar <- NULL
-      if ("build" %in% type) {
+      if ("build" %in% action) {
         withr::with_dir(artifact_dir, {
           pkg_name <- desc::desc_get_field("Package", file = cache_dir)
           system2(
@@ -69,7 +85,7 @@ run_package_actions <- function(pkg_df, type, dry = FALSE,
         })
       }
 
-      if ("check" %in% type) {
+      if ("check" %in% action) {
         # check tar.gz if it exists otherwise check the cache_dir
         if (!is.null(package_tar)) {
           withr::with_dir(artifact_dir,
@@ -81,7 +97,7 @@ run_package_actions <- function(pkg_df, type, dry = FALSE,
         }
       }
 
-      if ("install" %in% type) {
+      if ("install" %in% action) {
         # install the tar.gz if it exists otherwise install using staged.deps
         if (!is.null(package_tar)) {
           withr::with_dir(artifact_dir, system2("R", args = c("CMD", "INSTALL", rcmd_args$install, package_tar)))
@@ -92,7 +108,7 @@ run_package_actions <- function(pkg_df, type, dry = FALSE,
       }
 
     } else { # dry run
-      message_if_verbose(cat_nl("(Dry run) Skipping", toString(type), "of", cache_dir), verbose = verbose)
+      message_if_verbose(cat_nl("(Dry run) Skipping", toString(action), "of", cache_dir), verbose = verbose)
     }
 
   }
@@ -116,7 +132,7 @@ add_project_to_local_repos <- function(project, local_repos) {
     data.frame(
       repo = repo_deps_info$current_repo$repo,
       host = repo_deps_info$current_repo$host,
-      directory = normalizePath(project), stringsAsFactors = FALSE
+      directory = normalize_path(project), stringsAsFactors = FALSE
     )
   )
 }
@@ -153,38 +169,43 @@ get_local_pkgs_from_config <- function() {
   }
 }
 
-# Given a named list of packages of the form
-# list(name = <<path to package>>), create a dependency graph
-# using the R DESCRIPTION files, rather than the
-# staged_dependencies.yaml files.
-# The dependency graph is defined over the names in the list.
-# The direction can be "upstream", "downstream" or both. The "upstream_deps"
+# Given a data.frame of internal packages (with columns package_name, cache_dir),
+# create a dependency graph using the R DESCRIPTION files (rather than the
+# staged_dependencies.yaml files).
+# The dependency graph is defined over the packages in the data.frame. All
+# other packages are external and not included.
+# The graph_directions can be "upstream", "downstream" or both. The "upstream_deps"
 # graph is the graph where edges point from a package to its upstream
-# dependencies. The "downstream_deps" graph is the graph with the edge
-# direction flipped.
-get_true_deps_graph <- function(pkgs,
-                                direction = "upstream") {
+# dependencies. They are ordered in installation order.
+# The "downstream_deps" graph is the graph with the edge
+# direction flipped, and is ordered in reverse installation order.
+# It preserves the other columns of this data.frame.
+get_true_deps_graph <- function(pkgs_df,
+                                graph_directions = "upstream") {
+
+  stopifnot(
+    is.data.frame(pkgs_df),
+    all(c("package_name", "cache_dir") %in% colnames(pkgs_df))
+  )
+  check_direction_arg(graph_directions)
 
   # get the Imports, Suggests, Depends for each package
   # from the package DESCRIPTION files, filter for only
   # the internal packages
-  upstream_deps <- apply(pkgs, 1,
-    function(row) pkgs$package_name[pkgs$package_name %in% desc::desc_get_deps(file = row[["cache_dir"]])$package],
-    simplify = FALSE
-  )
-
-  names(upstream_deps) <- pkgs$package_name
+  upstream_deps <- lapply(pkgs_df$cache_dir,
+                          function(file) intersect(pkgs_df$package_name, desc::desc_get_deps(file)$package))
+  names(upstream_deps) <- pkgs_df$package_name
 
   # order the dependencies
   install_order <- topological_sort(upstream_deps)
   upstream_deps <- upstream_deps[install_order]
 
   res <- list()
-  if ("upstream" %in% direction) {
+  if ("upstream" %in% graph_directions) {
     res[["upstream_deps"]] <- upstream_deps
   }
-  if ("downstream" %in% direction) {
-    downstream_deps <- lapply(upstream_deps, function(x) list())
+  if ("downstream" %in% graph_directions) {
+    downstream_deps <- lapply(upstream_deps, function(x) c())
     for (x in names(upstream_deps)) {
       for (y in upstream_deps[[x]]) {
         downstream_deps[[y]] <- c(downstream_deps[[y]], x)
@@ -198,7 +219,9 @@ get_true_deps_graph <- function(pkgs,
 
 }
 
-# dep_table: dependency table as returned by `dependency_structure`
+# dep_table: dependency table as returned by `dependency_table`
+# useful to create staged_dependencies.yaml file
+# yaml::write_yaml(dependency_table(project = "."), file = "./staged_dependencies.yaml")
 yaml_from_dep_table <- function(dep_table) {
   upstream_repos <- dep_table[dep_table$type == "upstream" & dep_table$distance == 1, c("repo", "host")]
   downstream_repos <- dep_table[dep_table$type == "downstream" & dep_table$distance == 1, c("repo", "host")]

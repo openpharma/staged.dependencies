@@ -7,18 +7,23 @@
 install_deps_job(project = ".", verbose = 1, create_args = list(), ...)
 }
 \arguments{
+\item{project}{(`character`) directory of project (for which to restore the
+dependencies according to feature); must be a git repository.}
+
 \item{create_args}{\code{named list} - additional arguments passed to `dependency_table` function}
 
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
+    \item{\code{dep_structure}}{(\code{dependency_structure}) output of function
+\code{dependency_table}}
     \item{\code{install_project}}{(\code{logical}) whether to also install the current
 package (\code{project})}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
 installed without installing; this still checks out the git repos to
 match \code{feature}}
-    \item{\code{install_external_deps}}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
+    \item{\code{install_direction}}{"upstream", "downstream" or both; which packages
+to install (according to dependency structure)}
     \item{\code{verbose}}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}

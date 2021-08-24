@@ -3,15 +3,14 @@
 # DISCUSSION POINTS:
 # todo: replace git2r by gert
 # todo: cached repos, add examples
-# todo: rstudio addin to format doc
-# todo: add project field (scope) in yaml: to restrict to projects
-# todo: option to also fetch project from remote
 
-
-#' @include caching.R
-NULL
-
+# todo: local_repos to data.frame: package name to directory: no, because this means that the package needs to be fetched from the remote first
 #' TODO
+#' @param project (`character`) directory of project (for which to restore the
+#'   dependencies according to feature); must be a git repository.
+#' @param feature (`character`) feature we want to build; inferred from the
+#'   branch of the project if not provided; warning if not consistent with
+#'   current branch of project
 #' @export
 dependency_table <- function(project = ".", feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
@@ -53,36 +52,40 @@ dependency_table <- function(project = ".", feature = NULL,
   # deps$downstream_deps[["a"]] is a vector of downstream_deps of "a"
   # where the elements of the lists are the package names found in internal_deps
   # deps is ordered topologically
-  deps <- get_true_deps_graph(internal_deps, direction = c("upstream", "downstream"))
+  deps <- get_true_deps_graph(internal_deps, graph_directions = c("upstream", "downstream"))
 
-  current_repo <- internal_deps$package_name[internal_deps$repo == repo_deps_info$current_repo$repo &
-                                             internal_deps$host == repo_deps_info$current_repo$host]
+  current_pkg <- internal_deps$package_name[
+    internal_deps$repo == repo_deps_info$current_repo$repo &
+      internal_deps$host == repo_deps_info$current_repo$host
+    ]
 
-  internal_deps$type[internal_deps$package_name == current_repo] <- "current"
-  internal_deps$distance[internal_deps$package_name == current_repo] <- 0
+  internal_deps$type[internal_deps$package_name == current_pkg] <- "current"
+  internal_deps$distance[internal_deps$package_name == current_pkg] <- 0
 
-  upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], current_repo)
+  upstream_nodes <- get_descendants_distance(deps[["upstream_deps"]], current_pkg)
   internal_deps$type[internal_deps$package_name %in% upstream_nodes$id] <- "upstream"
-  internal_deps$distance[match(upstream_nodes$id, internal_deps$package_name)] <- upstream_nodes$distance
+  internal_deps$distance[internal_deps$package_name %in% upstream_nodes$id] <-
+    upstream_nodes$distance
 
-  downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], current_repo)
+  downstream_nodes <- get_descendants_distance(deps[["downstream_deps"]], current_pkg)
   internal_deps$type[internal_deps$package_name %in% downstream_nodes$id] <- "downstream"
-  internal_deps$distance[match(downstream_nodes$id, internal_deps$package_name)] <- downstream_nodes$distance
+  internal_deps$distance[internal_deps$package_name %in% downstream_nodes$id] <-
+    downstream_nodes$distance
 
   # sort the table
   internal_deps <- internal_deps[order(internal_deps$type, internal_deps$distance),
                                  c("package_name", "type", "distance", "branch",
                                    "repo", "host", "cache_dir")]
   rownames(internal_deps) <- NULL
-  internal_deps$type <- as.character(internal_deps$type)
 
+  # install_index: order in which to install packages
   internal_deps$install_index <- vapply(internal_deps$package_name,
                                         function(y) which(names(deps[["upstream_deps"]]) == y),
                                         FUN.VALUE = numeric(1))
   structure(
     list(
       project = fs::path_abs(project),
-      current_repo = current_repo,
+      current_pkg = current_pkg,
       table = internal_deps,
       deps = deps,
       direction = direction
@@ -103,6 +106,8 @@ print.dependency_structure <- function(x, ...) {
 
 
 #' @importFrom dplyr %>%
+#' @param x output from `dependency_table`
+#' @param y unused
 #' @export
 plot.dependency_structure <- function(x, y, ...){
 
@@ -158,9 +163,9 @@ plot.dependency_structure <- function(x, y, ...){
     dplyr::mutate(title = get_edge_tooltip(.data$from, .data$to, .data$listed_by)) %>%
     dplyr::mutate(dashes = !setequal(.data$listed_by, c("from", "to"))) %>%
     dplyr::ungroup() %>%
-    dplyr::select(-one_of("listed_by"))
+    dplyr::select(-tidyr::one_of("listed_by"))
 
-  plot_title <- paste0("Dependency graph starting from ", x$current_repo)
+  plot_title <- paste0("Dependency graph starting from ", x$current_pkg)
   graph <- visNetwork::visNetwork(nodes, edges, width = "100%", main = plot_title) %>%
     # topological sort
     visNetwork::visHierarchicalLayout(sortMethod = "directed", direction = "RL") %>%
@@ -200,18 +205,15 @@ plot.dependency_structure <- function(x, y, ...){
 #' The checked out branch should be a local branch.
 #'
 #' @md
-#' @param project (`character`) directory of project (for which to restore the
-#'   dependencies according to feature); must be a git repository.
-#' @param feature (`character`) feature we want to build; inferred from the
-#'   branch of the project if not provided; warning if not consistent with
-#'   current branch of project
+#' @param dep_structure (`dependency_structure`) output of function
+#'   `dependency_table`
 #' @param install_project (`logical`) whether to also install the current
 #'   package (`project`)
 #' @param dry_install (`logical`) dry run that lists packages that would be
 #'   installed without installing; this still checks out the git repos to
 #'   match `feature`
-#' @param install_external_deps logical to describe whether to install
-#'   external dependencies of package using `remotes::install_deps`.
+#' @param install_direction "upstream", "downstream" or both; which packages
+#'   to install (according to dependency structure)
 #' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
 #' @inheritParams rec_checkout_internal_deps
@@ -236,15 +238,16 @@ install_deps <- function(dep_structure,
                          install_project = TRUE,
                          dry_install = FALSE,
                          verbose = 0,
-                         install_external_deps = TRUE,
                          install_direction = "upstream",
+                         install_external_deps = TRUE,
                          dependency_packages = NULL, #TODO get this working
                          ...) {
 
-  stopifnot("dependency_structure" %in% class(dep_structure))
+  stopifnot(is(dep_structure, "dependency_structure"))
   stopifnot(is.logical(install_project), is.logical(dry_install))
 
   check_verbose_arg(verbose)
+  check_direction_arg(install_direction)
 
   if (!all(install_direction %in% dep_structure$direction)) {
     stop("Invalid install_direction argument for this dependency object")
@@ -256,6 +259,8 @@ install_deps <- function(dep_structure,
   if (length(install_direction) == 1) {
     pkg_df <- pkg_df[, pkg_df$type %in% c("current", install_direction)]
   }
+  # if upstream and downstream, we also need to install the upstream deps of the
+  # downstream deps, so no filtering
 
   if (!install_project) {
     pkg_df <- pkg_df[, pkg_df$type != "current"]
@@ -267,7 +272,7 @@ install_deps <- function(dep_structure,
   }
 
 
-  run_package_actions(pkg_df, type = "install", dry = dry_install,
+  run_package_actions(pkg_df, action = "install", dry = dry_install,
                       install_external_deps = install_external_deps,
                       internal_pkg_deps = dep_structure$table$package_name,
                       verbose = verbose, ...)
@@ -343,10 +348,9 @@ check_downstream <- function(dep_structure,
     pkg_df <- pkg_df[pkg_df$distance <= distance, ]
   }
 
+  action <- if (only_tests) c("test", "install") else c("check", "install")
 
-  type <- if (only_tests) c("test", "install") else c("check", "install")
-
-  run_package_actions(pkg_df, type = type, dry = dry_install_and_check,
+  run_package_actions(pkg_df, action = action, dry = dry_install_and_check,
                       install_external_deps = install_external_deps,
                       internal_pkg_deps = dep_structure$table$package_name,
                       rcmd_args = list(check = check_args),
@@ -365,7 +369,7 @@ check_downstream <- function(dep_structure,
 #' @inheritParams dependency_structure
 #' @export
 update_with_direct_deps <- function(dep_structure) {
-  stopifnot("dependency_structure" %in% class(dep_structure))
+  stopifnot(is(dep_structure, "dependency_structure"))
 
   yaml_contents <- yaml_from_dep_table(dep_structure$table)
   yaml::write_yaml(
@@ -422,7 +426,7 @@ update_with_direct_deps <- function(dep_structure) {
 #' # also adds commit SHA
 #' install_deps(someArgs, direction = c("upstream", "downstream"))
 #' }
-build_check_install<- function(dep_structure,
+build_check_install <- function(dep_structure,
                                install_direction = c("upstream", "downstream"),
                                packages_to_process = NULL,
                                verbose = 0,
@@ -432,7 +436,7 @@ build_check_install<- function(dep_structure,
                                install_external_deps = TRUE, ...) {
 
   steps <- match.arg(steps, several.ok = TRUE)
-  stopifnot("dependency_structure" %in% class(dep_structure))
+  stopifnot(is(dep_structure, "dependency_structure"))
 
   check_verbose_arg(verbose)
 
@@ -450,53 +454,20 @@ build_check_install<- function(dep_structure,
   if (length(install_direction) == 1) {
     pkg_df <- pkg_df[, pkg_df$type %in% c("current", install_direction)]
   }
+  # if upstream and downstream, we also need to install the upstream deps of the
+  # downstream deps, so no filtering
 
   # filter by dependency_packages
   if (!is.null(packages_to_process)) {
     pkg_df <- pkg_df[pkg_df$package_name %in% packages_to_process, ]
   }
 
-  run_package_actions(pkg_df, type = steps,
+  run_package_actions(pkg_df, action = steps,
                       install_external_deps = install_external_deps,
                       internal_pkg_deps = dep_structure$table$package_name,
                       rcmd_args = rcmd_args,
                       artifact_dir = artifact_dir,
                       verbose = verbose, ...)
-
-  return(artifact_dir)
-
-  cat(paste0("Installing packages from paths ", toString(install_order_paths)), "\n")
-
-  lapply(
-    install_order_paths,
-    function(pkg_source_dir) {
-      withr::with_dir(artifact_dir, {
-        pkg_name <- desc::desc_get_field("Package", file = pkg_source_dir)
-        if ("build" %in% steps) {
-          system2(
-            "R", args = c("CMD", "build", rcmd_args$build, pkg_source_dir),
-            stdout = file.path("build_logs", paste0(pkg_name, "_stdout.txt")),
-            stderr = file.path("build_logs", paste0(pkg_name, "_stderr.txt"))
-          )
-          pkg_file <- Sys.glob(paste0(pkg_name, "_*.tar.gz"))
-        } else {
-          pkg_name
-        }
-
-        if ("check" %in% steps) {
-          system2("R", args = c("CMD", "check", rcmd_args$check, pkg_file))
-        }
-
-        if ("install" %in% steps) {
-          system2(
-            "R", args = c("CMD", "INSTALL", rcmd_args$install, pkg_file),
-            stdout = file.path("install_logs", paste0(pkg_name, "_stdout.txt")),
-            stderr = file.path("install_logs", paste0(pkg_name, "_stderr.txt"))
-          )
-        }
-      })
-    }
-  )
 
   return(artifact_dir)
 }
@@ -505,11 +476,12 @@ build_check_install<- function(dep_structure,
 #' Checks that the staged dependency yamls are consistent with
 #' the dependencies listed in the DESCRIPTION files
 #'
+#' @md
 #' @details This function explicitly checks that for all packages in the
-#'   \code{dependency_structure} object: all upstream and downstream packages specified in each yaml
+#'   `dependency_structure` object: all upstream and downstream packages specified in each yaml
 #'   file are found in the appropriate package DESCRIPTION file
 #'
-#' @param dep_structure \code{dependency_structure} object
+#' @param dep_structure `dependency_structure` object
 #' @return NULL if successful. An error is thrown if inconsistencies found
 #' @export
 #'
@@ -520,53 +492,42 @@ build_check_install<- function(dep_structure,
 #' }
 check_yamls_consistent <- function(dep_structure) {
 
-  stopifnot("dependency_structure" %in% class(dep_structure))
-  if (length(dep_structure$direction) == 1) {
-    stop("direction must include both 'upstream' and 'downstream'")
-  }
+  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(setequal(dep_structure$direction, c("upstream", "downstream")))
 
-
-  extract_package_name <- function(repo_and_host, table){
+  extract_package_name <- function(repo_and_host, table) {
     table$package_name[table$repo == repo_and_host$repo & table$host == repo_and_host$host]
   }
 
-  error_msg <- ""
+  error_msg <- c()
 
   for (index in seq_len(nrow(dep_structure$table))) {
-    package_name <- dep_structure$table$package_name[index]
-    yaml_deps <- get_yaml_deps_info(unlist(dep_structure$table$cache_dir[index]))
+    package_name <- dep_structure$table$package_name[[index]]
+    yaml_deps <- get_yaml_deps_info(unlist(dep_structure$table$cache_dir[[index]]))
 
     # check that packages upstream in the yaml file are upstream deps
     upstream_packages_in_yaml <- vapply(yaml_deps$upstream_repos, extract_package_name, dep_structure$table,
                                         FUN.VALUE = character(1))
     upstream_packages_in_desc <- dep_structure$deps[["upstream_deps"]][[package_name]]
-    if (!all(upstream_packages_in_yaml %in% upstream_packages_in_desc)) {
-      error_msg <- paste(
-                     error_msg,
-                     "The staged dependencies yaml file for package", package_name,
-                     "has upstream repo(s):",
-                     toString(upstream_packages_in_yaml[!upstream_packages_in_yaml %in% upstream_packages_in_desc]),
-                     "which are not specified in the DESCRIPTION file.\n"
-                   )
-    }
+    # the dep_structure$deps only lists the internal package
+    error_msg <- c(error_msg, check_set_equal(
+      upstream_packages_in_yaml, upstream_packages_in_desc,
+      paste0("The internal upstream packages listed in the yaml don't agree with those in the DESCRIPTION files for package ", package_name, ": "),
+      return_error = TRUE
+    ))
 
-    # check that packages downstream in the yaml file are downstream deps
     downstream_packages_in_yaml <- vapply(yaml_deps$downstream_repos, extract_package_name, dep_structure$table,
                                           FUN.VALUE = character(1))
-    downstream_packages_in_desc <-  dep_structure$deps[["downstream_deps"]][[package_name]]
-    if (!all(downstream_packages_in_yaml %in% downstream_packages_in_desc)) {
-      error_msg <- paste(
-                     error_msg,
-                    "The staged dependencies yaml file for package", package_name,
-                    "has downstream repo(s):",
-                    toString(downstream_packages_in_yaml[!downstream_packages_in_yaml %in% downstream_packages_in_desc]),
-                    "which are not specified in the appropriate DESCRIPTION file(s).\n"
-                   )
-    }
+    downstream_packages_in_desc <- dep_structure$deps[["downstream_deps"]][[package_name]]
+    error_msg <- c(error_msg, check_set_equal(
+      downstream_packages_in_yaml, downstream_packages_in_desc,
+      paste0("The internal downstream packages listed in the yaml don't agree with those in the DESCRIPTION files for package ", package_name, ": "),
+      return_error = TRUE
+    ))
   }
 
-  if (nchar(error_msg) != 0) {
-    stop(error_msg)
+  if (length(error_msg) > 0) {
+    stop(paste(error_msg, collapse = "\n"))
   }
 
   return(invisible(NULL))

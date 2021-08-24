@@ -30,7 +30,7 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 2: includes git checkout infos)}
 }
 \value{
-A data frame, one row per checkouted out repository with columns
+A data frame, one row per checked out repository with columns
 repo, host and cache_dir
 }
 \description{
