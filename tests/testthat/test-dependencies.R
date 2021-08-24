@@ -70,6 +70,7 @@ test_that("dependency_table works", {
 test_that("dependency_table wih local_pkgs works", {
   copied_ecosystem <- tempfile("copied_ecosystem")
   fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
+  repo_dir <- file.path(copied_ecosystem, "stageddeps.house")
 
   local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
   local_repos <- data.frame(
