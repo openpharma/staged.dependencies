@@ -68,7 +68,7 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
 # copies a local directory to the cache dir and commits the current state in
 # that cache dir, so the SHA can be added to the DESCRIPTION file
 # note: files in .gitignore are also available to the package locally
-copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
+copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rule, verbose = 0) {
   check_dir_exists(local_dir, prefix = "Local directory: ")
   check_verbose_arg(verbose)
 
@@ -82,6 +82,15 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
   }
   # file.copy copies a directory inside an existing directory
   fs::dir_copy(local_dir, repo_dir)
+
+  # check that locally checked out branch is consistent with branch rule
+  available_branches <- names(git2r::branches(repo_dir, flags = "local"))
+  branch <- select_branch_rule(available_branches)
+  stopifnot(branch %in% available_branches)
+  if (branch != get_current_branch(repo_dir)) {
+    stop("You must check out branch ", branch, " for repository in directory ", repo_dir,
+         ", currently ", get_current_branch(repo_dir), " is checked out.")
+  }
 
   if ((length(git2r::status(repo_dir)$staged) > 0) ||
       (length(git2r::status(repo_dir)$unstaged) > 0) ||
@@ -170,6 +179,9 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
     if (hashed_repo_and_host %in% names(local_repo_to_dir)) {
       repo_info <- copy_local_repo_to_cachedir(
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
+        select_branch_rule = function(available_branches) {
+          determine_branch(feature, available_branches)
+        },
         verbose = verbose
       )
     } else {

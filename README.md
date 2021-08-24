@@ -97,7 +97,11 @@ install_upstream_deps(
   feature = "fix1@feature1@master", # see branch naming convention below
   verbose = 1
 )
+# todo: update above
 ```
+
+The package relies on an object of class `dependency_structure` based on which all operations are performed.
+This avoids fetching the packages over and over again when working from the command line.
 
 Remember to restart the R session after installing packages that were already loaded.
 There are additional functions (e.g. to see the dependency table/graph of the chosen project)

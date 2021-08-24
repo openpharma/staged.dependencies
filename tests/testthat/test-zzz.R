@@ -18,4 +18,8 @@ test_that("setup_storage_dir works", {
     list.files(new_storage_dir),
     c("config.yaml", "packages_cache")
   )
+  expect_equal(
+    get_packages_cache_dir(),
+    file.path(new_storage_dir, "packages_cache")
+  )
 })

@@ -25,7 +25,7 @@ run_job <- function(text, tempfile_prefix = "file", jobname_prefix = "Job", ...)
 #' install_deps_job(dry_install = TRUE)
 #' }
 install_deps_job <- function(project = ".", verbose = 1, create_args = list(), ...) {
-  project <- normalizePath(project)
+  project <- normalize_path(project)
   create_args <- c(list(project = project, verbose = verbose), create_args)
   create_args_str <- paste(deparse(create_args), collapse = "\n")
   install_args <- c(list(dep_structure = substitute(x), verbose = verbose), list(...))
@@ -52,7 +52,7 @@ install_deps_job <- function(project = ".", verbose = 1, create_args = list(), .
 #' check_downstream_job(only_tests = TRUE)
 #' }
 check_downstream_job <- function(project = ".", verbose = 1, create_args = list(), ...) {
-  project <- normalizePath(project)
+  project <- normalize_path(project)
   create_args <- c(list(project = project, verbose = verbose), create_args)
   create_args_str <- paste(deparse(create_args), collapse = "\n")
   check_downstream_args <- c(list(dep_structure = substitute(x), verbose = verbose), list(...))

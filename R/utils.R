@@ -153,12 +153,22 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
 }
 
 # check that two sets agree and throw an error message detailing difference otherwise
-check_set_equal <- function(x, y, pre_msg = "") {
+check_set_equal <- function(x, y, pre_msg = "", return_error = FALSE) {
   if (!setequal(x, y)) {
-    stop(pre_msg, "Sets do not agree, ",
+    err_msg <- paste0(pre_msg, "Sets do not agree, ",
          "setdiff x \\ y is '", toString(setdiff(x, y)), "'",
          ", setdiff y \\ x is '", toString(setdiff(y, x)), "'"
     )
+    if (return_error) {
+      return(err_msg)
+    } else {
+      stop(err_msg)
+    }
+  }
+  if (return_error) {
+    return(NULL)
+  } else {
+    return(invisible(NULL))
   }
 }
 
@@ -187,11 +197,11 @@ get_yaml_deps_info <- function(repo_dir) {
 }
 
 error_if_stageddeps_inexistent <- function(project) {
-  fpath <- normalizePath(
-    file.path(project, STAGEDDEPS_FILENAME),
-    winslash = "/", mustWork = FALSE # output error, see below
-  )
+  fpath <- normalize_path(file.path(project, STAGEDDEPS_FILENAME))
   if (!file.exists(fpath)) {
     stop("file ", STAGEDDEPS_FILENAME, " does not exist in project folder: not restoring anything")
   }
 }
+
+# normalizePath() is broken
+normalize_path <- function(x) as.character(fs::path_abs(x))

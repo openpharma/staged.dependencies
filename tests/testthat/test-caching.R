@@ -1,4 +1,4 @@
-test_that("rec_checkout_internal_deps works", {
+test_that("rec_checkout_internal_deps works (with mocking)", {
 
   mockery::stub(rec_checkout_internal_deps, 'checkout_repo', function(repo_dir, repo_url, select_branch_rule, ...) {
     repo_name <- basename(repo_url)
@@ -54,7 +54,37 @@ test_that("rec_checkout_internal_deps works", {
     res$branch,
     c("fix1@main", "main", "main")
   )
+
+  # todo: check when local_repos not null, direction is upstream and downstream
 })
+
+# todo: end2end test
+# test_that("rec_checkout_internal_deps works (without mocking)", {
+#
+# })
+# dependency_table(repo_dir, "fix1@main")
+# internal_deps <- internal_deps %>% dplyr::arrange(repo)
+# res1 <- res1 %>% dplyr::arrange(repo)
+# expect_equal(
+#   internal_deps,
+#   res1
+# )
+#
+# local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
+# local_repos <- data.frame(
+#   repo = paste0("openpharma/", local_pkgs),
+#   host = rep("https://github.com", 6),
+#   directory = file.path(TESTS_GIT_REPOS, local_pkgs),
+#   stringsAsFactors = FALSE
+# )
+# res <- data.frame(
+#   repo = paste0("openpharma/", local_pkgs),
+#   host = rep("https://github.com", 6),
+#   branch = c("main", "main", "local (main)", "main", "main", "main"),
+#   stringsAsFactors = FALSE
+# ) %>% dplyr::mutate(cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", branch)))) %>%
+#   dplyr::select(repo, host, cache_dir, branch)
+
 
 test_that("get_hashed_repo_to_dir_mapping works", {
   expect_equal(
@@ -91,7 +121,11 @@ test_that("copy_local_repo_to_cachedir works", {
     res <- expect_message(
       copy_local_repo_to_cachedir(
         repo_dir,
-        repo = "openpharma/stageddeps.food", host = "https://github.com", verbose = 2
+        repo = "openpharma/stageddeps.food", host = "https://github.com",
+        select_branch_rule = function(available_branches) {
+          "main"
+        },
+        verbose = 2
       ),
       regexp = "Adding all of the following", fixed = TRUE
     )

@@ -15,10 +15,10 @@
 # tar -czvf /tmp/ecosystem.tgz -C /tmp/test_ecosystem .
 
 # copy to package dir
-# cp /tmp/ecosystem.tgz tests/testthat
+# cp /tmp/ecosystem.tgz tests/testthat/ecosystem
 
 unpack_ecosystem <- function(target_dir, ...) {
-  cat("Unpacking test ecosystem to directory ", target_dir, "\n")
+  cat("Unpacking test ecosystem to directory", target_dir, "\n")
   tar_file <- test_path("ecosystem", "ecosystem.tgz")
   # untar(tar_file, list = TRUE)
   untar(tar_file, exdir = target_dir)
@@ -26,6 +26,11 @@ unpack_ecosystem <- function(target_dir, ...) {
 # TESTS_GIT_REPOS <- "/tmp/test_ecosystem/"
 TESTS_GIT_REPOS <- tempfile("test_ecosystem")
 unpack_ecosystem(TESTS_GIT_REPOS)
+
+# check main branch checked out everywhere
+for (dir in list.dirs(TESTS_GIT_REPOS, recursive = FALSE, full.names = TRUE)) {
+  stopifnot(get_current_branch(dir) == "main")
+}
 
 
 

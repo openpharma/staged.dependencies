@@ -6,6 +6,11 @@ test_that("infer_feature_from_branch works", {
     infer_feature_from_branch(NULL, repo_dir),
     "main"
   )
+  # feature fix1@main matches existing branch fix1@main better than main.
+  expect_warning(
+    infer_feature_from_branch("fix1@main", repo_dir),
+    regexp = "feature fix1@main would match fix1@main", fixed = TRUE
+  )
   expect_equal(
     infer_feature_from_branch("superfix@main", repo_dir),
     "superfix@main"

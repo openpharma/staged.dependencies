@@ -62,9 +62,8 @@ topological_sort <- function(graph) {
   }
 }
 
-# get the descendants (all children) of node,
+# get the descendants (all children) of node and their distances,
 # given list mapping parent to children
-# and their distances
 get_descendants_distance <- function(parents_to_children, starting_node) {
 
   # implement BFS
@@ -79,7 +78,7 @@ get_descendants_distance <- function(parents_to_children, starting_node) {
         nodes_to_treat <- c(nodes_to_treat, child_node)
         distances[[child_node]] <- distances[[cur_node]] + 1
       }
-      # otherwise, child_node was already visited before with lower distance
+      # otherwise, child_node was already visited before with smaller distance
     }
   }
   distances[[starting_node]] <- NULL # remove starting_node
@@ -91,22 +90,6 @@ get_descendants_distance <- function(parents_to_children, starting_node) {
       stringsAsFactors = FALSE
     )
   )
-}
-
-# get the descendants (all children) of node, given list mapping parent to children
-get_descendants <- function(parents_to_children, node) {
-  nodes_to_process <- c(node)
-  descendants <- c()
-  while (length(nodes_to_process) > 0) {
-    cur_node <- nodes_to_process[[1]]
-    nodes_to_process <- nodes_to_process[-1]
-
-    descendants <- c(descendants, cur_node)
-    children <- parents_to_children[[cur_node]]
-    nodes_to_process <- union(nodes_to_process, setdiff(children, descendants))
-  }
-
-  setdiff(descendants, node)
 }
 
 # convert an adjacency list to a data.frame with from and to
