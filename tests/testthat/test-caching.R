@@ -1,5 +1,40 @@
 # does not require internet access, mocks git remote operations
 
+test_that("clear_cache", {
+
+  create_cache <- function(path) {
+    fs::dir_create(file.path(path, "A"))
+    fs::dir_create(file.path(path, "A", "AA"))
+    fs::file_create(file.path(path, "A", "AA", "temp.txt"))
+    fs::dir_create(file.path(path, "B"))
+    fs::file_create(file.path(path, "B", "temp.txt"))
+  }
+
+  # test default pattern (remove all)
+  with_tmp_cachedir({
+    create_cache(get_packages_cache_dir())
+    clear_cache()
+    expect_length(fs::dir_ls(get_packages_cache_dir(), recurse = TRUE), 0)
+  })
+
+  # test pattern which removes all directories
+  with_tmp_cachedir({
+    create_cache(get_packages_cache_dir())
+    expect_message(clear_cache(pattern = "[AB]"), "Cache empty")
+    expect_length(fs::dir_ls(get_packages_cache_dir(), recurse = TRUE), 0)
+  })
+
+  # test pattern which keeps some directories
+  with_tmp_cachedir({
+    create_cache(get_packages_cache_dir())
+    expect_message(clear_cache(pattern = "[Aa]"), "Directories remaining in cache:\nB\n")
+    expect_length(fs::dir_ls(get_packages_cache_dir(), recurse = TRUE), 2)
+  })
+
+})
+
+
+
 test_that("rec_checkout_internal_deps works (with mocking)", {
 
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory

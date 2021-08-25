@@ -131,7 +131,7 @@ test_that("plot.dependency_structure works", {
     dep_table <- dependency_table(repo_dir, feature = "main"),
     regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
   )
-  plot_file <- tempfile("dep_plot", fileext = ".png")
+  plot_file <- tempfile("dep_plot", fileext = ".html")
   plot.dependency_structure(dep_table) %>% visNetwork::visSave(plot_file)
   expect_true(file.exists(plot_file))
   expect_true(file.info(plot_file)$size > 0) # expect non-empty

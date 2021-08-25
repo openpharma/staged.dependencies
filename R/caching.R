@@ -19,7 +19,10 @@ get_packages_cache_dir <- function() {
 #' clear_cache("*elecinfra*")
 #' }
 clear_cache <- function(pattern = "*") {
-  unlink(file.path(get_packages_cache_dir(), pattern), recursive = TRUE)
+  dirs_to_remove <- Sys.glob(file.path(get_packages_cache_dir(), pattern))
+  if (length(dirs_to_remove) > 0) {
+    fs::dir_delete(dirs_to_remove)
+  }
   if (!identical(pattern, "*")) {
     direcs <- dir(get_packages_cache_dir())
     if (length(direcs) == 0) {
