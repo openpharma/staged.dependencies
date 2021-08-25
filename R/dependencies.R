@@ -1,17 +1,43 @@
-# unlink(get_packages_cache_dir(), recursive = TRUE); dir.create(get_packages_cache_dir()) #todo
-
 # DISCUSSION POINTS:
 # todo: replace git2r by gert
 # todo: cached repos, add examples
-
 # todo: local_repos to data.frame: package name to directory: no, because this means that the package needs to be fetched from the remote first
-#' TODO
-#' @param project (`character`) directory of project (for which to restore the
-#'   dependencies according to feature); must be a git repository.
+# todo? unlink(get_packages_cache_dir(), recursive = TRUE); dir.create(get_packages_cache_dir())
+
+
+#' Create dependency structure of your package collection
+#' @param project (`character`) directory of project (for which to calculate the
+#'   dependency structure); must be a git repository.
 #' @param feature (`character`) feature we want to build; inferred from the
 #'   branch of the project if not provided; warning if not consistent with
 #'   current branch of project
+#' @param local_repos (`data.frame`) repositories that should be taken from
+#'   local file system rather than cloned; columns are `repo, host, directory`
+#' @param direction (`character`) direction in which to discover packages
+#'   either or both of "upstream" and "downstream".
+#'   Note if both are chosen then the entire graph is created
+#'   (i.e. upstream dependencies of downstream dependencies)
+#' @param verbose (`numeric`) verbosity level, incremental;
+#'   (0: None, 1: packages that get installed + high-level git operations,
+#'   2: includes git checkout infos)
+#' @return `dependency_structure` An S3 object with the following items:
+#' \describe{
+#'   \item{project}{First item}
+#'   \item{current_pkg}{Second item}
+#'   \item{table}{TODO}
+#'   \item{deps}{TODO}
+#'   \item{direction}{TODO}
+#' }
+#'
 #' @export
+#' @examples
+#' \dontrun{
+#'   dependency_table(verbose = 1)
+#'   x <- dependency_table(project = "path/to/project",
+#'                         direction = c("upstream))
+#'   print(x)
+#'   plot(x)
+#' }
 dependency_table <- function(project = ".", feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              direction = c("upstream", "downstream"),
@@ -213,9 +239,11 @@ plot.dependency_structure <- function(x, y, ...){
 #'   match `feature`
 #' @param install_direction "upstream", "downstream" or both; which packages
 #'   to install (according to dependency structure)
+#' @param install_external_deps logical to describe whether to install
+#'   external dependencies of package using `remotes::install_deps`.
+#' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
 #' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
-#' @inheritParams rec_checkout_internal_deps
 #'
 #' @return installed packages in installation order
 #'
@@ -236,10 +264,10 @@ plot.dependency_structure <- function(x, y, ...){
 install_deps <- function(dep_structure,
                          install_project = TRUE,
                          dry_install = FALSE,
-                         verbose = 0,
                          install_direction = "upstream",
                          install_external_deps = TRUE,
-                         dependency_packages = NULL, #TODO get this working
+                         dependency_packages = NULL,
+                         verbose = 0,
                          ...) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))

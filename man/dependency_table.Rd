@@ -2,7 +2,7 @@
 % Please edit documentation in R/dependencies.R
 \name{dependency_table}
 \alias{dependency_table}
-\title{TODO}
+\title{Create dependency structure of your package collection}
 \usage{
 dependency_table(
   project = ".",
@@ -13,13 +13,35 @@ dependency_table(
 )
 }
 \arguments{
-\item{project}{(`character`) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
+\item{project}{(`character`) directory of project (for which to calculate the
+dependency structure); must be a git repository.}
 
 \item{feature}{(`character`) feature we want to build; inferred from the
 branch of the project if not provided; warning if not consistent with
 current branch of project}
+
+\item{local_repos}{(`data.frame`) repositories that should be taken from
+local file system rather than cloned; columns are `repo, host, directory`}
+
+\item{direction}{(`character`) direction in which to discover packages
+either or both of "upstream" and "downstream".
+Note if both are chosen then the entire graph is created
+(i.e. upstream dependencies of downstream dependencies)}
+
+\item{verbose}{(`numeric`) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)}
+}
+\value{
+`dependency_structure` An S3 object with the following items:
+\describe{
+  \item{project}{First item}
+  \item{current_pkg}{Second item}
+  \item{table}{TODO}
+  \item{deps}{TODO}
+  \item{direction}{TODO}
+}
 }
 \description{
-TODO
+Create dependency structure of your package collection
 }

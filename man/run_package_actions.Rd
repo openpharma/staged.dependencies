@@ -30,8 +30,21 @@ run_package_actions(
 
 \item{internal_pkg_deps}{packages to install (when `install_external_deps = TRUE`)}
 
+\item{dry}{logical, if `FALSE` (default) run the actions, if `TRUE` do not}
+
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of package using `remotes::install_deps`.}
+
+\item{rcmd_args}{list with names `build`, `check`,
+`install` which are vectors that are passed as separate arguments
+to the `R CMD` commands}
+
+\item{artifact_dir}{directory to store log files}
+
+\item{verbose}{verbosity level, incremental - from 0 (none) to 2 (high)}
+
+\item{...}{Additional args passed to `remotes::install_deps. Note `upgrade`
+is set to "never" and shouldn't be passed into this function.}
 }
 \description{
 Run an action on the packages

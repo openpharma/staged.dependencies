@@ -5,7 +5,7 @@ get_packages_cache_dir <- function() {
 
 #' Clear the repository cache
 #'
-#' Use this function to clear the package cache and reclone some
+#' Use this function to clear the package cache of some
 #' or all repositories (depending on `pattern`) if
 #' the `git` operations fail.
 #'

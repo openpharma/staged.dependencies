@@ -8,10 +8,10 @@ install_deps(
   dep_structure,
   install_project = TRUE,
   dry_install = FALSE,
-  verbose = 0,
   install_direction = "upstream",
   install_external_deps = TRUE,
   dependency_packages = NULL,
+  verbose = 0,
   ...
 )
 }
@@ -26,12 +26,13 @@ package (\code{project})}
 installed without installing; this still checks out the git repos to
 match \code{feature}}
 
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
-
 \item{install_direction}{"upstream", "downstream" or both; which packages
 to install (according to dependency structure)}
+
+\item{install_external_deps}{logical to describe whether to install
+external dependencies of package using \code{remotes::install_deps}.}
+
+\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}

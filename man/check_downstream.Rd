@@ -28,9 +28,10 @@ what would be installed}
 
 \item{only_tests}{(\code{logical}) whether to only run tests (rather than checks)}
 
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
+
+\item{install_external_deps}{logical to describe whether to install
+external dependencies of package using \code{remotes::install_deps}.}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}

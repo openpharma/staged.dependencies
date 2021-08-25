@@ -16,16 +16,23 @@ install_deps_app(
 )
 }
 \arguments{
+\item{project}{(\code{character}) directory of project (for which to calculate the
+dependency structure); must be a git repository.}
+
 \item{default_feature}{(\code{character}) default feature, see also the parameter
 \code{feature} of \verb{\link{install_deps}}}
+
+\item{local_repos}{(\code{data.frame}) repositories that should be taken from
+local rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
 
 \item{run_as_job}{(\code{logical}) whether to run the installation as an RStudio job.}
 
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
+
+\item{install_external_deps}{logical to describe whether to install
+external dependencies of package using \code{remotes::install_deps}.}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}
@@ -34,6 +41,6 @@ is set to "never" and shouldn't be passed into this function.}
 \code{shiny.app} or value returned by app (executed as a gadget)
 }
 \description{
-The dependencies are obtained by traversing the upstream and downstream
-dependencies starting from \code{project}.
+The dependencies are obtained by traversing the upstream and downstream repositories
+in the package's staged dependencies yaml files starting from \code{project}.
 }

@@ -1,11 +1,15 @@
 #' Gadget or Shiny app to select the dependencies to install
 #'
-#' The dependencies are obtained by traversing the upstream and downstream
-#' dependencies starting from `project`.
+#' The dependencies are obtained by traversing the upstream and downstream repositories
+#' in the package's staged dependencies yaml files starting from `project`.
 #'
 #' @md
+#' @param project (`character`) directory of project (for which to calculate the
+#'   dependency structure); must be a git repository.
 #' @param default_feature (`character`) default feature, see also the parameter
 #'   `feature` of `\link{install_deps}`
+#' @param local_repos (`data.frame`) repositories that should be taken from
+#'   local rather than cloned; columns are `repo, host, directory`
 #' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
 #' @inheritParams install_deps
