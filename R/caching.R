@@ -1,6 +1,6 @@
 # directory where to clone packages to
 get_packages_cache_dir <- function() {
-  file.path(STORAGE_DIR, "packages_cache")
+  file.path(get_storage_dir(), "packages_cache")
 }
 
 #' Clear the repository cache
@@ -38,7 +38,7 @@ clear_cache <- function(pattern = "*") {
 copy_config_to_storage_dir <- function() {
   stopifnot(file.copy(
     system.file("config.yaml", package = "staged.dependencies", mustWork = TRUE),
-    STORAGE_DIR
+    get_storage_dir()
   ))
 }
 
@@ -101,7 +101,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rul
     # add all files, including untracked (all argument of git2r::commit does not do this)
     if (verbose >= 2) {
       message("Adding all of the following files: \n",
-              paste(capture.output(git2r::status(repo_dir)), collapse = "\n"))
+              paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n"))
     }
     git2r::add(repo_dir, ".")
     git2r::commit(

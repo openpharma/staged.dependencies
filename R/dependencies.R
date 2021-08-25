@@ -106,8 +106,7 @@ print.dependency_structure <- function(x, ...) {
 
 
 #' @importFrom dplyr %>%
-#' @param x output from `dependency_table`
-#' @param y unused
+#' @importFrom rlang .data
 #' @export
 plot.dependency_structure <- function(x, y, ...){
 
@@ -243,7 +242,7 @@ install_deps <- function(dep_structure,
                          dependency_packages = NULL, #TODO get this working
                          ...) {
 
-  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(is.logical(install_project), is.logical(dry_install))
 
   check_verbose_arg(verbose)
@@ -366,10 +365,12 @@ check_downstream <- function(dep_structure,
 #' 'graph' to define internal dependencies, update the
 #' project yaml file to include to include all direct
 #' (i.e. distance 1) upstream and downstream repos
-#' @inheritParams dependency_structure
+#' @param dep_structure, `dep_structure` object, output of `dependency_table`
+#'   function
+#' @md
 #' @export
 update_with_direct_deps <- function(dep_structure) {
-  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
 
   yaml_contents <- yaml_from_dep_table(dep_structure$table)
   yaml::write_yaml(
@@ -436,7 +437,7 @@ build_check_install <- function(dep_structure,
                                install_external_deps = TRUE, ...) {
 
   steps <- match.arg(steps, several.ok = TRUE)
-  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
 
   check_verbose_arg(verbose)
 
@@ -492,7 +493,7 @@ build_check_install <- function(dep_structure,
 #' }
 check_yamls_consistent <- function(dep_structure) {
 
-  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(setequal(dep_structure$direction, c("upstream", "downstream")))
 
   extract_package_name <- function(repo_and_host, table) {

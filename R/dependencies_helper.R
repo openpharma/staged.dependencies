@@ -148,7 +148,7 @@ add_project_to_local_repos <- function(project, local_repos) {
 #' @examples
 #' get_local_pkgs_from_config()
 get_local_pkgs_from_config <- function() {
-  filename <- file.path(STORAGE_DIR, CONFIG_FILENAME)
+  filename <- file.path(get_storage_dir(), CONFIG_FILENAME)
   if (file.exists(filename)) {
     content <- yaml::read_yaml(filename)
     local_pkgs <- content[["local_packages"]]
