@@ -66,5 +66,6 @@ Installs downstream R packages as specified in a
 x <- dependency_table(project = ".", verbose = 1)
 
 check_downstream(x, verbose = 1)
+check_downstream(x, verbose = 1, only_test = TRUE, check_args = c("--no-manual"))
 }
 }

@@ -334,10 +334,12 @@ install_deps <- function(dep_structure,
 #' x <- dependency_table(project = ".", verbose = 1)
 #'
 #' check_downstream(x, verbose = 1)
+#' check_downstream(x, verbose = 1, only_test = TRUE, check_args = c("--no-manual"))
 #' }
 check_downstream <- function(dep_structure,
                              downstream_packages = NULL,
-                             distance = NULL, dry_install_and_check = FALSE, check_args = NULL,
+                             distance = NULL, dry_install_and_check = FALSE,
+                             check_args = NULL,
                              only_tests = FALSE,
                              verbose = 0, install_external_deps = TRUE, ...) {
   stopifnot(
