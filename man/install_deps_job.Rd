@@ -22,14 +22,15 @@ dependency structure); must be a git repository.}
     \item{\code{dep_structure}}{(\code{dependency_structure}) output of function
 \code{dependency_table}}
     \item{\code{install_project}}{(\code{logical}) whether to also install the current
-package (\code{project})}
+package (i.e. the package named in \code{dependency_structure$current_pkg})}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
-installed without installing; this still checks out the git repos to
-match \code{feature}}
+installed}
     \item{\code{install_direction}}{"upstream", "downstream" or both; which packages
-to install (according to dependency structure)}
+to install (according to dependency structure). By default this is only "upstream"}
     \item{\code{install_external_deps}}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
+external dependencies of packages using \code{remotes::install_deps}.}
+    \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
+list will be installed (advanced usage only)}
   }}
 }
 \description{

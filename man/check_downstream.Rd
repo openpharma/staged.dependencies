@@ -20,6 +20,13 @@ check_downstream(
 \item{dep_structure}{(\code{dependency_structure}) output of function
 \code{dependency_table}}
 
+\item{downstream_packages}{(\code{vector}) additional filter to only install
+and check packages contained in this vector (advanced use only)}
+
+\item{distance}{(\code{numeric}) additional filter to only install downstream
+packages at most this distance from the \code{dependency_structure$current_pkg}
+(advanced use only)}
+
 \item{dry_install_and_check}{(\code{logical}) whether to install upstream
 dependencies and check/test downstream repos; otherwise just reports
 what would be installed}
@@ -31,43 +38,33 @@ what would be installed}
 \item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
 \item{install_external_deps}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
+external dependencies of packages using \code{remotes::install_deps}.}
 
-\item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
-is set to "never" and shouldn't be passed into this function.}
-
-\item{downstream_repos}{(\code{list}) to overwrite the downstream repos to check
-of \code{project}}
-
-\item{recursive}{(\code{logical}) whether to recursively check the downstream
-dependencies of the downstream dependencies;
-ignored if \code{downstream_repos} is set}
+\item{...}{
+  Arguments passed on to \code{\link[=install_deps]{install_deps}}
+  \describe{
+    \item{\code{install_project}}{(\code{logical}) whether to also install the current
+package (i.e. the package named in \code{dependency_structure$current_pkg})}
+    \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
+installed}
+    \item{\code{install_direction}}{"upstream", "downstream" or both; which packages
+to install (according to dependency structure). By default this is only "upstream"}
+    \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
+list will be installed (advanced usage only)}
+  }}
 }
 \value{
-\code{data.frame} of installed packages (in installation order) and checked packages
+vector of installed packages
 }
 \description{
-It installs the downstream dependencies and their upstream dependencies,
-and then runs \code{rcmdcheck} (\verb{R CMD check}) on the downstream dependencies.
-}
-\details{
-If A <- B (i.e. A is upstream of B), B should list A as upstream. Otherwise,
-B will be checked, but may not pick up the right version of A (unless there
-are other packages that require A and are processed before B).
-If A does not list B as downstream (which can be the case when projects A and
-B are unrelated), this will simply mean that check_downstream starting from A
-will not check B which is desirable.
-This requirement can be verified with \code{dependency_graph} by looking at the arrows.
+Installs downstream R packages as specified in a
+\code{dependency_structure} object  and then runs
+\code{rcmdcheck} (\verb{R CMD check}) on the downstream dependencies.
 }
 \examples{
 \dontrun{
-check_downstream(project = ".", verbose = 1)
+x <- dependency_table(project = ".", verbose = 1)
 
-check_downstream(
-  project = "../stageddeps.electricity"
-)
+check_downstream(x, verbose = 1)
 }
-}
-\seealso{
-determine_branch
 }

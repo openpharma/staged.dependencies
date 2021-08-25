@@ -35,13 +35,29 @@ Note if both are chosen then the entire graph is created
 \value{
 `dependency_structure` An S3 object with the following items:
 \describe{
-  \item{project}{First item}
-  \item{current_pkg}{Second item}
-  \item{table}{TODO}
-  \item{deps}{TODO}
-  \item{direction}{TODO}
+  \item{project}{Absolute path of the `project` argument used to create object}
+  \item{current_pkg}{The R package name of code in the `project` directory}
+  \item{table}{`data.frame` contain one row per r package discovered, with the
+               following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
+               `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`,
+               `cache_dir` and `install_index` (the order to install the packages).
+               Note `cache_dir` and `install_index` are suppressed when printing the object}
+  \item{deps}{`list` with two elements, `upstream_deps`is the graph where edges point from a package
+              to its upstream dependencies. They are ordered in installation order. The
+              `downstream_deps` list is the graph with the edge direction flipped,
+              and is ordered in reverse installation order.}
+  \item{direction}{`direction` argument used to create object}
 }
 }
 \description{
 Create dependency structure of your package collection
+}
+\examples{
+\dontrun{
+  dependency_table(verbose = 1)
+  x <- dependency_table(project = "path/to/project",
+                        direction = c("upstream"))
+  print(x)
+  plot(x)
+}
 }
