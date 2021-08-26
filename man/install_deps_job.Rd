@@ -20,9 +20,13 @@ dependency structure); must be a git repository.}
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
     \item{\code{dep_structure}}{(\code{dependency_structure}) output of function
-\code{dependency_table}}
+\code{dependency_table}; uses \code{dep_structure$table} to infer the packages
+to apply action to and infer installation order;
+uses \code{dep_structure$deps} to infer upstream dependencies}
     \item{\code{install_project}}{(\code{logical}) whether to also install the current
-package (i.e. the package named in \code{dependency_structure$current_pkg})}
+package (i.e. the package named in \code{dependency_structure$current_pkg}),
+ignored unless \code{install_direction = "upstream"} (because downstream
+deps automatically install all their upstream deps)}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
 installed}
     \item{\code{install_direction}}{"upstream", "downstream" or both; which packages

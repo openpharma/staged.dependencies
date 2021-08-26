@@ -5,45 +5,46 @@
 \title{Run an action on the packages}
 \usage{
 run_package_actions(
-  pkg_df,
-  action,
+  pkg_actions,
   internal_pkg_deps,
   dry = FALSE,
   install_external_deps = TRUE,
   rcmd_args = NULL,
   artifact_dir = NULL,
-  verbose = verbose,
+  verbose = 0,
   ...
 )
 }
 \arguments{
-\item{pkg_df}{table of packages to install, e.g. returned by
-`dependency_table(...)$table`}
+\item{pkg_actions}{sorted \code{data.frame} with columns \code{cache_dir} pointing
+to package source and \code{actions}, processed from top to bottom in order
+Each \code{actions} is a subset of "test", "build", "check", "install";
+\itemize{
+\item if test: run with \code{devtools::test}
+\item if build: \verb{R CMD build}
+\item if check: \code{rcmdcheck} with output to command line (if no build action),
+otherwise \verb{R CMD check} on tarball
+\item if install: R install based on \code{remotes::install} (if no build action),
+otherwise \verb{R CMD INSTALL} on tarball
+}}
 
-\item{action}{a subset of "test", "build", "check", "install";
--  if test: run with devtools::test
--  if build: R CMD build
--  if check: `rcmdcheck` with output to command line (if no build action),
-   otherwise `R CMD check` on tarball
--  if install: R install based on remotes::install (if no build action),
-   otherwise `R CMD INSTALL` on tarball}
+\item{internal_pkg_deps}{packages to not install (when \code{install_external_deps = TRUE})}
 
-\item{internal_pkg_deps}{packages to install (when `install_external_deps = TRUE`)}
-
-\item{dry}{logical, if `FALSE` (default) run the actions, if `TRUE` do not}
+\item{dry}{logical, if \code{FALSE} (default) run the actions, if \code{TRUE} do not}
 
 \item{install_external_deps}{logical to describe whether to install
-external dependencies of package using `remotes::install_deps`.}
+external dependencies of package using \code{remotes::install_deps}.}
 
-\item{rcmd_args}{list with names `build`, `check`,
-`install` which are vectors that are passed as separate arguments
-to the `R CMD` commands}
+\item{rcmd_args}{list with names \code{build}, \code{check},
+\code{install} which are vectors that are passed as separate arguments
+to the \verb{R CMD} commands}
 
-\item{artifact_dir}{directory to store log files}
+\item{artifact_dir}{directory to store log files, only when actions include
+\code{build}; action \code{test} only outputs to the console}
 
 \item{verbose}{verbosity level, incremental - from 0 (none) to 2 (high)}
 
-\item{...}{Additional args passed to `remotes::install_deps. Note `upgrade`
+\item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}
 }
 \description{
