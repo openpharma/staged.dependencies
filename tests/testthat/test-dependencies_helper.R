@@ -1,3 +1,4 @@
+# get_true_deps_graph ----
 test_that("get_true_deps_graph works", {
   # take out "stageddeps.water", so it will be treated like an external
   # dependency (i.e. not appear in the dep graph)
@@ -31,6 +32,7 @@ test_that("get_true_deps_graph works", {
 
 })
 
+# get_local_pkgs_from_config ----
 test_that("get_local_pkgs_from_config works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
@@ -81,6 +83,7 @@ test_that("add_project_to_local_repos works", {
   )
 })
 
+# yaml_from_dep_table ----
 test_that("yaml_from_dep_table works", {
   # check that correct yaml is generated from dep table
   expect_equal(
@@ -103,4 +106,33 @@ test_that("yaml_from_dep_table works", {
       )
     )
   )
+})
+
+
+# run_package_actions ----
+test_that("run_package_actions works", {
+  mockery::stub(run_package_actions, 'install_repo_add_sha', function(cache_dir, ...) {
+    cat(paste0("Mocking install_repo_add_sha for ", cache_dir, "\n"))
+  })
+
+  # check that install is called twice
+  output <- capture.output(
+    run_package_actions(
+      data.frame(
+        cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
+        actions = c("install", "install"),
+        stringsAsFactors = FALSE
+      ),
+      install_external_deps = FALSE
+    ) %>% invisible()
+  )
+  expect_equal(
+    output,
+    c(
+      paste0("Mocking install_repo_add_sha for ", file.path(TESTS_GIT_REPOS, "stageddeps.elecinfra")),
+      paste0("Mocking install_repo_add_sha for ", file.path(TESTS_GIT_REPOS, "stageddeps.electricity"))
+
+    )
+  )
+
 })

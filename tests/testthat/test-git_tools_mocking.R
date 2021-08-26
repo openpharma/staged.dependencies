@@ -69,12 +69,6 @@ test_that("check_only_remote_branches works", {
   repo_dir <- tempfile()
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.elecinfra"), repo_dir)
 
-  # delete local "main" branch
-  local_branch <- git2r::repository_head(repo_dir)
-  remote_branch <- git2r::branch_get_upstream(local_branch)
-  git2r::checkout(repo_dir, remote_branch$name)
-  git2r::branch_delete(local_branch)
-
   # check only remote branches exist
   expect_silent(check_only_remote_branches(repo_dir))
 

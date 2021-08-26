@@ -28,8 +28,12 @@ test_that("dependency_table works", {
 
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
 
-  repo_dir <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
+  repo_dir <- tempfile("stageddeps.food")
+  fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::checkout(repo_dir, "main")
+
   with_tmp_cachedir({
+
     expect_output(
       dep_table <- dependency_table(repo_dir, "main"),
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
@@ -72,6 +76,8 @@ test_that("dependency_table wih local_pkgs works", {
   fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
   repo_dir <- file.path(copied_ecosystem, "stageddeps.house")
 
+  lapply(file.path(copied_ecosystem, local_pkgs), function(repo_dir) git2r::checkout(repo_dir, "main"))
+
   local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
   local_repos <- data.frame(
     repo = paste0("openpharma/", local_pkgs),
@@ -100,7 +106,8 @@ test_that("check_yamls_consistent works", {
 
   with_tmp_cachedir({
     # missing staged_dependencies.yaml in stageddeps.garden
-    repo_dir <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
+    repo_dir <- file.path(copied_ecosystem, "stageddeps.food")
+    git2r::checkout(repo_dir, "main")
     expect_output(
       expect_error(
         check_yamls_consistent(
@@ -124,9 +131,12 @@ test_that("check_yamls_consistent works", {
 test_that("plot.dependency_structure works", {
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
 
+  repo_dir <- tempfile("stageddeps.food")
+  fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::checkout(repo_dir, "main")
+
   # check that it works by saving the plot to a file which requires the plot code to be
   # executed (otherwise lazy eval)
-  repo_dir <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
   expect_output(
     dep_table <- dependency_table(repo_dir, feature = "main"),
     regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
@@ -136,3 +146,114 @@ test_that("plot.dependency_structure works", {
   expect_true(file.exists(plot_file))
   expect_true(file.info(plot_file)$size > 0) # expect non-empty
 })
+
+test_that("install_deps works", {
+  repo_dir <- tempfile("stageddeps.food")
+  fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::checkout(repo_dir, "main")
+
+  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
+  capture.output(dep_table <- dependency_table(repo_dir, feature = "fixgarden@main")) # capture.output to make silent
+
+  mockery::stub(install_deps, 'run_package_actions', function(pkg_actions, ...) {
+    pkg_actions
+  })
+
+  # check install_direction = "upstream"
+  expect_equal(
+    install_deps(dep_table, dry_install = TRUE, install_direction = "upstream")[, c("package_name", "actions")],
+    data.frame(
+      package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
+                       "stageddeps.food"),
+      actions = c("install", "install", "install"),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  # check install_direction = "downstream"
+  # may fail because topological order is not unique, ignoring for now
+  expect_equal(
+    install_deps(dep_table, dry_install = TRUE, install_direction = "downstream")[, c("package_name", "actions")],
+    data.frame(
+      package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
+                       "stageddeps.food", "stageddeps.water", "stageddeps.house"),
+      actions = c("install", "install", "install", "install", "install"),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  # check install_direction = c("upstream", "downstream")
+  # may fail because topological order is not unique, ignoring for now
+  expect_equal(
+    install_deps(dep_table, dry_install = TRUE, install_direction = c("upstream", "downstream")
+    )[, c("package_name", "actions")],
+    data.frame(
+      package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
+                       "stageddeps.food", "stageddeps.water", "stageddeps.house",
+                       "stageddeps.garden"),
+      actions = c("install", "install", "install", "install", "install", "install"),
+      stringsAsFactors = FALSE
+    )
+  )
+
+})
+
+test_that("check_downstream works", {
+  repo_dir <- tempfile("stageddeps.food")
+  fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::checkout(repo_dir, "main")
+
+  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
+  capture.output(dep_table <- dependency_table(repo_dir, feature = "fixgarden@main")) # capture.output to make silent
+
+  mockery::stub(check_downstream, 'run_package_actions', function(pkg_actions, ...) {
+    pkg_actions
+  })
+
+  expected_res <- data.frame(
+    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
+                     "stageddeps.food", "stageddeps.water", "stageddeps.house"),
+    stringsAsFactors = FALSE
+  )
+  # workaround because adding it directly into data.frame(...) does not work
+  expected_res$actions <- list("install", "install", "install", "install", c("check", "install"))
+  expect_equal(
+    check_downstream(dep_table)[, c("package_name", "actions")],
+    expected_res
+  )
+
+  # add only_tests = TRUE
+  expected_res$actions <- list("install", "install", "install", "install", c("test", "install"))
+  expect_equal(
+    check_downstream(dep_table, only_tests = TRUE)[, c("package_name", "actions")],
+    expected_res
+  )
+})
+
+expect_that("build_check_install works", {
+  repo_dir <- tempfile("stageddeps.food")
+  fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::checkout(repo_dir, "main")
+
+  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
+  capture.output(dep_table <- dependency_table(repo_dir, feature = "fixgarden@main")) # capture.output to make silent
+
+  mockery::stub(build_check_install, 'run_package_actions', function(pkg_actions, ...) {
+    pkg_actions
+  })
+
+  expected_res <- data.frame(
+    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
+                     "stageddeps.food", "stageddeps.water", "stageddeps.house", "stageddeps.garden"),
+    stringsAsFactors = FALSE
+  )
+  # workaround because adding it directly into data.frame(...) does not work
+  expected_res$actions <- rep(list(c("build", "check", "install")), 6)
+  expect_equal(
+    build_check_install(dep_table)$pkg_actions[, c("package_name", "actions")],
+    expected_res
+  )
+
+})
+
+

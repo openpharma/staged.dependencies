@@ -205,3 +205,8 @@ error_if_stageddeps_inexistent <- function(project) {
 
 # normalizePath() is broken
 normalize_path <- function(x) as.character(fs::path_abs(x))
+
+# make a named list with names 'nm' and each entry being 'x'
+rep_with_names <- function(x, nm) {
+  setNames(rep(x, times = length(nm)), nm = nm)
+}

@@ -92,6 +92,21 @@ get_descendants_distance <- function(parents_to_children, starting_node) {
   )
 }
 
+# get children, children of children etc.
+# excludes the start_nodes
+get_descendants <- function(parents_to_children, start_nodes) {
+  descendants <- c()
+  nodes_to_treat <- start_nodes
+  while (length(nodes_to_treat) > 0) {
+    node <- nodes_to_treat[[1]]
+    nodes_to_treat <- nodes_to_treat[-1]
+    new_descendants <- setdiff(parents_to_children[[node]], descendants)
+    descendants <- c(descendants, new_descendants)
+    nodes_to_treat <- c(nodes_to_treat, new_descendants)
+  }
+  setdiff(descendants, start_nodes)
+}
+
 # convert an adjacency list to a data.frame with from and to
 # going from parents to children
 adj_list_to_edge_df <- function(parents_to_children) {
