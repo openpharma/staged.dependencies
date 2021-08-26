@@ -31,12 +31,13 @@ test_that("dependency_table works", {
   repo_dir <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
   with_tmp_cachedir({
     expect_output(
-      dep_table <- dependency_table(repo_dir, "main"),
+      dep_table <- dependency_table(repo_dir, feature = "main"),
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
     )
 
     # check output of `dependency_table` matches ground-truth
     expect_s3_class(dep_table, "dependency_structure")
+    expect_equal(dep_table$project_type, "local")
     expect_equal(dep_table$current_pkg, "stageddeps.food")
     expect_equal(
       dep_table$table,
@@ -58,7 +59,7 @@ test_that("dependency_table works", {
     )
 
     expect_output(
-      dep_table2 <- dependency_table(repo_dir, "main", direction = "upstream"),
+      dep_table2 <- dependency_table(repo_dir, feature = "main", direction = "upstream"),
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
     )
     # check direction upstream only, should not matter since yamls agree with DESCRIPTION files

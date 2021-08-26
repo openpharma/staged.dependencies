@@ -8,7 +8,7 @@ update_with_direct_deps(dep_structure)
 }
 \arguments{
 \item{dep_structure, }{\code{dep_structure} object, output of \code{dependency_table}
-function}
+function with \code{project_type = "local"}}
 }
 \description{
 Using the existing stage_dependencies yaml file

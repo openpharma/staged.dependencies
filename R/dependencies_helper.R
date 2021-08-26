@@ -250,3 +250,17 @@ yaml_from_dep_table <- function(dep_table) {
   )
 }
 
+
+# take string x@y and split it into list(repo=x, host=y)
+# error if multiple "@'s" in string, if no @'s then take
+# host = "https://github.com"
+parse_remote_project <- function(project) {
+  split_string <- strsplit(project, "@")[[1]]
+  if (length(split_string) > 2) {
+    stop("Invalid project argument, should be 'repo@host'")
+  }
+  if (length(split_string) == 1) {
+    split_string <- c(split_string, "https://github.com")
+  }
+  return(list(repo = split_string[1], host = split_string[2]))
+}
