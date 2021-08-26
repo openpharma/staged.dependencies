@@ -7,14 +7,23 @@
 check_downstream_job(project = ".", verbose = 1, create_args = list(), ...)
 }
 \arguments{
-\item{project}{(`character`) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
+\item{project}{(`character`) directory of project (for which to calculate the
+dependency structure); must be a git repository.}
+
+\item{verbose}{(`numeric`) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)}
 
 \item{create_args}{\code{named list} - additional arguments passed to `dependency_table` function}
 
 \item{...}{
   Arguments passed on to \code{\link[=check_downstream]{check_downstream}}
   \describe{
+    \item{\code{downstream_packages}}{(\code{vector}) additional filter to only install
+and check packages contained in this vector (advanced use only)}
+    \item{\code{distance}}{(\code{numeric}) additional filter to only install downstream
+packages at most this distance from the \code{dependency_structure$current_pkg}
+(advanced use only)}
     \item{\code{dry_install_and_check}}{(\code{logical}) whether to install upstream
 dependencies and check/test downstream repos; otherwise just reports
 what would be installed}
@@ -22,9 +31,8 @@ what would be installed}
     \item{\code{only_tests}}{(\code{logical}) whether to only run tests (rather than checks)}
     \item{\code{dep_structure}}{(\code{dependency_structure}) output of function
 \code{dependency_table}}
-    \item{\code{verbose}}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+    \item{\code{install_external_deps}}{logical to describe whether to install
+external dependencies of packages using \code{remotes::install_deps}.}
   }}
 }
 \description{

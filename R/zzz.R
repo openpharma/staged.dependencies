@@ -1,11 +1,10 @@
-STORAGE_DIR <- path.expand("~/.staged.dependencies")
 STAGEDDEPS_FILENAME <- "staged_dependencies.yaml"
-CONFIG_FILENAME <- "config.yaml" # in STORAGE_DIR
+CONFIG_FILENAME <- "config.yaml" # staged.dependencies._storage_dir
 
 # Use this function when you want to change the storage directory while the package is already loaded
 # It does not delete the old storage directory
 setup_storage_dir <- function(storage_dir) {
-  STORAGE_DIR <<- storage_dir
+  options(staged.dependencies._storage_dir = storage_dir)
 
   # only copy config if storage dir does not exist
   if (!dir.exists(storage_dir)) {
@@ -19,9 +18,9 @@ setup_storage_dir <- function(storage_dir) {
   storage_dir
 }
 
-# needed for tests since accessing `STORAGE_DIR` directly in tests does not seem to work
+
 get_storage_dir <- function() {
-  STORAGE_DIR
+  options()$staged.dependencies._storage_dir
 }
 
 .onLoad <- function(libname, pkgname) {
@@ -35,8 +34,7 @@ get_storage_dir <- function() {
   )
   toset <- !(names(op.package) %in% names(op))
   if (any(toset)) options(op.package[toset])
-
-  setup_storage_dir(STORAGE_DIR)
+  setup_storage_dir(path.expand("~/.staged.dependencies"))
 }
 
 

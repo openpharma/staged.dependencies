@@ -2,16 +2,16 @@
 % Please edit documentation in R/dependencies.R
 \name{install_deps}
 \alias{install_deps}
-\title{Install dependencies of project corresponding to feature}
+\title{Install dependencies of project}
 \usage{
 install_deps(
   dep_structure,
   install_project = TRUE,
   dry_install = FALSE,
-  verbose = 0,
   install_direction = "upstream",
   install_external_deps = TRUE,
   dependency_packages = NULL,
+  verbose = 0,
   ...
 )
 }
@@ -20,18 +20,21 @@ install_deps(
 \code{dependency_table}}
 
 \item{install_project}{(\code{logical}) whether to also install the current
-package (\code{project})}
+package (i.e. the package named in \code{dependency_structure$current_pkg})}
 
 \item{dry_install}{(\code{logical}) dry run that lists packages that would be
-installed without installing; this still checks out the git repos to
-match \code{feature}}
-
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+installed}
 
 \item{install_direction}{"upstream", "downstream" or both; which packages
-to install (according to dependency structure)}
+to install (according to dependency structure). By default this is only "upstream"}
+
+\item{install_external_deps}{logical to describe whether to install
+external dependencies of packages using \code{remotes::install_deps}.}
+
+\item{dependency_packages}{(\code{character}) An additional filter, only packages on this
+list will be installed (advanced usage only)}
+
+\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}
@@ -40,27 +43,18 @@ is set to "never" and shouldn't be passed into this function.}
 installed packages in installation order
 }
 \description{
-This reads the dependencies for the project (recursively) and
-installs the right branches based on the feature.
-The dependencies can be upstream (by default) and downstream (to
-install downstream packages as well).
-}
-\details{
-It throws a warning if the currently checked out branch in the project
-is not the one that would be taken based on \code{feature}.
-The checked out branch should be a local branch.
+Given a \code{dependency_structure} object, install the R packages
 }
 \examples{
 \dontrun{
-install_deps()
+x <- dependency_table(project = "./path/to/project")
+
+install_deps(x)
 
 # install all dependencies
-install_deps(direction = c("upstream", "downstream"))
+install_deps(x, direction = c("upstream", "downstream"))
 
-remove.packages("stageddeps.food")
-install_deps("../scratch1/stageddeps.food")
 }
-
 }
 \seealso{
 determine_branch

@@ -1,17 +1,50 @@
-# unlink(get_packages_cache_dir(), recursive = TRUE); dir.create(get_packages_cache_dir()) #todo
-
 # DISCUSSION POINTS:
 # todo: replace git2r by gert
 # todo: cached repos, add examples
-
 # todo: local_repos to data.frame: package name to directory: no, because this means that the package needs to be fetched from the remote first
-#' TODO
-#' @param project (`character`) directory of project (for which to restore the
-#'   dependencies according to feature); must be a git repository.
+# todo? unlink(get_packages_cache_dir(), recursive = TRUE); dir.create(get_packages_cache_dir())
+
+
+#' Create dependency structure of your package collection
+#' @param project (`character`) directory of project (for which to calculate the
+#'   dependency structure); must be a git repository.
 #' @param feature (`character`) feature we want to build; inferred from the
 #'   branch of the project if not provided; warning if not consistent with
 #'   current branch of project
+#' @param local_repos (`data.frame`) repositories that should be taken from
+#'   local file system rather than cloned; columns are `repo, host, directory`
+#' @param direction (`character`) direction in which to discover packages
+#'   either or both of "upstream" and "downstream".
+#'   Note if both are chosen then the entire graph is created
+#'   (i.e. upstream dependencies of downstream dependencies)
+#' @param verbose (`numeric`) verbosity level, incremental;
+#'   (0: None, 1: packages that get installed + high-level git operations,
+#'   2: includes git checkout infos)
+#' @return `dependency_structure` An S3 object with the following items:
+#' \describe{
+#'   \item{project}{Absolute path of the `project` argument used to create object}
+#'   \item{current_pkg}{The R package name of code in the `project` directory}
+#'   \item{table}{`data.frame` contain one row per r package discovered, with the
+#'                following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
+#'                `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`,
+#'                `cache_dir` and `install_index` (the order to install the packages).
+#'                Note `cache_dir` and `install_index` are suppressed when printing the object}
+#'   \item{deps}{`list` with two elements, `upstream_deps`is the graph where edges point from a package
+#'               to its upstream dependencies. They are ordered in installation order. The
+#'               `downstream_deps` list is the graph with the edge direction flipped,
+#'               and is ordered in reverse installation order.}
+#'   \item{direction}{`direction` argument used to create object}
+#' }
+#'
 #' @export
+#' @examples
+#' \dontrun{
+#'   dependency_table(verbose = 1)
+#'   x <- dependency_table(project = "path/to/project",
+#'                         direction = c("upstream"))
+#'   print(x)
+#'   plot(x)
+#' }
 dependency_table <- function(project = ".", feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              direction = c("upstream", "downstream"),
@@ -106,8 +139,7 @@ print.dependency_structure <- function(x, ...) {
 
 
 #' @importFrom dplyr %>%
-#' @param x output from `dependency_table`
-#' @param y unused
+#' @importFrom rlang .data
 #' @export
 plot.dependency_structure <- function(x, y, ...){
 
@@ -193,30 +225,26 @@ plot.dependency_structure <- function(x, y, ...){
 
 
 
-#' Install dependencies of project corresponding to feature
+#' Install dependencies of project
 #'
-#' This reads the dependencies for the project (recursively) and
-#' installs the right branches based on the feature.
-#' The dependencies can be upstream (by default) and downstream (to
-#' install downstream packages as well).
-#'
-#' It throws a warning if the currently checked out branch in the project
-#' is not the one that would be taken based on `feature`.
-#' The checked out branch should be a local branch.
+#' Given a `dependency_structure` object, install the R packages
 #'
 #' @md
 #' @param dep_structure (`dependency_structure`) output of function
 #'   `dependency_table`
 #' @param install_project (`logical`) whether to also install the current
-#'   package (`project`)
+#'   package (i.e. the package named in `dependency_structure$current_pkg`)
 #' @param dry_install (`logical`) dry run that lists packages that would be
-#'   installed without installing; this still checks out the git repos to
-#'   match `feature`
+#'   installed
 #' @param install_direction "upstream", "downstream" or both; which packages
-#'   to install (according to dependency structure)
+#'   to install (according to dependency structure). By default this is only "upstream"
+#' @param install_external_deps logical to describe whether to install
+#'   external dependencies of packages using `remotes::install_deps`.
+#' @param dependency_packages (`character`) An additional filter, only packages on this
+#'   list will be installed (advanced usage only)
+#' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
 #' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
-#' @inheritParams rec_checkout_internal_deps
 #'
 #' @return installed packages in installation order
 #'
@@ -225,25 +253,24 @@ plot.dependency_structure <- function(x, y, ...){
 #'
 #' @examples
 #' \dontrun{
-#' install_deps()
+#' x <- dependency_table(project = "./path/to/project")
+#'
+#' install_deps(x)
 #'
 #' # install all dependencies
-#' install_deps(direction = c("upstream", "downstream"))
+#' install_deps(x, direction = c("upstream", "downstream"))
 #'
-#' remove.packages("stageddeps.food")
-#' install_deps("../scratch1/stageddeps.food")
 #' }
-#'
 install_deps <- function(dep_structure,
                          install_project = TRUE,
                          dry_install = FALSE,
-                         verbose = 0,
                          install_direction = "upstream",
                          install_external_deps = TRUE,
-                         dependency_packages = NULL, #TODO get this working
+                         dependency_packages = NULL,
+                         verbose = 0,
                          ...) {
 
-  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(is.logical(install_project), is.logical(dry_install))
 
   check_verbose_arg(verbose)
@@ -282,48 +309,37 @@ install_deps <- function(dep_structure,
 
 #' Check & install downstream dependencies
 #'
-#' It installs the downstream dependencies and their upstream dependencies,
-#' and then runs `rcmdcheck` (`R CMD check`) on the downstream dependencies.
-#'
-#' If A <- B (i.e. A is upstream of B), B should list A as upstream. Otherwise,
-#' B will be checked, but may not pick up the right version of A (unless there
-#' are other packages that require A and are processed before B).
-#' If A does not list B as downstream (which can be the case when projects A and
-#' B are unrelated), this will simply mean that check_downstream starting from A
-#' will not check B which is desirable.
-#' This requirement can be verified with `dependency_graph` by looking at the arrows.
+#' Installs downstream R packages as specified in a
+#' `dependency_structure` object  and then runs
+#' `rcmdcheck` (`R CMD check`) on the downstream dependencies.
 #'
 #' @md
-#'
-#' @export
-#'
-#' @param downstream_repos (`list`) to overwrite the downstream repos to check
-#'   of `project`
+#' @param downstream_packages (`vector`) additional filter to only install
+#'   and check packages contained in this vector (advanced use only)
+#' @param distance (`numeric`) additional filter to only install downstream
+#'   packages at most this distance from the `dependency_structure$current_pkg`
+#'   (advanced use only)
 #' @param dry_install_and_check (`logical`) whether to install upstream
 #'   dependencies and check/test downstream repos; otherwise just reports
 #'   what would be installed
-#' @param recursive (`logical`) whether to recursively check the downstream
-#'   dependencies of the downstream dependencies;
-#'   ignored if `downstream_repos` is set
 #' @param check_args (`list`) arguments passed to `rcmdcheck`
 #' @param only_tests (`logical`) whether to only run tests (rather than checks)
 #' @inheritParams install_deps
+#' @inheritDotParams install_deps
 #' @export
-#' @seealso determine_branch
-#'
-#' @return `data.frame` of installed packages (in installation order) and checked packages
-#'
+#
+#' @return  vector of installed packages
 #' @examples
 #' \dontrun{
-#' check_downstream(project = ".", verbose = 1)
+#' x <- dependency_table(project = ".", verbose = 1)
 #'
-#' check_downstream(
-#'   project = "../stageddeps.electricity"
-#' )
+#' check_downstream(x, verbose = 1)
+#' check_downstream(x, verbose = 1, only_test = TRUE, check_args = c("--no-manual"))
 #' }
 check_downstream <- function(dep_structure,
                              downstream_packages = NULL,
-                             distance = NULL, dry_install_and_check = FALSE, check_args = NULL,
+                             distance = NULL, dry_install_and_check = FALSE,
+                             check_args = NULL,
                              only_tests = FALSE,
                              verbose = 0, install_external_deps = TRUE, ...) {
   stopifnot(
@@ -366,10 +382,12 @@ check_downstream <- function(dep_structure,
 #' 'graph' to define internal dependencies, update the
 #' project yaml file to include to include all direct
 #' (i.e. distance 1) upstream and downstream repos
-#' @inheritParams dependency_structure
+#' @param dep_structure, `dep_structure` object, output of `dependency_table`
+#'   function
+#' @md
 #' @export
 update_with_direct_deps <- function(dep_structure) {
-  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
 
   yaml_contents <- yaml_from_dep_table(dep_structure$table)
   yaml::write_yaml(
@@ -380,51 +398,29 @@ update_with_direct_deps <- function(dep_structure) {
   )
 }
 
-#' Recursively discover and build, check and install
-#' internal dependencies
+#' Build, check and install internal dependencies
 #'
-#' It discovers all dependencies starting from the repositories,
-#' determines the installation order and then
-#' builds, checks and installs them in order.
+
 #'
 #' @md
-#' @inheritParams rec_checkout_internal_deps
+#' @inheritParams install_deps
+#' @inheritDotParams install_deps
 #' @param steps (`character` vector) subset of "build", "check", "install";
 #'   useful to skip checking for example
 #' @param rcmd_args (`list`) with names `build`, `check`,
 #'   `install` which are vectors that are passed as separate arguments
 #'   to the `R CMD` commands
-#' @param artifact_dir (`character`) directory where build
-#'   tarball and logs go to
+#' @param packages_to_process (`character`) An additional filter, only packages on
+#'   this list will be installed (advanced usage only)
+#' @param artifact_dir (`character`) directory to place built R packages
+#'   and logs
 #' @return `artifact_dir` directory with log files
 #' @export
 #' @examples
 #' \dontrun{
-#' build_check_install_repos(
-#'   list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
-#'   feature = "main",
-#'   direction = "upstream",
-#'   local_repos = data.frame(repo = "openpharma/stageddeps.food",
-#'   host = "https://github.com", directory = "../scratch1/stageddeps.food/",
-#'   stringsAsFactors = FALSE)
-#' )
-#' build_check_install_repos(
-#'   list(list(repo = "openpharma/stageddeps.electricity",
-#'   host = "https://github.com")),
-#'   feature = "main",
-#'   direction = "upstream",
-#'   local_repos = data.frame(repo = "openpharma/stageddeps.electricity",
-#'   host = "https://github.com",
-#'   directory = "../example_ecosystem/stageddeps.electricity/",
-#'   stringsAsFactors = FALSE),
-#'   artifact_dir = "/tmp/test112"
-#' )
-#'
-#' # to install all packages
-#' build_check_install_repos(someArgs, steps = "install")
-#' # alternatively with slightly different arguments (e.g. dry_run),
-#' # also adds commit SHA
-#' install_deps(someArgs, direction = c("upstream", "downstream"))
+#'   x <- dependency_table(project = ".", verbose = 1)
+#'   build_check_install(x, steps = c("build", "check"), verbose = 1)
+#'   build_check_install(x, artifact_dir = "../output")
 #' }
 build_check_install <- function(dep_structure,
                                install_direction = c("upstream", "downstream"),
@@ -436,7 +432,7 @@ build_check_install <- function(dep_structure,
                                install_external_deps = TRUE, ...) {
 
   steps <- match.arg(steps, several.ok = TRUE)
-  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
 
   check_verbose_arg(verbose)
 
@@ -478,8 +474,8 @@ build_check_install <- function(dep_structure,
 #'
 #' @md
 #' @details This function explicitly checks that for all packages in the
-#'   `dependency_structure` object: all upstream and downstream packages specified in each yaml
-#'   file are found in the appropriate package DESCRIPTION file
+#'   `dependency_structure` object: all upstream and downstream packages specified
+#'   in each yaml file are found in the appropriate package DESCRIPTION file
 #'
 #' @param dep_structure `dependency_structure` object
 #' @return NULL if successful. An error is thrown if inconsistencies found
@@ -492,7 +488,7 @@ build_check_install <- function(dep_structure,
 #' }
 check_yamls_consistent <- function(dep_structure) {
 
-  stopifnot(is(dep_structure, "dependency_structure"))
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(setequal(dep_structure$direction, c("upstream", "downstream")))
 
   extract_package_name <- function(repo_and_host, table) {

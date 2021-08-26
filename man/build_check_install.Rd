@@ -2,8 +2,7 @@
 % Please edit documentation in R/dependencies.R
 \name{build_check_install}
 \alias{build_check_install}
-\title{Recursively discover and build, check and install
-internal dependencies}
+\title{Build, check and install internal dependencies}
 \usage{
 build_check_install(
   dep_structure,
@@ -18,9 +17,16 @@ build_check_install(
 )
 }
 \arguments{
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+\item{dep_structure}{(\code{dependency_structure}) output of function
+\code{dependency_table}}
+
+\item{install_direction}{"upstream", "downstream" or both; which packages
+to install (according to dependency structure). By default this is only "upstream"}
+
+\item{packages_to_process}{(\code{character}) An additional filter, only packages on
+this list will be installed (advanced usage only)}
+
+\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
 \item{steps}{(\code{character} vector) subset of "build", "check", "install";
 useful to skip checking for example}
@@ -29,43 +35,33 @@ useful to skip checking for example}
 \code{install} which are vectors that are passed as separate arguments
 to the \verb{R CMD} commands}
 
-\item{artifact_dir}{(\code{character}) directory where build
-tarball and logs go to}
+\item{artifact_dir}{(\code{character}) directory to place built R packages
+and logs}
+
+\item{install_external_deps}{logical to describe whether to install
+external dependencies of packages using \code{remotes::install_deps}.}
+
+\item{...}{
+  Arguments passed on to \code{\link[=install_deps]{install_deps}}
+  \describe{
+    \item{\code{install_project}}{(\code{logical}) whether to also install the current
+package (i.e. the package named in \code{dependency_structure$current_pkg})}
+    \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
+installed}
+    \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
+list will be installed (advanced usage only)}
+  }}
 }
 \value{
 \code{artifact_dir} directory with log files
 }
 \description{
-It discovers all dependencies starting from the repositories,
-determines the installation order and then
-builds, checks and installs them in order.
+Build, check and install internal dependencies
 }
 \examples{
 \dontrun{
-build_check_install_repos(
-  list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
-  feature = "main",
-  direction = "upstream",
-  local_repos = data.frame(repo = "openpharma/stageddeps.food",
-  host = "https://github.com", directory = "../scratch1/stageddeps.food/",
-  stringsAsFactors = FALSE)
-)
-build_check_install_repos(
-  list(list(repo = "openpharma/stageddeps.electricity",
-  host = "https://github.com")),
-  feature = "main",
-  direction = "upstream",
-  local_repos = data.frame(repo = "openpharma/stageddeps.electricity",
-  host = "https://github.com",
-  directory = "../example_ecosystem/stageddeps.electricity/",
-  stringsAsFactors = FALSE),
-  artifact_dir = "/tmp/test112"
-)
-
-# to install all packages
-build_check_install_repos(someArgs, steps = "install")
-# alternatively with slightly different arguments (e.g. dry_run),
-# also adds commit SHA
-install_deps(someArgs, direction = c("upstream", "downstream"))
+  x <- dependency_table(project = ".", verbose = 1)
+  build_check_install(x, steps = c("build", "check"), verbose = 1)
+  build_check_install(x, artifact_dir = "../output")
 }
 }

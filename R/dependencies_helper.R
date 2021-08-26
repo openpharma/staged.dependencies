@@ -14,8 +14,16 @@ NULL
 #'  -  if install: R install based on remotes::install (if no build action),
 #'     otherwise `R CMD INSTALL` on tarball
 #' @param internal_pkg_deps packages to install (when `install_external_deps = TRUE`)
+#' @param dry logical, if `FALSE` (default) run the actions, if `TRUE` do not
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of package using `remotes::install_deps`.
+#' @param rcmd_args list with names `build`, `check`,
+#'   `install` which are vectors that are passed as separate arguments
+#'   to the `R CMD` commands
+#' @param artifact_dir directory to store log files
+#' @param verbose verbosity level, incremental - from 0 (none) to 2 (high)
+#' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
+#'   is set to "never" and shouldn't be passed into this function.
 run_package_actions <- function(pkg_df, action, internal_pkg_deps,
                                 dry = FALSE,
                                 install_external_deps = TRUE,
@@ -148,7 +156,7 @@ add_project_to_local_repos <- function(project, local_repos) {
 #' @examples
 #' get_local_pkgs_from_config()
 get_local_pkgs_from_config <- function() {
-  filename <- file.path(STORAGE_DIR, CONFIG_FILENAME)
+  filename <- file.path(get_storage_dir(), CONFIG_FILENAME)
   if (file.exists(filename)) {
     content <- yaml::read_yaml(filename)
     local_pkgs <- content[["local_packages"]]
@@ -169,15 +177,16 @@ get_local_pkgs_from_config <- function() {
   }
 }
 
-# Given a data.frame of internal packages (with columns package_name, cache_dir),
+# Given a data.frame of internal packages (with [at least] columns package_name, cache_dir),
 # create a dependency graph using the R DESCRIPTION files (rather than the
 # staged_dependencies.yaml files).
 # The dependency graph is defined over the packages in the data.frame. All
 # other packages are external and not included.
-# The graph_directions can be "upstream", "downstream" or both. The "upstream_deps"
-# graph is the graph where edges point from a package to its upstream
+# The graph_directions can be "upstream", "downstream" or both.
+# The "upstream_deps"
+# list is the graph where edges point from a package to its upstream
 # dependencies. They are ordered in installation order.
-# The "downstream_deps" graph is the graph with the edge
+# The "downstream_deps" list is the graph with the edge
 # direction flipped, and is ordered in reverse installation order.
 # It preserves the other columns of this data.frame.
 get_true_deps_graph <- function(pkgs_df,
@@ -221,7 +230,7 @@ get_true_deps_graph <- function(pkgs_df,
 
 # dep_table: dependency table as returned by `dependency_table`
 # useful to create staged_dependencies.yaml file
-# yaml::write_yaml(dependency_table(project = "."), file = "./staged_dependencies.yaml")
+# yaml::write_yaml(dependency_table(project = "."))
 yaml_from_dep_table <- function(dep_table) {
   upstream_repos <- dep_table[dep_table$type == "upstream" & dep_table$distance == 1, c("repo", "host")]
   downstream_repos <- dep_table[dep_table$type == "downstream" & dep_table$distance == 1, c("repo", "host")]

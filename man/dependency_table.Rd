@@ -2,7 +2,7 @@
 % Please edit documentation in R/dependencies.R
 \name{dependency_table}
 \alias{dependency_table}
-\title{TODO}
+\title{Create dependency structure of your package collection}
 \usage{
 dependency_table(
   project = ".",
@@ -13,13 +13,51 @@ dependency_table(
 )
 }
 \arguments{
-\item{project}{(`character`) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
+\item{project}{(`character`) directory of project (for which to calculate the
+dependency structure); must be a git repository.}
 
 \item{feature}{(`character`) feature we want to build; inferred from the
 branch of the project if not provided; warning if not consistent with
 current branch of project}
+
+\item{local_repos}{(`data.frame`) repositories that should be taken from
+local file system rather than cloned; columns are `repo, host, directory`}
+
+\item{direction}{(`character`) direction in which to discover packages
+either or both of "upstream" and "downstream".
+Note if both are chosen then the entire graph is created
+(i.e. upstream dependencies of downstream dependencies)}
+
+\item{verbose}{(`numeric`) verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)}
+}
+\value{
+`dependency_structure` An S3 object with the following items:
+\describe{
+  \item{project}{Absolute path of the `project` argument used to create object}
+  \item{current_pkg}{The R package name of code in the `project` directory}
+  \item{table}{`data.frame` contain one row per r package discovered, with the
+               following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
+               `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`,
+               `cache_dir` and `install_index` (the order to install the packages).
+               Note `cache_dir` and `install_index` are suppressed when printing the object}
+  \item{deps}{`list` with two elements, `upstream_deps`is the graph where edges point from a package
+              to its upstream dependencies. They are ordered in installation order. The
+              `downstream_deps` list is the graph with the edge direction flipped,
+              and is ordered in reverse installation order.}
+  \item{direction}{`direction` argument used to create object}
+}
 }
 \description{
-TODO
+Create dependency structure of your package collection
+}
+\examples{
+\dontrun{
+  dependency_table(verbose = 1)
+  x <- dependency_table(project = "path/to/project",
+                        direction = c("upstream"))
+  print(x)
+  plot(x)
+}
 }
