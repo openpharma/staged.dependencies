@@ -109,6 +109,25 @@ test_that("yaml_from_dep_table works", {
 })
 
 
+test_that("parse_remote_project works", {
+
+  # repo@host
+  expect_equal(parse_remote_project("x@y"),
+               list(repo = "x", host = "y"))
+
+
+  # missing host uses default
+  expect_equal(parse_remote_project("x"),
+               list(repo = "x", host = "https://github.com"))
+
+  # more than 1 @ throws error
+  expect_error(parse_remote_project("x@y@z"))
+
+  # empty input or only whitespace repo/host throws error
+  expect_error(parse_remote_project(""))
+  expect_error(parse_remote_project("@"))
+  expect_error(parse_remote_project(" @ "))
+
 # run_package_actions ----
 test_that("run_package_actions works", {
   mockery::stub(run_package_actions, 'install_repo_add_sha', function(cache_dir, ...) {
@@ -134,5 +153,4 @@ test_that("run_package_actions works", {
 
     )
   )
-
 })

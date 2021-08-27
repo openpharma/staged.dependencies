@@ -71,5 +71,6 @@ Build, check and install internal dependencies
   x <- dependency_table(project = ".", verbose = 1)
   build_check_install(x, steps = c("build", "check"), verbose = 1)
   build_check_install(x, artifact_dir = "../output")
+
 }
 }

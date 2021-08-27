@@ -7,10 +7,14 @@
 check_downstream_job(project = ".", verbose = 1, create_args = list(), ...)
 }
 \arguments{
-\item{project}{(`character`) directory of project (for which to calculate the
-dependency structure); must be a git repository.}
+\item{project}{(\code{character}) If \code{project_type} is \code{local} then
+directory of project (for which to calculate the dependency structure);
+must be a git repository. If \code{project_type} is \code{repo@host} then should
+be character of the form \verb{openpharma/stageddeps.food@https://github.com}
+If host is not included in the string then the default \verb{https://github.com}
+is assumed.}
 
-\item{verbose}{(`numeric`) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 

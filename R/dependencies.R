@@ -6,11 +6,17 @@
 
 
 #' Create dependency structure of your package collection
-#' @param project (`character`) directory of project (for which to calculate the
-#'   dependency structure); must be a git repository.
+#' @param project (`character`) If `project_type` is `local` then
+#'   directory of project (for which to calculate the dependency structure);
+#'   must be a git repository. If `project_type` is `repo@host` then should
+#'   be character of the form `openpharma/stageddeps.food@https://github.com`
+#'   If host is not included in the string then the default `https://github.com`
+#'   is assumed.
+#' @param project_type (`character`) See `project` argument
 #' @param feature (`character`) feature we want to build; inferred from the
 #'   branch of the project if not provided; warning if not consistent with
-#'   current branch of project
+#'   current branch of project. If `project_type` is not `local` then this argument
+#'   must be provided
 #' @param local_repos (`data.frame`) repositories that should be taken from
 #'   local file system rather than cloned; columns are `repo, host, directory`
 #' @param direction (`character`) direction in which to discover packages
@@ -22,7 +28,9 @@
 #'   2: includes git checkout infos)
 #' @return `dependency_structure` An S3 object with the following items:
 #' \describe{
-#'   \item{project}{Absolute path of the `project` argument used to create object}
+#'   \item{project}{`project` argument used to create
+#'                  the object (absolute path if `project_type` is `local`}
+#'   \item{project_type}{`project_type` used to create object}
 #'   \item{current_pkg}{The R package name of code in the `project` directory}
 #'   \item{table}{`data.frame` contain one row per r package discovered, with the
 #'                following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
@@ -35,40 +43,55 @@
 #'               and is ordered in reverse installation order.}
 #'   \item{direction}{`direction` argument used to create object}
 #' }
-#'
+#' @md
 #' @export
 #' @examples
 #' \dontrun{
 #'   dependency_table(verbose = 1)
+#'   dependency_table(project = "openpharma/stageddeps.food@@https://github.com",
+#'                    project_type = "repo@@host")
 #'   x <- dependency_table(project = "path/to/project",
 #'                         direction = c("upstream"))
 #'   print(x)
 #'   plot(x)
 #' }
-dependency_table <- function(project = ".", feature = NULL,
+dependency_table <- function(project = ".",
+                             project_type = c("local", "repo@host")[1],
+                             feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              direction = c("upstream", "downstream"),
                              verbose = 0) {
 
+  # validate arguments
   stopifnot(is.data.frame(local_repos) || is.null(local_repos))
-  check_dir_exists(project)
   check_verbose_arg(verbose)
   check_direction_arg(direction)
-  error_if_stageddeps_inexistent(project)
+  stopifnot(project_type %in% c("local", "repo@host"))
 
-  if (!is.null(feature) && nchar(feature) == 0) {
-    feature <- NULL
+  if (project_type == "repo@host" && (is.null(feature) || nchar(feature) == 0)) {
+    stop("For non-local projects the feature (branch) must be specified")
   }
-  feature <- infer_feature_from_branch(feature, project)
+  if (project_type == "local") {
+    check_dir_exists(project)
+    error_if_stageddeps_inexistent(project)
+    # infer feature
+    if (is.null(feature) || nchar(feature) == 0) {
+      feature <- infer_feature_from_branch(NULL, project)
+    }
+  }
 
-  # take local version of project (rather than remote)
-  local_repos <- add_project_to_local_repos(project, local_repos)
-
-  repo_deps_info <- get_yaml_deps_info(project)
+  if (project_type == "local") {
+    # take local version of project (rather than remote)
+    local_repos <- add_project_to_local_repos(project, local_repos)
+    repo_deps_info <- get_yaml_deps_info(project)
+    repo_to_process <- list(repo_deps_info$current_repo)
+  } else {
+    repo_to_process <- list(parse_remote_project(project))
+  }
 
   # a dataframe with columns repo, host, branch, cache_dir
   internal_deps <- rec_checkout_internal_deps(
-    list(repo_deps_info$current_repo), feature, direction = direction,
+    repo_to_process, feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
 
@@ -88,8 +111,8 @@ dependency_table <- function(project = ".", feature = NULL,
   deps <- get_true_deps_graph(internal_deps, graph_directions = c("upstream", "downstream"))
 
   current_pkg <- internal_deps$package_name[
-    internal_deps$repo == repo_deps_info$current_repo$repo &
-      internal_deps$host == repo_deps_info$current_repo$host
+    internal_deps$repo == repo_to_process[[1]]$repo &
+      internal_deps$host == repo_to_process[[1]]$host
     ]
 
   internal_deps$type[internal_deps$package_name == current_pkg] <- "current"
@@ -117,7 +140,8 @@ dependency_table <- function(project = ".", feature = NULL,
                                         FUN.VALUE = numeric(1))
   structure(
     list(
-      project = fs::path_abs(project),
+      project = if (project_type == "local") fs::path_abs(project) else project,
+      project_type = project_type,
       current_pkg = current_pkg,
       table = internal_deps,
       deps = deps,
@@ -380,11 +404,14 @@ check_downstream <- function(dep_structure,
 #' project yaml file to include to include all direct
 #' (i.e. distance 1) upstream and downstream repos
 #' @param dep_structure, `dep_structure` object, output of `dependency_table`
-#'   function
+#'   function with `project_type = "local"`
 #' @md
 #' @export
 update_with_direct_deps <- function(dep_structure) {
   stopifnot(methods::is(dep_structure, "dependency_structure"))
+  if (dep_structure$project_type != "local") {
+    stop("Can only update yaml file for local projects")
+  }
 
   yaml_contents <- yaml_from_dep_table(dep_structure$table)
   yaml::write_yaml(
@@ -420,6 +447,7 @@ update_with_direct_deps <- function(dep_structure) {
 #'   x <- dependency_table(project = ".", verbose = 1)
 #'   build_check_install(x, steps = c("build", "check"), verbose = 1)
 #'   build_check_install(x, artifact_dir = "../output")
+#'
 #' }
 build_check_install <- function(dep_structure,
                                install_direction = c("upstream", "downstream"),
