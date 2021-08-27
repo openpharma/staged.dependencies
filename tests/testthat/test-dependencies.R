@@ -242,6 +242,8 @@ test_that("build_check_install works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
+  #set config (needed for automation)
+  git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
 
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   capture.output(dep_table <- dependency_table(repo_dir, feature = "fixgarden@main")) # capture.output to make silent
