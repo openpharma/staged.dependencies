@@ -77,6 +77,10 @@ test_that("dependency_table wih local_pkgs works", {
   fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
   repo_dir <- file.path(copied_ecosystem, "stageddeps.house")
 
+  #set config (needed for automation)
+  git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
+
+
   lapply(file.path(copied_ecosystem, local_pkgs), function(repo_dir) git2r::checkout(repo_dir, "main"))
 
   local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
@@ -103,6 +107,7 @@ test_that("check_yamls_consistent works", {
   # copy to new directory, so we can modify branch which is then copied to cache_dir in rec_checkout_repos
   copied_ecosystem <- tempfile("copied_ecosystem")
   fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
+
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(copied_ecosystem))
 
   with_tmp_cachedir({
@@ -242,8 +247,6 @@ test_that("build_check_install works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
-  #set config (needed for automation)
-  git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
 
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   capture.output(dep_table <- dependency_table(repo_dir, feature = "fixgarden@main")) # capture.output to make silent
