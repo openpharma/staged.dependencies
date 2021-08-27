@@ -18,7 +18,9 @@ build_check_install(
 }
 \arguments{
 \item{dep_structure}{(\code{dependency_structure}) output of function
-\code{dependency_table}}
+\code{dependency_table}; uses \code{dep_structure$table} to infer the packages
+to apply action to and infer installation order;
+uses \code{dep_structure$deps} to infer upstream dependencies}
 
 \item{install_direction}{"upstream", "downstream" or both; which packages
 to install (according to dependency structure). By default this is only "upstream"}
@@ -45,7 +47,9 @@ external dependencies of packages using \code{remotes::install_deps}.}
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
     \item{\code{install_project}}{(\code{logical}) whether to also install the current
-package (i.e. the package named in \code{dependency_structure$current_pkg})}
+package (i.e. the package named in \code{dependency_structure$current_pkg}),
+ignored unless \code{install_direction = "upstream"} (because downstream
+deps automatically install all their upstream deps)}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
 installed}
     \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
@@ -53,7 +57,11 @@ list will be installed (advanced usage only)}
   }}
 }
 \value{
-\code{artifact_dir} directory with log files
+list with entries
+\itemize{
+\item artifact_dir: \code{artifact_dir} directory with log files
+\item pkg_actions: \code{data.frame} of performed actions
+}
 }
 \description{
 Build, check and install internal dependencies

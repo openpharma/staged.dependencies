@@ -30,8 +30,11 @@ TESTS_GIT_REPOS <- tempfile("test_ecosystem")
 unpack_ecosystem(TESTS_GIT_REPOS)
 
 # check main branch checked out everywhere
-for (dir in list.dirs(TESTS_GIT_REPOS, recursive = FALSE, full.names = TRUE)) {
-  stopifnot(get_current_branch(dir) == "main")
+for (git_repo in list.dirs(TESTS_GIT_REPOS, recursive = FALSE, full.names = TRUE)) {
+  stopifnot(get_current_branch(git_repo) == "main")
+  local_branch <- git2r::repository_head(git_repo)
+  git2r::checkout(git_repo, branch = "origin/main")
+  git2r::branch_delete(local_branch)
 }
 
 

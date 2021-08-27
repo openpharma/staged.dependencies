@@ -18,7 +18,9 @@ check_downstream(
 }
 \arguments{
 \item{dep_structure}{(\code{dependency_structure}) output of function
-\code{dependency_table}}
+\code{dependency_table}; uses \code{dep_structure$table} to infer the packages
+to apply action to and infer installation order;
+uses \code{dep_structure$deps} to infer upstream dependencies}
 
 \item{downstream_packages}{(\code{vector}) additional filter to only install
 and check packages contained in this vector (advanced use only)}
@@ -44,7 +46,9 @@ external dependencies of packages using \code{remotes::install_deps}.}
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
     \item{\code{install_project}}{(\code{logical}) whether to also install the current
-package (i.e. the package named in \code{dependency_structure$current_pkg})}
+package (i.e. the package named in \code{dependency_structure$current_pkg}),
+ignored unless \code{install_direction = "upstream"} (because downstream
+deps automatically install all their upstream deps)}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
 installed}
     \item{\code{install_direction}}{"upstream", "downstream" or both; which packages
@@ -54,7 +58,7 @@ list will be installed (advanced usage only)}
   }}
 }
 \value{
-vector of installed packages
+\code{data.frame} of performed actions
 }
 \description{
 Installs downstream R packages as specified in a

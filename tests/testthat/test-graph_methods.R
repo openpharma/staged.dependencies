@@ -95,3 +95,32 @@ test_that("adj_list_to_edge_df works", {
     ) %>% dplyr::arrange(from, to)
   )
 })
+
+test_that("get_descendants works", {
+  expect_equal(get_descendants(
+    list(b = "a", c = "b", a = c()), c("b", "c")
+  ), "a")
+  expect_equal(get_descendants(
+    list(b = "a", c = "b", a = c()), c("b")
+  ), "a")
+  expect_setequal(get_descendants(
+    list(b = "a", c = "b", a = c()), c("c")
+  ), c("a", "b"))
+
+  # more complicated example
+  # A -> B -> C -> D
+  #      |    |
+  #      |\-->\--> E
+  #      |         ^
+  #      \--> F --/]
+  # one start_node
+  expect_setequal(
+    get_descendants(list(A = "B", B = c("C", "F", "E"), C = c("D", "E"), D = c(), E = c(), F = c("E")), "C"),
+    c("D", "E")
+  )
+  # with two start_nodes
+  expect_setequal(
+    get_descendants(list(A = "B", B = c("C", "F", "E"), C = c("D", "E"), D = c(), E = c(), F = c("E")), c("B", "C")),
+    c("D", "E", "F")
+  )
+})

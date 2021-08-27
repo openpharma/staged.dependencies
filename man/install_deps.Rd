@@ -17,10 +17,14 @@ install_deps(
 }
 \arguments{
 \item{dep_structure}{(\code{dependency_structure}) output of function
-\code{dependency_table}}
+\code{dependency_table}; uses \code{dep_structure$table} to infer the packages
+to apply action to and infer installation order;
+uses \code{dep_structure$deps} to infer upstream dependencies}
 
 \item{install_project}{(\code{logical}) whether to also install the current
-package (i.e. the package named in \code{dependency_structure$current_pkg})}
+package (i.e. the package named in \code{dependency_structure$current_pkg}),
+ignored unless \code{install_direction = "upstream"} (because downstream
+deps automatically install all their upstream deps)}
 
 \item{dry_install}{(\code{logical}) dry run that lists packages that would be
 installed}
@@ -40,7 +44,7 @@ list will be installed (advanced usage only)}
 is set to "never" and shouldn't be passed into this function.}
 }
 \value{
-installed packages in installation order
+\code{data.frame} of performed actions
 }
 \description{
 Given a \code{dependency_structure} object, install the R packages

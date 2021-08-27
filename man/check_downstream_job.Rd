@@ -34,7 +34,9 @@ what would be installed}
     \item{\code{check_args}}{(\code{list}) arguments passed to \code{rcmdcheck}}
     \item{\code{only_tests}}{(\code{logical}) whether to only run tests (rather than checks)}
     \item{\code{dep_structure}}{(\code{dependency_structure}) output of function
-\code{dependency_table}}
+\code{dependency_table}; uses \code{dep_structure$table} to infer the packages
+to apply action to and infer installation order;
+uses \code{dep_structure$deps} to infer upstream dependencies}
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
   }}

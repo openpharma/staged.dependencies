@@ -70,3 +70,9 @@ test_that("error_if_stageddeps_inexistent works", {
     regexp = "staged_dependencies.yaml does not exist", fixed = TRUE
   )
 })
+
+test_that("rep_with_names works", {
+  expect_equal(rep_with_names("hh", c("aa", "bb")), c(aa = "hh", bb = "hh"))
+  expect_equal(rep_with_names(list("hh"), c("aa", "bb")), list(aa = "hh", bb = "hh"))
+  expect_equal(rep_with_names("hh", NULL), character(0))
+})

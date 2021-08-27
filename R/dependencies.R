@@ -256,9 +256,13 @@ plot.dependency_structure <- function(x, y, ...){
 #'
 #' @md
 #' @param dep_structure (`dependency_structure`) output of function
-#'   `dependency_table`
+#'   `dependency_table`; uses `dep_structure$table` to infer the packages
+#'   to apply action to and infer installation order;
+#'   uses `dep_structure$deps` to infer upstream dependencies
 #' @param install_project (`logical`) whether to also install the current
-#'   package (i.e. the package named in `dependency_structure$current_pkg`)
+#'   package (i.e. the package named in `dependency_structure$current_pkg`),
+#'   ignored unless `install_direction = "upstream"` (because downstream
+#'   deps automatically install all their upstream deps)
 #' @param dry_install (`logical`) dry run that lists packages that would be
 #'   installed
 #' @param install_direction "upstream", "downstream" or both; which packages
@@ -271,7 +275,7 @@ plot.dependency_structure <- function(x, y, ...){
 #' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
 #'
-#' @return installed packages in installation order
+#' @return `data.frame` of performed actions
 #'
 #' @export
 #' @seealso determine_branch
@@ -298,37 +302,29 @@ install_deps <- function(dep_structure,
   stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(is.logical(install_project), is.logical(dry_install))
 
-  check_verbose_arg(verbose)
-  check_direction_arg(install_direction)
-
   if (!all(install_direction %in% dep_structure$direction)) {
     stop("Invalid install_direction argument for this dependency object")
   }
 
   # get the packages to install
-  pkg_df <- dep_structure$table[order(dep_structure$table$install_index), ]
-  # filter by install_direction
-  if (length(install_direction) == 1) {
-    pkg_df <- pkg_df[, pkg_df$type %in% c("current", install_direction)]
-  }
-  # if upstream and downstream, we also need to install the upstream deps of the
-  # downstream deps, so no filtering
+  pkg_df <- dep_structure$table
 
-  if (!install_project) {
-    pkg_df <- pkg_df[, pkg_df$type != "current"]
-  }
-
-  # filter by dependency_packages
-  if (!is.null(dependency_packages)) {
-    pkg_df <- pkg_df[pkg_df$package_name %in% dependency_packages, ]
-  }
+  pkg_names <- filter_pkgs(pkg_df, install_direction,
+                           include_project = install_project,
+                           dependency_packages = dependency_packages)
 
 
-  run_package_actions(pkg_df, action = "install", dry = dry_install,
+  # we also need to install the upstream dependencies of e.g. the downstream dependencies
+  # they may have been filtered out by the above
+  upstream_pkgs <- get_descendants(dep_structure$deps[["upstream_deps"]], pkg_names)
+
+  pkg_actions <- compute_actions(pkg_df, pkg_names, "install", upstream_pkgs)
+
+  run_package_actions(pkg_actions, dry = dry_install,
                       install_external_deps = install_external_deps,
                       internal_pkg_deps = dep_structure$table$package_name,
                       verbose = verbose, ...)
-  pkg_df$package_name
+  pkg_actions
 }
 
 
@@ -353,7 +349,7 @@ install_deps <- function(dep_structure,
 #' @inheritDotParams install_deps
 #' @export
 #
-#' @return  vector of installed packages
+#' @return `data.frame` of performed actions
 #' @examples
 #' \dontrun{
 #' x <- dependency_table(project = ".", verbose = 1)
@@ -368,36 +364,37 @@ check_downstream <- function(dep_structure,
                              only_tests = FALSE,
                              verbose = 0, install_external_deps = TRUE, ...) {
   stopifnot(
-    "dependency_structure" %in% class(dep_structure),
-    is.null(distance) || (is.numeric(distance) && distance > 0),
+    methods::is(dep_structure, "dependency_structure"),
     is.logical(dry_install_and_check)
   )
-
-  check_verbose_arg(verbose)
 
   if (!"downstream" %in% dep_structure$direction) {
     stop("Invalid dependency table - downstream dependencies must be have been calculated")
   }
 
-  # get the packages to test/check + install
-  pkg_df <- dep_structure$table[order(dep_structure$table$install_index),]
-  pkg_df <- pkg_df[pkg_df$type == "downstream", ]
+  # get the packages to install
+  pkg_df <- dep_structure$table
 
-  if (!is.null(downstream_packages)) {
-    pkg_df <- pkg_df[pkg_df$package_name %in% downstream_packages, ]
-  } else if (!is.null(distance)) {
-    pkg_df <- pkg_df[pkg_df$distance <= distance, ]
-  }
+  pkg_names <- filter_pkgs(pkg_df, install_direction = "downstream",
+                           include_project = FALSE,
+                           dependency_packages = downstream_packages,
+                           distance = distance)
 
-  action <- if (only_tests) c("test", "install") else c("check", "install")
 
-  run_package_actions(pkg_df, action = action, dry = dry_install_and_check,
+  # we also need to install the upstream dependencies of e.g. the downstream dependencies
+  # they may have been filtered out by the above
+  upstream_pkgs <- get_descendants(dep_structure$deps[["upstream_deps"]], pkg_names)
+
+  actions <- if (only_tests) c("test", "install") else c("check", "install")
+  pkg_actions <- compute_actions(pkg_df, pkg_names, actions, upstream_pkgs)
+
+  run_package_actions(pkg_actions, dry = dry_install_and_check,
                       install_external_deps = install_external_deps,
                       internal_pkg_deps = dep_structure$table$package_name,
                       rcmd_args = list(check = check_args),
                       verbose = verbose, ...)
 
-  pkg_df$package_name
+  pkg_actions
 }
 
 
@@ -442,7 +439,9 @@ update_with_direct_deps <- function(dep_structure) {
 #'   this list will be installed (advanced usage only)
 #' @param artifact_dir (`character`) directory to place built R packages
 #'   and logs
-#' @return `artifact_dir` directory with log files
+#' @return list with entries
+#'  - artifact_dir: `artifact_dir` directory with log files
+#'  - pkg_actions: `data.frame` of performed actions
 #' @export
 #' @examples
 #' \dontrun{
@@ -463,8 +462,6 @@ build_check_install <- function(dep_structure,
   steps <- match.arg(steps, several.ok = TRUE)
   stopifnot(methods::is(dep_structure, "dependency_structure"))
 
-  check_verbose_arg(verbose)
-
   if (!all(install_direction %in% dep_structure$direction)) {
     stop("Invalid install_direction argument for this dependency object")
   }
@@ -473,19 +470,19 @@ build_check_install <- function(dep_structure,
     dir.create(artifact_dir)
   }
 
-  # get the packages to process
-  pkg_df <- dep_structure$table[order(dep_structure$table$install_index), ]
-  # filter by install_direction
-  if (length(install_direction) == 1) {
-    pkg_df <- pkg_df[, pkg_df$type %in% c("current", install_direction)]
-  }
-  # if upstream and downstream, we also need to install the upstream deps of the
-  # downstream deps, so no filtering
+  # get the packages to install
+  pkg_df <- dep_structure$table
 
-  # filter by dependency_packages
-  if (!is.null(packages_to_process)) {
-    pkg_df <- pkg_df[pkg_df$package_name %in% packages_to_process, ]
-  }
+  pkg_names <- filter_pkgs(pkg_df, install_direction = install_direction,
+                           include_project = TRUE,
+                           dependency_packages = packages_to_process)
+
+
+  # we also need to install the upstream dependencies of e.g. the downstream dependencies
+  # they may have been filtered out by the above
+  upstream_pkgs <- get_descendants(dep_structure$deps[["upstream_deps"]], pkg_names)
+
+  pkg_actions <- compute_actions(pkg_df, pkg_names, steps, upstream_pkgs)
 
   run_package_actions(pkg_df, action = steps,
                       install_external_deps = install_external_deps,
@@ -494,7 +491,7 @@ build_check_install <- function(dep_structure,
                       artifact_dir = artifact_dir,
                       verbose = verbose, ...)
 
-  return(artifact_dir)
+  return(list(artifact_dir = artifact_dir, pkg_actions = pkg_actions))
 }
 
 

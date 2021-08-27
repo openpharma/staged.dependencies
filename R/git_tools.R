@@ -161,15 +161,9 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
 #' installed.
 #'
 #' @param repo_dir directory of repo
-#' @param install_external_deps logical to describe whether to install
-#'   external dependencies of package using `remotes::install_deps`
-#' @param internal_pkg_deps (`character` vector) package names that are internal
-#'   and which should be skipped when installing dependencies
 #' @param ... Additional args passed to `remotes::install_deps`. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
 install_repo_add_sha <- function(repo_dir,
-                                 install_external_deps = TRUE,
-                                 internal_pkg_deps = character(0),
                                  ...) {
   check_dir_exists(repo_dir)
 
@@ -235,10 +229,6 @@ install_repo_add_sha <- function(repo_dir,
     return(invisible(NULL))
   }
 
-  if (install_external_deps) {
-    install_external_deps(repo_dir, internal_pkg_deps = internal_pkg_deps,
-                          dependencies = TRUE, upgrade = "never", ...)
-  }
   utils::install.packages(repo_dir, repos = NULL, type = "source")
 
   # we do not clean up the DESCRIPTION file

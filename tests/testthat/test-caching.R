@@ -35,7 +35,7 @@ test_that("clear_cache", {
 
 
 
-test_that("rec_checkout_internal_deps works (with mocking)", {
+test_that("rec_checkout_internal_deps works (with mocking checkout)", {
 
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
   mockery::stub(rec_checkout_internal_deps, 'checkout_repo', function(repo_dir, repo_url, select_branch_rule, ...) {
@@ -149,6 +149,7 @@ git_status_clean <- function(repo_dir) {
 test_that("copy_local_repo_to_cachedir works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::checkout(repo_dir, "main")
 
   # add some staged, unstaged and untracked files
   withr::with_dir(repo_dir, {

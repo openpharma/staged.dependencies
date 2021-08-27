@@ -4,59 +4,67 @@ NULL
 
 #' Run an action on the packages
 #'
-#' @param pkg_df table of packages to install, e.g. returned by
-#'   `dependency_table(...)$table`
-#' @param action a subset of "test", "build", "check", "install";
-#'  -  if test: run with devtools::test
-#'  -  if build: R CMD build
+#' @md
+#' @param pkg_actions sorted `data.frame` with columns `cache_dir` pointing
+#' to package source and `actions`, processed from top to bottom in order
+#'  Each `actions` is a subset of "test", "build", "check", "install";
+#'  -  if test: run with `devtools::test`
+#'  -  if build: `R CMD build`
 #'  -  if check: `rcmdcheck` with output to command line (if no build action),
 #'     otherwise `R CMD check` on tarball
-#'  -  if install: R install based on remotes::install (if no build action),
+#'  -  if install: R install based on `remotes::install` (if no build action),
 #'     otherwise `R CMD INSTALL` on tarball
-#' @param internal_pkg_deps packages to install (when `install_external_deps = TRUE`)
+#' @param internal_pkg_deps packages to not install (when `install_external_deps = TRUE`)
 #' @param dry logical, if `FALSE` (default) run the actions, if `TRUE` do not
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of package using `remotes::install_deps`.
 #' @param rcmd_args list with names `build`, `check`,
 #'   `install` which are vectors that are passed as separate arguments
 #'   to the `R CMD` commands
-#' @param artifact_dir directory to store log files
+#' @param artifact_dir directory to store log files, only when actions include
+#'   `build`; action `test` only outputs to the console
 #' @param verbose verbosity level, incremental - from 0 (none) to 2 (high)
 #' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
-run_package_actions <- function(pkg_df, action, internal_pkg_deps,
+run_package_actions <- function(pkg_actions, internal_pkg_deps,
                                 dry = FALSE,
                                 install_external_deps = TRUE,
                                 rcmd_args = NULL,
                                 artifact_dir = NULL,
-                                verbose = verbose, ...) {
+                                verbose = 0, ...) {
 
-  stopifnot(all(action %in% c("test", "build", "check", "install")))
+  all_actions <- unique(unlist(pkg_actions$actions))
+  stopifnot(all(all_actions %in% c("test", "build", "check", "install")))
+  check_verbose_arg(verbose)
 
-  if (nrow(pkg_df) == 0) {
+  if (nrow(pkg_actions) == 0) {
     message_if_verbose("No packages to process!", verbose = verbose)
-    return(pkg_df)
+    return(pkg_actions)
   }
 
-  if (any(c("build", "check", "install") %in% action)) {
+  if ("build" %in% all_actions) {
     stop("when building a package an artifact_dir must be specified")
   }
 
   if (!is.null(artifact_dir)) {
     #TODO empty directories if exist?
     lapply(
-      intersect(action, c("build", "install")),
+      intersect(all_actions, c("build", "install")),
       function(action) fs::dir_create(file.path(artifact_dir, paste0(action, "_logs")))
     )
   }
 
-  message_if_verbose("Processing packages in order: ", toString(pkg_df$package_name), verbose = verbose)
+  message_if_verbose("Processing packages in order: ",
+                     toString(get_pkg_names_from_paths(pkg_actions$cache_dir)),
+                     verbose = verbose)
 
-  for (cache_dir in pkg_df$cache_dir) {
+  for (idx in seq_along(pkg_actions$cache_dir)) {
+    cache_dir <- pkg_actions$cache_dir[[idx]]
+    actions <- pkg_actions$actions[[idx]]
 
     if (!dry) {
 
-      if ("test" %in% action) {
+      if ("test" %in% actions) {
         # testthat::test_dir and devtools::test do not always agree
         # testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
         # stop_on_failure argument cannot be passed to devtools::test
@@ -81,7 +89,7 @@ run_package_actions <- function(pkg_df, action, internal_pkg_deps,
       }
 
       package_tar <- NULL
-      if ("build" %in% action) {
+      if ("build" %in% actions) {
         withr::with_dir(artifact_dir, {
           pkg_name <- desc::desc_get_field("Package", file = cache_dir)
           system2(
@@ -93,36 +101,45 @@ run_package_actions <- function(pkg_df, action, internal_pkg_deps,
         })
       }
 
-      if ("check" %in% action) {
+      if ("check" %in% actions) {
         # check tar.gz if it exists otherwise check the cache_dir
         if (!is.null(package_tar)) {
-          withr::with_dir(artifact_dir,
-            system2("R", args = c("CMD", "check", rcmd_args$check, package_tar),
-                    stdout = file.path("check_logs", paste0(pkg_name, "_stdout.txt")),
-                    stderr = file.path("check_logs", paste0(pkg_name, "_stderr.txt"))))
+          withr::with_dir(
+            artifact_dir,
+            system2("R", args = c("CMD", "check", rcmd_args$check, package_tar))
+          )
         } else {
           rcmdcheck::rcmdcheck(cache_dir, error_on = "warning", args = rcmd_args$check)
         }
       }
 
-      if ("install" %in% action) {
+      if ("install" %in% actions) {
+        if (install_external_deps) {
+          install_external_deps(repo_dir, internal_pkg_deps = internal_pkg_deps,
+                                dependencies = TRUE, upgrade = "never", ...)
+        }
+
         # install the tar.gz if it exists otherwise install using staged.deps
         if (!is.null(package_tar)) {
-          withr::with_dir(artifact_dir, system2("R", args = c("CMD", "INSTALL", rcmd_args$install, package_tar)))
+          withr::with_dir(
+            artifact_dir,
+            system2("R", args = c("CMD", "INSTALL", rcmd_args$install, package_tar),
+                    stdout = file.path("install_logs", paste0(pkg_name, "_stdout.txt")),
+                    stderr = file.path("install_logs", paste0(pkg_name, "_stderr.txt")))
+          )
         } else {
-          install_repo_add_sha(cache_dir, install_external_deps = install_external_deps,
-                             internal_pkg_deps = internal_pkg_deps, ...)
+          install_repo_add_sha(cache_dir, ...)
         }
       }
 
     } else { # dry run
-      message_if_verbose(cat_nl("(Dry run) Skipping", toString(action), "of", cache_dir), verbose = verbose)
+      message_if_verbose(cat_nl("(Dry run) Skipping", toString(actions), "of", cache_dir), verbose = verbose)
     }
 
   }
 
-  message("Processed packages in order: ", toString(pkg_df$package_name), verbose = verbose)
-  pkg_df
+  message_if_verbose("Processed packages in order: ", toString(pkg_actions$package_name), verbose = verbose)
+  pkg_actions
 }
 
 
@@ -270,4 +287,53 @@ parse_remote_project <- function(project) {
     stop(error_message)
   }
   return(list(repo = split_string[1], host = split_string[2]))
+}
+
+# filter packages according to some criteria
+# pkg_df = dependency_table(...)$table
+filter_pkgs <- function(pkg_df,
+                        install_direction,
+                        include_project = TRUE,
+                        dependency_packages = NULL,
+                        distance = NULL) {
+  stopifnot(
+    is.data.frame(pkg_df),
+    is.logical(include_project),
+    is.null(distance) || (is.numeric(distance) && distance > 0)
+  )
+  check_direction_arg(install_direction)
+
+  # filter by install_direction
+  if (length(install_direction) == 1) {
+    pkg_names <- pkg_df$package_name[pkg_df$type %in% c("current", install_direction)]
+  } else {
+    pkg_names <- pkg_df$package_name
+  }
+
+  if (!include_project) {
+    pkg_names <- setdiff(pkg_names, pkg_df$package_name[pkg_df$type == "current"])
+  }
+
+  # filter by dependency_packages: restrict actions to those packages
+  if (!is.null(dependency_packages)) {
+    pkg_names <- intersect(pkg_names, dependency_packages)
+  }
+
+  if (!is.null(distance)) {
+    pkg_names <- intersect(pkg_names, pkg_df$package_name[pkg_df$distance <= distance, ])
+  }
+
+  return(pkg_names)
+}
+
+# helper function to compute pkg_actions data.frame for `run_package_actions`
+# actions: actions to take for pkg_names, "install" action for upstream_pkgs
+compute_actions <- function(pkg_df, pkg_names, actions, upstream_pkgs) {
+  pkg_df <- pkg_df[pkg_df$package_name %in% c(pkg_names, upstream_pkgs), ]
+  pkg_df[pkg_df$package_name %in% pkg_names, "actions"] <- list(
+    rep(list(actions), times = sum(pkg_df$package_name %in% pkg_names))
+  ) # outer list() to assign list elements to column
+  pkg_df[pkg_df$package_name %in% upstream_pkgs, "actions"] <- "install"
+  pkg_df %>% dplyr::arrange(install_index) %>%
+    dplyr::select(package_name, cache_dir, actions)
 }

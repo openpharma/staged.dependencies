@@ -1,6 +1,7 @@
 test_that("infer_feature_from_branch works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::checkout(repo_dir, "main")
 
   # check that it infers the feature from branch name when no feature provided
   expect_equal(
@@ -90,3 +91,4 @@ test_that("determine_branch works", {
     regexp = "at least one of 'feature1@release, release, main'", fixed = TRUE
   )
 })
+
