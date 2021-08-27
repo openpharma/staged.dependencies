@@ -74,25 +74,24 @@ dependency_table <- function(project = ".",
   if (project_type == "local") {
     check_dir_exists(project)
     error_if_stageddeps_inexistent(project)
-  }
-
-  # infer feature
-  if (is.null(feature) || nchar(feature) == 0) {
-    feature <- infer_feature_from_branch(feature, project)
+    # infer feature
+    if (is.null(feature) || nchar(feature) == 0) {
+      feature <- infer_feature_from_branch(NULL, project)
+    }
   }
 
   if (project_type == "local") {
     # take local version of project (rather than remote)
     local_repos <- add_project_to_local_repos(project, local_repos)
     repo_deps_info <- get_yaml_deps_info(project)
-    repos_to_process <- (repo_deps_info$current_repo)
+    repo_to_process <- list(repo_deps_info$current_repo)
   } else {
-    repos_to_process <- parse_remote_project(project)
+    repo_to_process <- list(parse_remote_project(project))
   }
 
   # a dataframe with columns repo, host, branch, cache_dir
   internal_deps <- rec_checkout_internal_deps(
-    list(repos_to_process), feature, direction = direction,
+    repo_to_process, feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
 
@@ -112,8 +111,8 @@ dependency_table <- function(project = ".",
   deps <- get_true_deps_graph(internal_deps, graph_directions = c("upstream", "downstream"))
 
   current_pkg <- internal_deps$package_name[
-    internal_deps$repo == repos_to_process$repo &
-      internal_deps$host == repos_to_process$host
+    internal_deps$repo == repo_to_process[[1]]$repo &
+      internal_deps$host == repo_to_process[[1]]$host
     ]
 
   internal_deps$type[internal_deps$package_name == current_pkg] <- "current"
