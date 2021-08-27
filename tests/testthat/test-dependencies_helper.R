@@ -127,6 +127,7 @@ test_that("parse_remote_project works", {
   expect_error(parse_remote_project(""))
   expect_error(parse_remote_project("@"))
   expect_error(parse_remote_project(" @ "))
+})
 
 # run_package_actions ----
 test_that("run_package_actions works", {
