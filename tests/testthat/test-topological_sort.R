@@ -1,4 +1,3 @@
-context("topological_sort")
 test_that("topological sort throws error if circular relationship", {
 
   expect_error(topological_sort(
@@ -16,7 +15,6 @@ test_that("topological sort throws error if circular relationship", {
 })
 
 
-context("topological_sort")
 test_that("topological sort correctly sorts graph with no branching", {
   sorted_deps <- topological_sort(
     list(
@@ -31,7 +29,6 @@ test_that("topological sort correctly sorts graph with no branching", {
 })
 
 
-context("topological_sort")
 test_that("topological sort correctly sorts disconnected graph", {
   sorted_deps <- topological_sort(
     list(
@@ -51,7 +48,6 @@ test_that("topological sort correctly sorts disconnected graph", {
 })
 
 
-context("topological_sort")
 test_that("topological sort works with graph with branching", {
   sorted_deps <- topological_sort(
     list(
@@ -70,7 +66,6 @@ test_that("topological sort works with graph with branching", {
 })
 
 
-context("topological_sort")
 test_that("topological sort works when parent occurs twice in graph", {
   sorted_deps <- topological_sort(
     list(
