@@ -171,7 +171,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
         with:
-          files: "${{ github.event.repository.name }}.Rcheck/junit-result.xml"
+          files: "${{ github.event.repository.name }}/**/*.xml"
 
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
