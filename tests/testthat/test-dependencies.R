@@ -72,36 +72,35 @@ test_that("dependency_table works", {
 
 })
 
-test_that("dependency_table wih local_pkgs works", {
-  copied_ecosystem <- tempfile("copied_ecosystem")
-  fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
-  repo_dir <- file.path(copied_ecosystem, "stageddeps.house")
-
-  #set config (needed for automation)
-  git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
-
-
-  lapply(file.path(copied_ecosystem, local_pkgs), function(repo_dir) git2r::checkout(repo_dir, "main"))
-
-  local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
-  local_repos <- data.frame(
-    repo = paste0("openpharma/", local_pkgs),
-    host = rep("https://github.com", 6),
-    directory = file.path(copied_ecosystem, local_pkgs),
-    stringsAsFactors = FALSE
-  )
-
-  # stageddeps.garden has branch fixgarden@main, so it should check it out
-  expect_error(
-    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos),
-    regexp = "must check out branch fixgarden@main", fixed = TRUE
-  )
-
-  git2r::checkout(file.path(copied_ecosystem, "stageddeps.garden"), branch = "fixgarden@main")
-  expect_silent(
-    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos)
-  )
-})
+# test_that("dependency_table wih local_pkgs works", {
+#   copied_ecosystem <- tempfile("copied_ecosystem")
+#   fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
+#   repo_dir <- file.path(copied_ecosystem, "stageddeps.house")
+#
+#   #set config (needed for automation)
+#   git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
+#
+#   lapply(file.path(copied_ecosystem, local_pkgs), function(repo_dir) git2r::checkout(repo_dir, "main"))
+#
+#   local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
+#   local_repos <- data.frame(
+#     repo = paste0("openpharma/", local_pkgs),
+#     host = rep("https://github.com", 6),
+#     directory = file.path(copied_ecosystem, local_pkgs),
+#     stringsAsFactors = FALSE
+#   )
+#
+#   # stageddeps.garden has branch fixgarden@main, so it should check it out
+#   expect_error(
+#     dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos),
+#     regexp = "must check out branch fixgarden@main", fixed = TRUE
+#   )
+#
+#   git2r::checkout(file.path(copied_ecosystem, "stageddeps.garden"), branch = "fixgarden@main")
+#   expect_silent(
+#     dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos)
+#   )
+# })
 
 test_that("check_yamls_consistent works", {
   # copy to new directory, so we can modify branch which is then copied to cache_dir in rec_checkout_repos
