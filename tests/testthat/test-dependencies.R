@@ -161,40 +161,46 @@ test_that("install_deps works", {
   })
 
   # check install_direction = "upstream"
+  expected_result <- data.frame(
+    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
+                     "stageddeps.food"),
+    stringsAsFactors = FALSE
+  )
+  expected_result$actions <- rep(list("install"), 3)
   expect_equal(
     install_deps(dep_table, dry_install = TRUE, install_direction = "upstream")[, c("package_name", "actions")],
-    data.frame(
-      package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
-                       "stageddeps.food"),
-      actions = c("install", "install", "install"),
-      stringsAsFactors = FALSE
-    )
+    expected_result
   )
 
   # check install_direction = "downstream"
-  # may fail because topological order is not unique, ignoring for now
+  # in theory may fail because topological order is not unique,
+  # although topological order is not unique our implementation should be deterministic
+  expected_result <- data.frame(
+    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
+                     "stageddeps.food", "stageddeps.water", "stageddeps.house"),
+    stringsAsFactors = FALSE
+  )
+  expected_result$actions <- rep(list("install"), 5)
+
   expect_equal(
     install_deps(dep_table, dry_install = TRUE, install_direction = "downstream")[, c("package_name", "actions")],
-    data.frame(
-      package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
-                       "stageddeps.food", "stageddeps.water", "stageddeps.house"),
-      actions = c("install", "install", "install", "install", "install"),
-      stringsAsFactors = FALSE
-    )
+    expected_result
   )
 
   # check install_direction = c("upstream", "downstream")
-  # may fail because topological order is not unique, ignoring for now
+  # in theory may fail because topological order is not unique,
+  # although topological order is not unique our implementation should be deterministic
+  expected_result <- data.frame(
+    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
+                     "stageddeps.food", "stageddeps.water", "stageddeps.house",
+                     "stageddeps.garden"),
+    stringsAsFactors = FALSE
+  )
+  expected_result$actions <- rep(list("install"), 6)
   expect_equal(
     install_deps(dep_table, dry_install = TRUE, install_direction = c("upstream", "downstream")
     )[, c("package_name", "actions")],
-    data.frame(
-      package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
-                       "stageddeps.food", "stageddeps.water", "stageddeps.house",
-                       "stageddeps.garden"),
-      actions = c("install", "install", "install", "install", "install", "install"),
-      stringsAsFactors = FALSE
-    )
+    expected_result
   )
 
 })
@@ -231,7 +237,8 @@ test_that("check_downstream works", {
   )
 })
 
-expect_that("build_check_install works", {
+test_that("build_check_install works", {
+
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")

@@ -115,7 +115,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
 
       if ("install" %in% actions) {
         if (install_external_deps) {
-          install_external_deps(repo_dir, internal_pkg_deps = internal_pkg_deps,
+          install_external_deps(cache_dir, internal_pkg_deps = internal_pkg_deps,
                                 dependencies = TRUE, upgrade = "never", ...)
         }
 
@@ -334,6 +334,6 @@ compute_actions <- function(pkg_df, pkg_names, actions, upstream_pkgs) {
     rep(list(actions), times = sum(pkg_df$package_name %in% pkg_names))
   ) # outer list() to assign list elements to column
   pkg_df[pkg_df$package_name %in% upstream_pkgs, "actions"] <- "install"
-  pkg_df %>% dplyr::arrange(install_index) %>%
-    dplyr::select(package_name, cache_dir, actions)
+  pkg_df %>% dplyr::arrange(.data$install_index) %>%
+    dplyr::select(.data$package_name, .data$cache_dir, .data$actions)
 }
