@@ -21,6 +21,10 @@ jobs:
           - {image: ghcr.io/insightsengineering/tidyverse_4.1.0_bioc_3.13, tag: latest}
 
     steps:
+      - name: Setup R_CHECK_TESTS_NLINES environment variable
+        id: step_one
+        run: |
+          echo "0" >> $_R_CHECK_TESTS_NLINES_
       - name: Gather info from PR
         uses: actions/github-script@v4
         id: get-pr
