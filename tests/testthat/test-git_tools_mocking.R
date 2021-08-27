@@ -15,6 +15,9 @@ test_that("checkout_repo with mocking works", {
     # assuming "main" branch exists
     git2r::checkout(local_path, branch = "main", force = TRUE)
 
+    #set config (needed for automation)
+    git2r::config(git2r::repository(local_path), user.name = "github.action", user.email = "gh@action.com")
+
     # delete other local branches
     local_branches <- git2r::branches(repo_dir, flags = "local")
     lapply(local_branches[names(local_branches) != "main"], git2r::branch_delete)

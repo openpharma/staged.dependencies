@@ -151,6 +151,7 @@ test_that("copy_local_repo_to_cachedir works", {
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
 
+  #set config (needed for automation)
   git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
 
   # add some staged, unstaged and untracked files
