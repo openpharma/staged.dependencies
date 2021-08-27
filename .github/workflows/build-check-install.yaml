@@ -173,6 +173,12 @@ jobs:
         with:
           files: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
 
+      - name: Publish Unit Test Results - Alternate
+        uses: mikepenz/action-junit-report@v2
+        if: always()
+        with:
+          report_paths: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
+
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
         shell: bash
