@@ -78,7 +78,7 @@ You can run the actions of the addins explicitly and change the default argument
 documentation for further details)
 
 ```{r}
-# create dependency_structure object froma checked out repo...
+# create dependency_structure object from a checked out repo...
 x <- dependency_table(project = "../stageddeps.electricity", verbose = 1)
 # ... or directly from a remote 
 x <- dependency_table(project = "openpharma/stageddeps.electricity@https://github.com", 
