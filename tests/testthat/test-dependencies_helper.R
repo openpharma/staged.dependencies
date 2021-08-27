@@ -37,6 +37,9 @@ test_that("get_local_pkgs_from_config works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
 
+  #set config (needed for automation)
+  git2r::config(git2r::repository(local_path), user.name = "github.action", user.email = "gh@action.com")
+
   with_tmp_cachedir({
     config_file <- file.path(get_storage_dir(), CONFIG_FILENAME)
     expect_null(get_local_pkgs_from_config())
