@@ -1,7 +1,3 @@
-#' @include caching.R
-NULL
-
-
 #' Run an action on the packages
 #'
 #' @md
