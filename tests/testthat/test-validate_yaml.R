@@ -36,6 +36,7 @@ test_that("staged dep yaml allows additional fields beyond those required", {
 })
 
 #---- Invalid yaml ----
+
 test_that("empty staged dep yaml file throws error", {
 
   text <- "---

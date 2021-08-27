@@ -14,7 +14,6 @@ test_that("topological sort throws error if circular relationship", {
 
 })
 
-
 test_that("topological sort correctly sorts graph with no branching", {
   sorted_deps <- topological_sort(
     list(
@@ -27,7 +26,6 @@ test_that("topological sort correctly sorts graph with no branching", {
   )
   expect_equal(sorted_deps, c("n5", "n3", "n4", "n2", "n1"))
 })
-
 
 test_that("topological sort correctly sorts disconnected graph", {
   sorted_deps <- topological_sort(
@@ -46,7 +44,6 @@ test_that("topological sort correctly sorts disconnected graph", {
   expect_equal(length(sorted_deps), 5)
   expect_equal(unique(sorted_deps), sorted_deps)
 })
-
 
 test_that("topological sort works with graph with branching", {
   sorted_deps <- topological_sort(

@@ -4,7 +4,6 @@ test_that("check_set_equal returns no error if sets are equal", {
   expect_silent(check_set_equal(c("A", "B"), c("B", "A")))
 })
 
-
 test_that("check_set_equal returns error message containing the set differences", {
   # note the escaping of \ in the regexp
   expect_error(check_set_equal(c("A", "B"), c("B")),
