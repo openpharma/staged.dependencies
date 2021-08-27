@@ -167,6 +167,12 @@ jobs:
           name: ${{ matrix.config.tag }}-results
           path: ${{ github.event.repository.name }}.Rcheck/00check.log
 
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: "${{ github.event.repository.name }}.Rcheck/junit-result.xml"
+
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
         shell: bash

@@ -1,4 +1,5 @@
 #---- Valid yaml ----
+context("validate_yaml")
 test_that("staged dep yaml without dependencies is valid ", {
 
   text <- "---
@@ -13,6 +14,7 @@ test_that("staged dep yaml without dependencies is valid ", {
   expect_silent(validate_staged_deps_yaml(yaml::read_yaml(text = text)))
 })
 
+context("validate_yaml")
 test_that("staged dep yaml allows additional fields beyond those required", {
 
   text <- "---
@@ -36,7 +38,7 @@ test_that("staged dep yaml allows additional fields beyond those required", {
 })
 
 #---- Invalid yaml ----
-
+context("validate_yaml")
 test_that("empty staged dep yaml file throws error", {
 
   text <- "---
@@ -54,6 +56,7 @@ test_that("empty staged dep yaml file throws error", {
   )
 })
 
+context("validate_yaml")
 test_that("staged dep yaml file missing expected fields throws error", {
 
   text <- "---
@@ -76,6 +79,7 @@ test_that("staged dep yaml file missing expected fields throws error", {
   )
 })
 
+context("validate_yaml")
 test_that("staged dep yaml file without current_repo content throws error", {
 
   text <- "---
@@ -93,6 +97,7 @@ test_that("staged dep yaml file without current_repo content throws error", {
   )
 })
 
+context("validate_yaml")
 test_that("staged dep yaml file with current_repo as array throws error", {
 
   text <- "---
@@ -108,6 +113,7 @@ test_that("staged dep yaml file with current_repo as array throws error", {
   )
 })
 
+context("validate_yaml")
 test_that("staged dep yaml file cannot contain non-character values", {
 
   text <- "---
@@ -167,6 +173,7 @@ test_that("staged dep yaml file cannot contain non-character values", {
   )
 })
 
+context("validate_yaml")
 test_that("staged dep yaml file missing repo or host throws error", {
 
   text <- "---
@@ -200,6 +207,7 @@ test_that("staged dep yaml file missing repo or host throws error", {
   )
 })
 
+context("validate_yaml")
 test_that("staged dep yaml with nesting/naming inside repo or host throws an error", {
 
   text <- "---

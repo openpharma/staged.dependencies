@@ -1,3 +1,4 @@
+context("get_descendants_distance")
 test_that("get_descendants_distance with no descendants returns dataframe with 0 rows", {
 
   expect_equal(nrow(get_descendants_distance(NULL, starting_node = "A")), 0)
@@ -7,6 +8,7 @@ test_that("get_descendants_distance with no descendants returns dataframe with 0
 })
 
 
+context("get_descendants_distance")
 test_that("get_descendants_distance takes minimum distance between two nodes", {
 
   parents_to_children <- list(A = list("C"),
@@ -20,6 +22,7 @@ test_that("get_descendants_distance takes minimum distance between two nodes", {
 })
 
 
+context("get_descendants_distance")
 test_that("get_descendants_distance only includes descendants", {
 
   parents_to_children <- list(A = list("C"),
@@ -37,6 +40,7 @@ test_that("get_descendants_distance only includes descendants", {
 
 })
 
+context("get_descendants_distance")
 test_that("get_descendants_distance handles minimum distances greater than 1", {
 
   parents_to_children <- list(A = list("B"),
@@ -54,6 +58,7 @@ test_that("get_descendants_distance handles minimum distances greater than 1", {
 })
 
 
+context("get_descendants_distance")
 test_that("get_descendants_distance node names can include symbols", {
   parents_to_children <- list(`A @ A` = list("C / D"),
                               `B > C` = list("A @ A", "C / D"),

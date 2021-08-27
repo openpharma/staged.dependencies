@@ -1,3 +1,4 @@
+context("git_tools")
 test_that("checkout_repo works", {
   # sodo: mock git clone etc so it works in automation (will be addressed in issue #33)
   # expect_silent(
