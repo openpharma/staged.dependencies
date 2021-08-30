@@ -182,9 +182,7 @@ jobs:
         shell: bash
 
       - name: Post Unit Test Results
-        uses: machine-learning-apps/pr-comment@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: ${{ github.event.repository.name }}.Rcheck/tests/testthat/unit-test-results.md
 
