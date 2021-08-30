@@ -169,15 +169,23 @@ jobs:
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
+        if: failure()
         with:
           files: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
 
-      - name: Publish Unit Test Results - Alternate
-        uses: mikepenz/action-junit-report@v2
-        if: always()
+      - name: Convert JUnit XML Test Results to Markdown
+        run: |
+          wget https://github.com/dinakar29/junit2md/releases/download/v0.1.0/junit2md_0.1.0_linux-amd64 -O /tmp/junit2md
+          chmod +x /tmp/junit2md
+          /tmp/junit2md ${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml > /tmp/unit-test-results.md
+        shell: bash
+
+      - name: Post Unit Test Results
+        uses: machine-learning-apps/pr-comment@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          report_paths: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
+          path: /tmp/unit-test-results.md
 
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
