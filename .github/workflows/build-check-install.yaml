@@ -177,7 +177,7 @@ jobs:
         run: |
           wget -q https://github.com/dinakar29/junit2md/releases/download/v0.1.0/junit2md_0.1.0_linux-amd64 -O /tmp/junit2md
           chmod +x /tmp/junit2md
-          /tmp/junit2md ${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml > ${GITHUB_WORKSPACE}/unit-test-results.md
+          /tmp/junit2md ${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml > ${{ env.GITHUB_WORKSPACE }}/unit-test-results.md
         shell: bash
 
       - name: Post Unit Test Results
@@ -185,7 +185,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path: ${GITHUB_WORKSPACE}/unit-test-results.md
+          path: ${{ env.GITHUB_WORKSPACE }}/unit-test-results.md
 
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
