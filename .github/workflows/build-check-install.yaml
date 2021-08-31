@@ -174,17 +174,24 @@ jobs:
           files: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
 
       - name: Convert JUnit XML Test Results to Markdown
+        id: xml2md
         run: |
           wget -q https://github.com/dinakar29/junit2md/releases/download/v0.1.0/junit2md_0.1.0_linux-amd64 -O /tmp/junit2md
           chmod +x /tmp/junit2md
-          cd ${{ github.event.repository.name }}.Rcheck/tests/testthat/
-          /tmp/junit2md junit-result.xml > junit-result.md
+          output="$(/tmp/junit2md ${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml)"
+          output="${output//'%'/'%25'}"
+          output="${output//$'\n'/'%0A'}"
+          output="${output//$'\r'/'%0D'}"
+          echo "::set-output name=test-results-md::$output"
         shell: bash
 
       - name: Post Unit Test Results
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: ${{ github.event.repository.name }}.Rcheck/tests/testthat/unit-test-results.md
+          message: |
+            ## Unit Test Results
+
+            ${{ steps.xml2md.outputs.test-results-md }}
 
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
