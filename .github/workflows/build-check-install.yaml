@@ -125,30 +125,23 @@ jobs:
 
 # TODO: only if there are Errors, warnings, or notes
       - name: Post check output as PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v4
         with:
-          script: |
-            const output = `#### R CMD check for R v${{ matrix.config.tag }}
+          message: |
+            #### R CMD check for R v${{ matrix.config.tag }}
 
-            \`R CMD check\` resulted in \`${{ steps.check.outputs.check-status }}\`
+            `R CMD check` resulted in `${{ steps.check.outputs.check-status }}`
 
             <details><summary>Click here to show full output</summary>
 
-            \`\`\`R
+            ```R
             ${{ steps.check.outputs.check-output }}
-            \`\`\`
+            ```
 
             </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+            *Pusher: @${{ github.actor }}, Action: `${{ github.event_name }}`*
 
 
       - name: Catch warnings in R CMD check output
@@ -166,6 +159,35 @@ jobs:
         with:
           name: ${{ matrix.config.tag }}-results
           path: ${{ github.event.repository.name }}.Rcheck/00check.log
+
+      - name: Publish Unit Test Summary
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          check_name: Unit Tests Summary
+          files: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
+
+      - name: Convert JUnit XML Test Results to Markdown
+        id: xml2md
+        if: always()
+        run: |
+          wget -q https://github.com/dinakar29/junit2md/releases/download/v0.1.0/junit2md_0.1.0_linux-amd64 -O /tmp/junit2md
+          chmod +x /tmp/junit2md
+          output="$(/tmp/junit2md ${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml)"
+          output="${output//'%'/'%25'}"
+          output="${output//$'\n'/'%0A'}"
+          output="${output//$'\r'/'%0D'}"
+          echo "::set-output name=test-results-md::$output"
+        shell: bash
+
+      - name: Post Unit Test Details
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: always()
+        with:
+          message: |
+            ## Unit Test Details
+
+            ${{ steps.xml2md.outputs.test-results-md }}
 
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
