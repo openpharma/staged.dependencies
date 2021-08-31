@@ -125,30 +125,23 @@ jobs:
 
 # TODO: only if there are Errors, warnings, or notes
       - name: Post check output as PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v4
         with:
-          script: |
-            const output = `#### R CMD check for R v${{ matrix.config.tag }}
+          message: |
+            #### R CMD check for R v${{ matrix.config.tag }}
 
-            \`R CMD check\` resulted in \`${{ steps.check.outputs.check-status }}\`
+            `R CMD check` resulted in `${{ steps.check.outputs.check-status }}`
 
             <details><summary>Click here to show full output</summary>
 
-            \`\`\`R
+            ```R
             ${{ steps.check.outputs.check-output }}
-            \`\`\`
+            ```
 
             </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+            *Pusher: @${{ github.actor }}, Action: `${{ github.event_name }}`*
 
 
       - name: Catch warnings in R CMD check output
