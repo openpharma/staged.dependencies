@@ -162,14 +162,14 @@ jobs:
 
       - name: Publish Unit Test Summary
         uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
+        if: ${{ always() && github.event_name == 'pull_request' }}
         with:
           check_name: Unit Tests Summary
           files: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
 
       - name: Convert JUnit XML Test Results to Markdown
         id: xml2md
-        if: always()
+        if: ${{ always() && github.event_name == 'pull_request' }}
         run: |
           wget -q https://github.com/dinakar29/junit2md/releases/download/v0.1.0/junit2md_0.1.0_linux-amd64 -O /tmp/junit2md
           chmod +x /tmp/junit2md
@@ -182,7 +182,7 @@ jobs:
 
       - name: Post Unit Test Details
         uses: marocchino/sticky-pull-request-comment@v2
-        if: always()
+        if: ${{ always() && github.event_name == 'pull_request' }}
         with:
           message: |
             ## Unit Test Details
