@@ -38,7 +38,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
     return(pkg_actions)
   }
 
-  if ("build" %in% all_actions) {
+  if ("build" %in% all_actions && is.null( artifact_dir)) {
     stop("when building a package an artifact_dir must be specified")
   }
 

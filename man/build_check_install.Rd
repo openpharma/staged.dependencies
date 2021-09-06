@@ -8,6 +8,7 @@ build_check_install(
   dep_structure,
   install_direction = c("upstream", "downstream"),
   packages_to_process = NULL,
+  dry_install = FALSE,
   verbose = 0,
   steps = c("build", "check", "install"),
   rcmd_args = list(check = c("--no-manual")),
@@ -27,6 +28,9 @@ to install (according to dependency structure). By default this is only "upstrea
 
 \item{packages_to_process}{(\code{character}) An additional filter, only packages on
 this list will be installed (advanced usage only)}
+
+\item{dry_install}{(\code{logical}) dry run that lists packages that would be
+installed}
 
 \item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
@@ -50,8 +54,6 @@ external dependencies of packages using \code{remotes::install_deps}.}
 package (i.e. the package named in \code{dependency_structure$current_pkg}),
 ignored unless \code{install_direction = "upstream"} (because downstream
 deps automatically install all their upstream deps)}
-    \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
-installed}
     \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
 list will be installed (advanced usage only)}
   }}

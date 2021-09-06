@@ -452,6 +452,7 @@ update_with_direct_deps <- function(dep_structure) {
 build_check_install <- function(dep_structure,
                                install_direction = c("upstream", "downstream"),
                                packages_to_process = NULL,
+                               dry_install = FALSE,
                                verbose = 0,
                                steps = c("build", "check", "install"),
                                rcmd_args = list(check = c("--no-manual")),
@@ -483,7 +484,7 @@ build_check_install <- function(dep_structure,
 
   pkg_actions <- compute_actions(pkg_df, pkg_names, steps, upstream_pkgs)
 
-  run_package_actions(pkg_df, action = steps,
+  run_package_actions(pkg_actions, dry = dry_install,
                       install_external_deps = install_external_deps,
                       internal_pkg_deps = dep_structure$table$package_name,
                       rcmd_args = rcmd_args,
