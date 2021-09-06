@@ -158,7 +158,7 @@ print.dependency_structure <- function(x, ...) {
   table <- x$table
   table$cache_dir <- NULL
   table$install_index <- NULL
-  print(table)
+  print(table, ...)
 }
 
 
