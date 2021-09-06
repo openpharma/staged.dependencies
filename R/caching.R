@@ -1,11 +1,11 @@
 # directory where to clone packages to
 get_packages_cache_dir <- function() {
-  file.path(STORAGE_DIR, "packages_cache")
+  file.path(get_storage_dir(), "packages_cache")
 }
 
 #' Clear the repository cache
 #'
-#' Use this function to clear the package cache and reclone some
+#' Use this function to clear the package cache of some
 #' or all repositories (depending on `pattern`) if
 #' the `git` operations fail.
 #'
@@ -19,7 +19,10 @@ get_packages_cache_dir <- function() {
 #' clear_cache("*elecinfra*")
 #' }
 clear_cache <- function(pattern = "*") {
-  unlink(file.path(get_packages_cache_dir(), pattern), recursive = TRUE)
+  dirs_to_remove <- Sys.glob(file.path(get_packages_cache_dir(), pattern))
+  if (length(dirs_to_remove) > 0) {
+    fs::dir_delete(dirs_to_remove)
+  }
   if (!identical(pattern, "*")) {
     direcs <- dir(get_packages_cache_dir())
     if (length(direcs) == 0) {
@@ -35,7 +38,7 @@ clear_cache <- function(pattern = "*") {
 copy_config_to_storage_dir <- function() {
   stopifnot(file.copy(
     system.file("config.yaml", package = "staged.dependencies", mustWork = TRUE),
-    STORAGE_DIR
+    get_storage_dir()
   ))
 }
 
@@ -68,7 +71,7 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
 # copies a local directory to the cache dir and commits the current state in
 # that cache dir, so the SHA can be added to the DESCRIPTION file
 # note: files in .gitignore are also available to the package locally
-copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
+copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rule, verbose = 0) {
   check_dir_exists(local_dir, prefix = "Local directory: ")
   check_verbose_arg(verbose)
 
@@ -98,10 +101,23 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
     }
   })
 
+  # check that locally checked out branch is consistent with branch rule
+  available_branches <- names(git2r::branches(repo_dir, flags = "local"))
+  branch <- select_branch_rule(available_branches)
+  stopifnot(branch %in% available_branches)
+  if (branch != get_current_branch(repo_dir)) {
+    stop("You must check out branch ", branch, " for repository in directory ", repo_dir,
+         ", currently ", get_current_branch(repo_dir), " is checked out.")
+  }
+
   if ((length(git2r::status(repo_dir)$staged) > 0) ||
       (length(git2r::status(repo_dir)$unstaged) > 0) ||
       (length(git2r::status(repo_dir)$untracked) > 0)) {
     # add all files, including untracked (all argument of git2r::commit does not do this)
+    if (verbose >= 2) {
+      message("Adding all of the following files: \n",
+              paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n"))
+    }
     git2r::add(repo_dir, ".")
     git2r::commit(
       repo_dir,
@@ -109,35 +125,8 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, verbose = 0) {
     )
   }
 
-  repo_dir
-}
-
-# get upstream repos and downstream repos according to yaml file in repo directory
-# if yaml file does not exist, returns empty lists
-get_yaml_deps_info <- function(repo_dir) {
-  check_dir_exists(repo_dir, "deps_info: ")
-
-  yaml_file <- file.path(repo_dir, STAGEDDEPS_FILENAME)
-  if (file.exists(yaml_file)) {
-    content <- yaml::read_yaml(yaml_file)
-    validate_staged_deps_yaml(content, file_name = yaml_file)
-    content
-  } else {
-    list(upstream_repos = list(), downstream_repos = list(),
-         # function() so it does not error immediately
-         current_repo = function() stop("Directory ", repo_dir, " has no ", STAGEDDEPS_FILENAME))
-  }
-}
-
-
-error_if_stageddeps_inexistent <- function(project) {
-  fpath <- normalizePath(
-    file.path(project, STAGEDDEPS_FILENAME),
-    winslash = "/", mustWork = FALSE # output error, see below
-  )
-  if (!file.exists(fpath)) {
-    stop("file ", STAGEDDEPS_FILENAME, " does not exist in project folder: not restoring anything")
-  }
+  branch <-  git2r::repository_head(repo_dir)$name
+  return(list(dir = repo_dir, branch = paste0("local (", branch, ")")))
 }
 
 # local_repos: data.frame that maps repo and host to local directory
@@ -176,17 +165,16 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
 #'
-#' @return A list, on entry per checkout out repository whose name is
-#'   the name of the repo in the form `repo @ host` (`hash(repo, host)`)
-#'   and whose value is the directory to which it has been checked out into
+#' @return A data frame, one row per checked out repository with columns
+#' repo, host and cache_dir
 rec_checkout_internal_deps <- function(repos_to_process, feature,
                                       direction = c("upstream"),
                                       local_repos = get_local_pkgs_from_config(),
                                       verbose = 0) {
   stopifnot(
-    is.list(repos_to_process),
-    all(direction %in% c("upstream", "downstream")), length(direction) >= 1
+    is.list(repos_to_process)
   )
+  check_direction_arg(direction)
   check_verbose_arg(verbose)
 
   local_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
@@ -196,6 +184,7 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
   rm(repos_to_process)
 
   hashed_processed_repos <- list()
+  hashed_repos_branches <- list()
 
   while (length(hashed_repos_to_process) > 0) {
     hashed_repo_and_host <- hashed_repos_to_process[[1]]
@@ -206,12 +195,15 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
     stopifnot(!is.null(repo_and_host$host))
 
     if (hashed_repo_and_host %in% names(local_repo_to_dir)) {
-      repo_dir <- copy_local_repo_to_cachedir(
+      repo_info <- copy_local_repo_to_cachedir(
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
+        select_branch_rule = function(available_branches) {
+          determine_branch(feature, available_branches)
+        },
         verbose = verbose
       )
     } else {
-      repo_dir <- checkout_repo(
+      repo_info <- checkout_repo(
         get_repo_cache_dir(repo_and_host$repo, repo_and_host$host),
         get_repo_url(repo_and_host$repo, repo_and_host$host),
         token_envvar = get_authtoken_envvar(repo_and_host$host),
@@ -224,18 +216,22 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
 
     hashed_new_repos <- c()
     if ("upstream" %in% direction) {
-      hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_dir)$upstream_repos, hash_repo_and_host)
+      hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$upstream_repos, hash_repo_and_host)
       hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
     }
     if ("downstream" %in% direction) {
-      hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_dir)$downstream_repos, hash_repo_and_host)
+      hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$downstream_repos, hash_repo_and_host)
       hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
     }
-    hashed_processed_repos[[hashed_repo_and_host]] <- repo_dir
+    hashed_processed_repos[[hashed_repo_and_host]] <- repo_info$dir
+    hashed_repos_branches[[hashed_repo_and_host]] <- repo_info$branch
     hashed_repos_to_process <- union(
       hashed_repos_to_process, setdiff(hashed_new_repos, names(hashed_processed_repos))
     )
   }
 
-  return(hashed_processed_repos)
+  df <- data.frame(unhash_repo_and_host(names(hashed_processed_repos)), stringsAsFactors = FALSE)
+  df$cache_dir <- unlist(unname(hashed_processed_repos))
+  df$branch <- unlist(unname(hashed_repos_branches))
+  return(df)
 }

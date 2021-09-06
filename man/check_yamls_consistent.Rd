@@ -5,46 +5,26 @@
 \title{Checks that the staged dependency yamls are consistent with
 the dependencies listed in the DESCRIPTION files}
 \usage{
-check_yamls_consistent(
-  repos_to_process,
-  feature,
-  direction = c("upstream", "downstream"),
-  local_repos = get_local_pkgs_from_config(),
-  verbose = 0
-)
+check_yamls_consistent(dep_structure)
 }
 \arguments{
-\item{repos_to_process}{\code{list} of \code{list(repo, host)} repos to start from}
-
-\item{feature}{(\code{character}) feature to build}
-
-\item{direction}{(\code{character}) direction in which to discover packages
-either or both of "upstream" and "downstream"
-to recursively checkout upstream and/or downstream dependencies}
-
-\item{local_repos}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
-
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
+\item{dep_structure}{\code{dependency_structure} object}
+}
+\value{
+NULL if successful. An error is thrown if inconsistencies found
 }
 \description{
 Checks that the staged dependency yamls are consistent with
 the dependencies listed in the DESCRIPTION files
 }
+\details{
+This function explicitly checks that for all packages in the
+\code{dependency_structure} object: all upstream and downstream packages specified
+in each yaml file are found in the appropriate package DESCRIPTION file
+}
 \examples{
 \dontrun{
-check_yamls_consistent(
-list(list(repo = "openpharma/stageddeps.food",
-          host = "https://github.com")),
-feature = "main",
-local_repos = data.frame(
-  repo = "openpharma/stageddeps.food",
-  host = "https://github.com",
-  directory = "../scratch1/stageddeps.food",
-  stringsAsFactors = FALSE
-)
-)
+x <- dependency_table(project = ".")
+check_yamls_consistent(x)
 }
 }

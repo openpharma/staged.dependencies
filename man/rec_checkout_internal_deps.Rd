@@ -30,9 +30,8 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 2: includes git checkout infos)}
 }
 \value{
-A list, on entry per checkout out repository whose name is
-the name of the repo in the form \code{repo @ host} (\code{hash(repo, host)})
-and whose value is the directory to which it has been checked out into
+A data frame, one row per checked out repository with columns
+repo, host and cache_dir
 }
 \description{
 This uses the \code{staged_dependencies.yaml} to discover the upstream

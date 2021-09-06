@@ -34,13 +34,19 @@ check_only_remote_branches <- function(git_repo) {
 # select_branch_rule is a function that is given the available branches
 # and selects one of them
 # verbose level: 0: none, 1: print high-level git operations, 2: print git clone detailed messages etc.
-checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, verbose = 0) {
+# returns: list of repo_dir and checked out branch (according to branch rule)
+checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar = NULL, verbose = 0) {
   stopifnot(
-    is.function(select_branch_rule)
+    is.function(select_branch_rule),
+    endsWith(repo_url, ".git")
   )
   check_verbose_arg(verbose)
 
-  creds <- git2r::cred_token(token = token_envvar)
+  creds <- if (is.null(token_envvar)) {
+    NULL
+  } else {
+    git2r::cred_token(token = token_envvar)
+  }
   if (!dir.exists(repo_dir)) {
     stopifnot(is_non_empty_char(repo_url))
     if (verbose >= 1) {
@@ -49,7 +55,8 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
 
     tryCatch({
       git_repo <- git2r::clone(
-        url = repo_url, local_path = repo_dir, credentials = creds, progress = verbose >= 2
+        url = repo_url, local_path = repo_dir,
+        credentials = creds, progress = verbose >= 2
       )
     }, error = function(e) {
       # catch some common errors
@@ -91,6 +98,8 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
     # git automatically created local tracking branch (for master or main), checkout
     # corresponding remote branch and delete local branch, so we only have remote
     # branches
+    # note: git2r::clone seems to have an argument `checkout = FALSE`, but it does not
+    # seem to work (it still checks out the local branch)
     local_branch <- git2r::repository_head(git_repo)
     remote_branch <- git2r::branch_get_upstream(local_branch)
     git2r::checkout(git_repo, branch = remote_branch$name)
@@ -113,24 +122,16 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar, 
   check_only_remote_branches(git_repo)
   available_branches <- names(git2r::branches(git_repo))
   available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
-  branch <- select_branch_rule(available_branches)
-  stopifnot(branch %in% available_branches)
-  branch <- paste0("origin/", branch)
+  branch_without_prefix <- select_branch_rule(available_branches)
+  stopifnot(branch_without_prefix %in% available_branches)
+  branch <- paste0("origin/", branch_without_prefix)
 
-
-  # force = TRUE to discard any changes (which should not happen)
-  if (startsWith(git_repo$path, get_packages_cache_dir())) {
-    if (verbose >= 1) {
-      message("   - in cache: reset --hard HEAD")
-    }
-    git2r::reset(git_repo, reset_type = "hard", path = "HEAD")
-  }
   if (verbose >= 1) {
     message(paste("   - checkout branch", branch, "in directory", repo_dir))
   }
   git2r::checkout(git_repo, branch = branch, force = TRUE)
 
-  repo_dir
+  return(list(dir = repo_dir, branch = branch_without_prefix))
 }
 
 # Install the external deps required for a package
@@ -160,15 +161,9 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
 #' installed.
 #'
 #' @param repo_dir directory of repo
-#' @param install_external_deps logical to describe whether to install
-#'   external dependencies of package using `remotes::install_deps`
-#' @param internal_pkg_deps (`character` vector) package names that are internal
-#'   and which should be skipped when installing dependencies
 #' @param ... Additional args passed to `remotes::install_deps`. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
 install_repo_add_sha <- function(repo_dir,
-                                 install_external_deps = TRUE,
-                                 internal_pkg_deps = character(0),
                                  ...) {
   check_dir_exists(repo_dir)
 
@@ -234,10 +229,6 @@ install_repo_add_sha <- function(repo_dir,
     return(invisible(NULL))
   }
 
-  if (install_external_deps) {
-    install_external_deps(repo_dir, internal_pkg_deps = internal_pkg_deps,
-                          dependencies = TRUE, upgrade = "never", ...)
-  }
   utils::install.packages(repo_dir, repos = NULL, type = "source")
 
   # we do not clean up the DESCRIPTION file

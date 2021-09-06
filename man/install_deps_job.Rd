@@ -4,34 +4,41 @@
 \alias{install_deps_job}
 \title{Install dependencies job}
 \usage{
-install_deps_job(project = ".", verbose = 1, ...)
+install_deps_job(project = ".", verbose = 1, create_args = list(), ...)
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
+\item{project}{(\code{character}) If \code{project_type} is \code{local} then
+directory of project (for which to calculate the dependency structure);
+must be a git repository. If \code{project_type} is \code{repo@host} then should
+be character of the form \verb{openpharma/stageddeps.food@https://github.com}
+If host is not included in the string then the default \verb{https://github.com}
+is assumed.}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 
+\item{create_args}{\code{named list} - additional arguments passed to `dependency_table` function}
+
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
-    \item{\code{feature}}{(\code{character}) feature we want to build; inferred from the
-branch of the project if not provided; warning if not consistent with
-current branch of project}
+    \item{\code{dep_structure}}{(\code{dependency_structure}) output of function
+\code{dependency_table}; uses \code{dep_structure$table} to infer the packages
+to apply action to and infer installation order;
+uses \code{dep_structure$deps} to infer upstream dependencies}
     \item{\code{install_project}}{(\code{logical}) whether to also install the current
-package (\code{project})}
+package (i.e. the package named in \code{dependency_structure$current_pkg}),
+ignored unless \code{install_direction = "upstream"} (because downstream
+deps automatically install all their upstream deps)}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
-installed without installing; this still checks out the git repos to
-match \code{feature}}
+installed}
+    \item{\code{install_direction}}{"upstream", "downstream" or both; which packages
+to install (according to dependency structure). By default this is only "upstream"}
     \item{\code{install_external_deps}}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
-    \item{\code{local_repos}}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
-    \item{\code{direction}}{(\code{character}) direction in which to discover packages
-either or both of "upstream" and "downstream"
-to recursively checkout upstream and/or downstream dependencies}
+external dependencies of packages using \code{remotes::install_deps}.}
+    \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
+list will be installed (advanced usage only)}
   }}
 }
 \description{
@@ -40,10 +47,10 @@ Install dependencies job
 \examples{
 \dontrun{
 install_deps_job()
-install_deps_job(feature = "6_makegraph@main")
+install_deps_job(create_args = list(feature = "6_makegraph@main"))
 
 # install all dependencies
-install_deps_job(direction = c("upstream", "downstream"))
+install_deps_job(create_args = list(direction = c("upstream", "downstream")))
 install_deps_job(dry_install = TRUE)
 }
 }

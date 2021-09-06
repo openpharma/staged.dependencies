@@ -2,10 +2,11 @@
 % Please edit documentation in R/dependencies.R
 \name{dependency_table}
 \alias{dependency_table}
-\title{Get the dependency structure as a table}
+\title{Create dependency structure of your package collection}
 \usage{
 dependency_table(
   project = ".",
+  project_type = c("local", "repo@host")[1],
   feature = NULL,
   local_repos = get_local_pkgs_from_config(),
   direction = c("upstream", "downstream"),
@@ -13,67 +14,62 @@ dependency_table(
 )
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
+\item{project}{(\code{character}) If \code{project_type} is \code{local} then
+directory of project (for which to calculate the dependency structure);
+must be a git repository. If \code{project_type} is \code{repo@host} then should
+be character of the form \verb{openpharma/stageddeps.food@https://github.com}
+If host is not included in the string then the default \verb{https://github.com}
+is assumed.}
+
+\item{project_type}{(\code{character}) See \code{project} argument}
 
 \item{feature}{(\code{character}) feature we want to build; inferred from the
 branch of the project if not provided; warning if not consistent with
-current branch of project}
+current branch of project. If \code{project_type} is not \code{local} then this argument
+must be provided}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
+local file system rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{direction}{(\code{character}) direction in which to discover packages
-either or both of "upstream" and "downstream"
-to recursively checkout upstream and/or downstream dependencies}
+either or both of "upstream" and "downstream".
+Note if both are chosen then the entire graph is created
+(i.e. upstream dependencies of downstream dependencies)}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 }
 \value{
-depending on \code{return_table_only} (see above); either \code{data.frame} or a list with
-the following elements:
-
-\code{df}:
-\code{data.frame} with columns \verb{repo, host, type, branch}, where \code{type} is:
-\itemize{
-\item \code{current} (project),
-\item \code{upstream} (of project),
-\item \code{downstream} (of project),
-\item \code{other} (the remaining, e.g. downstream dependencies of upstream dependencies)
+\code{dependency_structure} An S3 object with the following items:
+\describe{
+\item{project}{\code{project} argument used to create
+the object (absolute path if \code{project_type} is \code{local}}
+\item{project_type}{\code{project_type} used to create object}
+\item{current_pkg}{The R package name of code in the \code{project} directory}
+\item{table}{\code{data.frame} contain one row per r package discovered, with the
+following rows \code{package_name}, \code{type} (\code{current}, \code{upstream}, \code{downstream} or \code{other}),
+\code{distance} (minimum number of steps from \code{current_pkg}), \code{branch}, \code{repo}, \code{host},
+\code{cache_dir} and \code{install_index} (the order to install the packages).
+Note \code{cache_dir} and \code{install_index} are suppressed when printing the object}
+\item{deps}{\code{list} with two elements, \code{upstream_deps}is the graph where edges point from a package
+to its upstream dependencies. They are ordered in installation order. The
+\code{downstream_deps} list is the graph with the edge direction flipped,
+and is ordered in reverse installation order.}
+\item{direction}{\code{direction} argument used to create object}
 }
-
-and \code{branch} is the branch corresponding to \code{feature} and becomes \code{local (branch)}
-if package is in \code{local_repos}.
-
-\code{graph}:
-visNetwork graph with arrows going in the direction from downstream to upstream.
-Arrows are solid if both upstream and downstream list each other; they
-are dashed if either does not list the other:
-\itemize{
-\item if upstream does not list downstream, blue dashed
-\item if downstream does not list upstream, red dashed (this means that
-the downstream repo's yaml needs to be fixed)
-Tooltips give more information about nodes and edges.
-}
-
-\code{deps}:
-deps: upstream and downstream dependencies of each node
-
-\code{internal_deps}:
-internal dependencies, named list mapping hash to path where they were cloned to
 }
 \description{
-The dependency structure depends on \code{feature} which determines which
-repositories are checked out.
-It starts from the project and discovers all reachable upstream and
-downstream dependencies.
+Create dependency structure of your package collection
 }
 \examples{
 \dontrun{
-dependency_table()
-
-dependency_table(direction = "upstream")
+  dependency_table(verbose = 1)
+  dependency_table(project = "openpharma/stageddeps.food@https://github.com",
+                   project_type = "repo@host")
+  x <- dependency_table(project = "path/to/project",
+                        direction = c("upstream"))
+  print(x)
+  plot(x)
 }
 }

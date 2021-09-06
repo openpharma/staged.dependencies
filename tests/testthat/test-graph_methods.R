@@ -1,3 +1,4 @@
+# topological sort ----
 test_that("topological sort throws error if circular relationship", {
 
   expect_error(topological_sort(
@@ -77,4 +78,49 @@ test_that("topological sort works when parent occurs twice in graph", {
   expect_equal(sorted_deps, c("n2", "n4", "n3", "n6", "n5", "n1"))
 })
 
+test_that("adj_list_to_edge_df works", {
+  # A -> B -> C -> D
+  #      |    |
+  #      |\-->\--> E
+  #      |         ^
+  #      \--> F --/
+  expect_equal(
+    adj_list_to_edge_df(
+      list(A = "B", B = c("C", "F", "E"), C = c("D", "E"), D = c(), E = c(), F = c("E"))
+    ) %>% dplyr::arrange(from, to),
+    data.frame(
+      from = c("A", "B", "B", "B", "C", "C", "F"),
+      to = c("B", "C", "E", "F", "D", "E", "E"),
+      stringsAsFactors = FALSE
+    ) %>% dplyr::arrange(from, to)
+  )
+})
 
+test_that("get_descendants works", {
+  expect_equal(get_descendants(
+    list(b = "a", c = "b", a = c()), c("b", "c")
+  ), "a")
+  expect_equal(get_descendants(
+    list(b = "a", c = "b", a = c()), c("b")
+  ), "a")
+  expect_setequal(get_descendants(
+    list(b = "a", c = "b", a = c()), c("c")
+  ), c("a", "b"))
+
+  # more complicated example
+  # A -> B -> C -> D
+  #      |    |
+  #      |\-->\--> E
+  #      |         ^
+  #      \--> F --/]
+  # one start_node
+  expect_setequal(
+    get_descendants(list(A = "B", B = c("C", "F", "E"), C = c("D", "E"), D = c(), E = c(), F = c("E")), "C"),
+    c("D", "E")
+  )
+  # with two start_nodes
+  expect_setequal(
+    get_descendants(list(A = "B", B = c("C", "F", "E"), C = c("D", "E"), D = c(), E = c(), F = c("E")), c("B", "C")),
+    c("D", "E", "F")
+  )
+})

@@ -47,6 +47,8 @@ determine_branch(
   c("main", "devel", "feature1", "fix1")
 ) == "devel"
 
+determine_branch("feature1@release", c("main", "devel"))
+
 # error because neither `feature1@release` nor `release` branch exists
-# determine_branch("feature1@release", c("main", "devel"))
+# determine_branch("feature1@release", c("master", "devel"))
 }

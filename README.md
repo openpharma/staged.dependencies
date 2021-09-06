@@ -35,8 +35,7 @@ the directory does not exist and this is where checked out repositories are cach
 
 ### Setup tokens
 
-This package requires [personal access tokens](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) 
- with read access to the repositories you are developing set as environment variables.   
+If you internal packages require [personal access tokens](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) then these must be available to staged.dependencies.
 
 For example:
 ```
@@ -75,33 +74,32 @@ is to checkout a repository and within the RStudio use the addins:
 
 ### Console
 
-You can run the actions of the addins explicitly and change the default arguments:
+You can run the actions of the addins explicitly and change the default arguments (see function
+documentation for further details)
 
 ```{r}
-# latex may not be installed, so `R CMD check` does not fail because of it
-Sys.setenv(RCMDCHECK_ARGS = "--no-manual")
+# create dependency_structure object from a checked out repo...
+x <- dependency_table(project = "../stageddeps.electricity", verbose = 1)
+# ... or directly from a remote 
+x <- dependency_table(project = "openpharma/stageddeps.electricity@https://github.com", 
+                      project_type = "repo@host", 
+                      feature = "main", 
+                      verbose = 1)
 
-check_downstream(
-  project = "../stageddeps.electricity"
-)
+# print and plot it
+print(x)
+if (require("visNetwork")) plot(x)
 
-install_upstream_deps(project = "../stageddeps.electricity", verbose = 1)
+#install upstream dependencies
+install_deps(x, verbose = 1)
 
-check_downstream(
-  project = "../stageddeps.electricity", 
-  downstream_repos = list(list(repo = "maximilian_oliver.mordig/stageddeps.house", host = "https://code.example.com"))
-)
-
-install_upstream_deps(
-  project = "../stageddeps.house", 
-  feature = "fix1@feature1@master", # see branch naming convention below
-  verbose = 1
-)
+# check downstream packages
+check_downstream(x, verbose = 1, check_args = c("--no-manual"))
 ```
 
 Remember to restart the R session after installing packages that were already loaded.
-There are additional functions (e.g. to see the dependency table/graph of the chosen project)
-in the package. See the function documentation for more details.
+There are additional functions (e.g. a shiny app to view the dependency graph and choose which
+packages to install) in the package. See the function documentation for more details.
 
 ## Additional information
 

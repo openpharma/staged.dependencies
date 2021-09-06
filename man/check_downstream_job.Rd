@@ -4,36 +4,41 @@
 \alias{check_downstream_job}
 \title{Check & install downstream job}
 \usage{
-check_downstream_job(project = ".", verbose = 1, ...)
+check_downstream_job(project = ".", verbose = 1, create_args = list(), ...)
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to restore the
-dependencies according to feature); must be a git repository.}
+\item{project}{(\code{character}) If \code{project_type} is \code{local} then
+directory of project (for which to calculate the dependency structure);
+must be a git repository. If \code{project_type} is \code{repo@host} then should
+be character of the form \verb{openpharma/stageddeps.food@https://github.com}
+If host is not included in the string then the default \verb{https://github.com}
+is assumed.}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 
+\item{create_args}{\code{named list} - additional arguments passed to `dependency_table` function}
+
 \item{...}{
   Arguments passed on to \code{\link[=check_downstream]{check_downstream}}
   \describe{
-    \item{\code{downstream_repos}}{(\code{list}) to overwrite the downstream repos to check
-of \code{project}}
+    \item{\code{downstream_packages}}{(\code{vector}) additional filter to only install
+and check packages contained in this vector (advanced use only)}
+    \item{\code{distance}}{(\code{numeric}) additional filter to only install downstream
+packages at most this distance from the \code{dependency_structure$current_pkg}
+(advanced use only)}
     \item{\code{dry_install_and_check}}{(\code{logical}) whether to install upstream
 dependencies and check/test downstream repos; otherwise just reports
 what would be installed}
-    \item{\code{recursive}}{(\code{logical}) whether to recursively check the downstream
-dependencies of the downstream dependencies;
-ignored if \code{downstream_repos} is set}
     \item{\code{check_args}}{(\code{list}) arguments passed to \code{rcmdcheck}}
     \item{\code{only_tests}}{(\code{logical}) whether to only run tests (rather than checks)}
-    \item{\code{feature}}{(\code{character}) feature we want to build; inferred from the
-branch of the project if not provided; warning if not consistent with
-current branch of project}
-    \item{\code{local_repos}}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
+    \item{\code{dep_structure}}{(\code{dependency_structure}) output of function
+\code{dependency_table}; uses \code{dep_structure$table} to infer the packages
+to apply action to and infer installation order;
+uses \code{dep_structure$deps} to infer upstream dependencies}
     \item{\code{install_external_deps}}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
+external dependencies of packages using \code{remotes::install_deps}.}
   }}
 }
 \description{
@@ -42,7 +47,8 @@ Check & install downstream job
 \examples{
 \dontrun{
 check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"))
-check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"), feature = "6_makegraph@main")
+check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"),
+                     list(create_arg = feature = "6_makegraph@main"))
 check_downstream_job(only_tests = TRUE)
 }
 }
