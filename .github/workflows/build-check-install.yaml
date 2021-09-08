@@ -160,16 +160,22 @@ jobs:
           name: ${{ matrix.config.tag }}-results
           path: ${{ github.event.repository.name }}.Rcheck/00check.log
 
+      - name: Check whether JUnit XML report exists
+        id: check_junit_xml
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
+
       - name: Publish Unit Test Summary
         uses: EnricoMi/publish-unit-test-result-action@v1
-        if: ${{ always() && github.event_name == 'pull_request' }}
+        if: ${{ steps.check_junit_xml.outputs.files_exists == 'true' && github.event_name == 'pull_request' }}
         with:
           check_name: Unit Tests Summary
           files: "${{ github.event.repository.name }}.Rcheck/tests/testthat/junit-result.xml"
 
       - name: Convert JUnit XML Test Results to Markdown
         id: xml2md
-        if: ${{ always() && github.event_name == 'pull_request' }}
+        if: ${{ steps.check_junit_xml.outputs.files_exists == 'true' && github.event_name == 'pull_request' }}
         run: |
           wget -q https://github.com/dinakar29/junit2md/releases/download/v0.1.0/junit2md_0.1.0_linux-amd64 -O /tmp/junit2md
           chmod +x /tmp/junit2md
@@ -182,7 +188,7 @@ jobs:
 
       - name: Post Unit Test Details
         uses: marocchino/sticky-pull-request-comment@v2
-        if: ${{ always() && github.event_name == 'pull_request' }}
+        if: ${{ steps.check_junit_xml.outputs.files_exists == 'true' && github.event_name == 'pull_request' }}
         with:
           message: |
             ## Unit Test Details
