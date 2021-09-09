@@ -202,6 +202,7 @@ get_local_pkgs_from_config <- function() {
 # The "downstream_deps" list is the graph with the edge
 # direction flipped, and is ordered in reverse installation order.
 # It preserves the other columns of this data.frame.
+# The "external" list contains the external packages in the DESCRIPTION file
 get_true_deps_graph <- function(pkgs_df,
                                 graph_directions = "upstream") {
 
@@ -218,11 +219,17 @@ get_true_deps_graph <- function(pkgs_df,
                           function(file) intersect(pkgs_df$package_name, desc::desc_get_deps(file)$package))
   names(upstream_deps) <- pkgs_df$package_name
 
+  external <- lapply(pkgs_df$cache_dir,
+                     function(file) setdiff(desc::desc_get_deps(file)$package, pkgs_df$package_name))
+  names(external) <- pkgs_df$package_name
+
   # order the dependencies
   install_order <- topological_sort(upstream_deps)
   upstream_deps <- upstream_deps[install_order]
+  external <- external[install_order]
 
   res <- list()
+  res[["external"]] <- external
   if ("upstream" %in% graph_directions) {
     res[["upstream_deps"]] <- upstream_deps
   }

@@ -13,6 +13,13 @@ test_that("get_true_deps_graph works", {
   expect_equal(
     get_true_deps_graph(pkgs_df, c("upstream", "downstream")),
     list(
+      external = list(
+        stageddeps.elecinfra = "testthat",
+        stageddeps.electricity = "testthat",
+        stageddeps.food = c("desc", "SummarizedExperiment", "testthat"),
+        stageddeps.house = c("stageddeps.water", "testthat"), # water treated as external, see above
+        stageddeps.garden = c("stageddeps.water", "testthat")
+      ),
       upstream_deps = list(
         stageddeps.elecinfra = character(0),
         stageddeps.electricity = "stageddeps.elecinfra",

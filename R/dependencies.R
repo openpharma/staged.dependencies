@@ -37,10 +37,11 @@
 #'                `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`,
 #'                `cache_dir` and `install_index` (the order to install the packages).
 #'                Note `cache_dir` and `install_index` are suppressed when printing the object}
-#'   \item{deps}{`list` with two elements, `upstream_deps`is the graph where edges point from a package
+#'   \item{deps}{`list` with three elements, `upstream_deps`is the graph where edges point from a package
 #'               to its upstream dependencies. They are ordered in installation order. The
 #'               `downstream_deps` list is the graph with the edge direction flipped,
-#'               and is ordered in reverse installation order.}
+#'               and is ordered in reverse installation order. `external` contains the external
+#'               R packages found in the description files of the internal packages}
 #'   \item{direction}{`direction` argument used to create object}
 #' }
 #' @md
@@ -106,6 +107,7 @@ dependency_table <- function(project = ".",
 
   # deps$upstream_deps[["a"]] is vector of upstream_deps of "a"
   # deps$downstream_deps[["a"]] is a vector of downstream_deps of "a"
+  # deps$external[["a"]] is a vector of external packages in "a"s DESCRIPTION file
   # where the elements of the lists are the package names found in internal_deps
   # deps is ordered topologically
   deps <- get_true_deps_graph(internal_deps, graph_directions = c("upstream", "downstream"))
