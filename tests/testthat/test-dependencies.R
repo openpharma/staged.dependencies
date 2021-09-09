@@ -272,3 +272,51 @@ test_that("build_check_install works", {
 })
 
 
+test_that("get_all_external_deps works", {
+
+  # dummy dependency_structure object
+
+  deps <- list(
+    external = list(A = c("X", "Y"), B = c("Z")),
+    upstream_deps = list(A = "B", B = character(0)),
+    downstream_deps = list(B = "A", character(0))
+  )
+
+  internal_deps <- data.frame(package_name = c("A", "B"), type = c("current", "upstream"))
+
+  x <- structure(
+    list(
+      project = NA,
+      project_type = NA,
+      current_pkg = NA,
+      table = internal_deps,
+      deps = deps,
+      direction = c("upstream", "downstream")
+    ),
+    class = "dependency_structure"
+  )
+
+
+  available_packages <- data.frame(Package = c("T", "U", "V", "W", "X", "Y", "Z"),
+                                   Depends = c(NA, NA, NA, "Q", "U", NA, "T"),
+                                   Imports = c(NA, NA, NA, NA, NA, "U,V", NA),
+                                   Suggests = c(NA, NA, NA, "S", NA, NA, "W"))
+
+
+
+  expect_equal(sort(get_all_external_dependencies(x, available_packages = available_packages)),
+               c("T", "U", "V", "X", "Y", "Z"))
+
+  # only take B's dependencies
+  expect_equal(sort(get_all_external_dependencies(x,
+                      packages_to_process = "B",
+                      available_packages = available_packages)),
+               c("T", "Z"))
+
+  # include suggests and check get warning for missing packages
+  expect_warning(results <- get_all_external_dependencies(x, available_packages = available_packages, include_suggests = TRUE),
+                 "Cannot find information about package\\(s\\) Q, S check that options\\('repos'\\) contains expected repos")
+
+  expect_equal(sort(results), c("Q", "S", "T", "U", "V", "W", "X", "Y", "Z"))
+})
+

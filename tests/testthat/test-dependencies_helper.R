@@ -162,3 +162,23 @@ test_that("run_package_actions works", {
     )
   )
 })
+
+# parse_deps_table ----
+test_that("parsae_deps_table works as expected", {
+
+  # empty/NA returns character(0)
+  expect_length(parse_deps_table(""), 0)
+  expect_length(parse_deps_table(NA), 0)
+  expect_is(parse_deps_table(""), "character")
+  expect_is(parse_deps_table(NA), "character")
+
+  # R is removed
+  expect_equal(parse_deps_table("R (>=3.3), utils"), "utils")
+
+  # version numbers removed
+  expect_equal(parse_deps_table("utils, survival (>= 1.17)"), c("utils", "survival"))
+
+  # can handle newline/whitespace chars
+  expect_equal(parse_deps_table("utils,\nsurvival (>= 1.17)"), c("utils", "survival"))
+  expect_equal(parse_deps_table("utils  ,\t  survival  (>= 1.17)"), c("utils", "survival"))
+})
