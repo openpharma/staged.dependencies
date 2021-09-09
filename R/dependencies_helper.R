@@ -220,7 +220,7 @@ get_true_deps_graph <- function(pkgs_df,
   names(upstream_deps) <- pkgs_df$package_name
 
   external <- lapply(pkgs_df$cache_dir,
-                     function(file) setdiff(desc::desc_get_deps(file)$package, pkgs_df$package_name))
+                     function(file) setdiff(desc::desc_get_deps(file)$package, c("R",pkgs_df$package_name)))
   names(external) <- pkgs_df$package_name
 
   # order the dependencies
@@ -339,4 +339,20 @@ compute_actions <- function(pkg_df, pkg_names, actions, upstream_pkgs) {
   pkg_df[pkg_df$package_name %in% upstream_pkgs, "actions"] <- "install"
   pkg_df %>% dplyr::arrange(.data$install_index) %>%
     dplyr::select(.data$package_name, .data$cache_dir, .data$actions)
+}
+
+
+# function which takes a string in utils::available.packages$Depends|Imports|Suggests
+# and outputs a vector of packages with "R" removed and version requirements removed
+parse_deps_table <- function(str) {
+  if (is.na(str) || nchar(str) == 0) {
+    return(character(0))
+  }
+  # remove whitespace
+  str <- gsub("\\s", "", str)
+  #split by "," and remove version info within brackets
+  deps <-  gsub("\\s*\\([^\\)]+\\)","",strsplit(str, ",")[[1]])
+  # remove R
+  deps <- deps[deps != "R"]
+  return(deps)
 }
