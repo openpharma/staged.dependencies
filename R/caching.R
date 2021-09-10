@@ -107,7 +107,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rul
   # so that for example gitlab automation (which uses a detached HEAD)
   # does not incorrectly fail
   current_branch <- git2r::repository_head(repo_dir)$name
-  if (!is.null(curent_branch)) {
+  if (!is.null(current_branch)) {
     available_branches <- names(git2r::branches(repo_dir, flags = "local"))
     branch <- select_branch_rule(available_branches)
     stopifnot(branch %in% available_branches)
@@ -132,8 +132,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rul
     )
   }
 
-  branch <-  git2r::repository_head(repo_dir)$name
-  return(list(dir = repo_dir, branch = paste0("local (", branch, ")")))
+  return(list(dir = repo_dir, branch = paste0("local (", current_branch, ")")))
 }
 
 # local_repos: data.frame that maps repo and host to local directory
