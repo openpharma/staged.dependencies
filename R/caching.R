@@ -102,12 +102,19 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rul
   })
 
   # check that locally checked out branch is consistent with branch rule
-  available_branches <- names(git2r::branches(repo_dir, flags = "local"))
-  branch <- select_branch_rule(available_branches)
-  stopifnot(branch %in% available_branches)
-  if (branch != get_current_branch(repo_dir)) {
-    stop("You must check out branch ", branch, " for repository in directory ", repo_dir,
-         ", currently ", get_current_branch(repo_dir), " is checked out.")
+  # if current_branch is NULL then we have a detached HEAD,
+  # in this case, for the local repo, we skip the checks
+  # so that for example gitlab automation (which uses a detached HEAD)
+  # does not incorrectly fail
+  current_branch <- git2r::repository_head(repo_dir)$name
+  if (!is.null(curent_branch)) {
+    available_branches <- names(git2r::branches(repo_dir, flags = "local"))
+    branch <- select_branch_rule(available_branches)
+    stopifnot(branch %in% available_branches)
+    if (branch != get_current_branch(repo_dir)) {
+      stop("You must check out branch ", branch, " for repository in directory ", repo_dir,
+           ", currently ", get_current_branch(repo_dir), " is checked out.")
+    }
   }
 
   if ((length(git2r::status(repo_dir)$staged) > 0) ||
