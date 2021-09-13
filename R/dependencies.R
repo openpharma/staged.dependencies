@@ -505,7 +505,7 @@ build_check_install <- function(dep_structure,
 #'
 #' @param dep_structure `dependency_structure` object
 #' @param skip_if_missing_yaml `logical` should checks be skipped on packages
-#'   without yaml files. Default `TRUE`
+#'   without yaml files. Default `FALSE`
 #' @return NULL if successful. An error is thrown if inconsistencies found
 #' @export
 #'
@@ -514,7 +514,7 @@ build_check_install <- function(dep_structure,
 #' x <- dependency_table(project = ".")
 #' check_yamls_consistent(x)
 #' }
-check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = TRUE) {
+check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(setequal(dep_structure$direction, c("upstream", "downstream")))
