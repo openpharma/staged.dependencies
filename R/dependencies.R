@@ -504,6 +504,8 @@ build_check_install <- function(dep_structure,
 #'   in each yaml file are found in the appropriate package DESCRIPTION file
 #'
 #' @param dep_structure `dependency_structure` object
+#' @param skip_if_missing_yaml `logical` should checks be skipped on packages
+#'   without yaml files. Default `TRUE`
 #' @return NULL if successful. An error is thrown if inconsistencies found
 #' @export
 #'
@@ -512,10 +514,11 @@ build_check_install <- function(dep_structure,
 #' x <- dependency_table(project = ".")
 #' check_yamls_consistent(x)
 #' }
-check_yamls_consistent <- function(dep_structure) {
+check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = TRUE) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(setequal(dep_structure$direction, c("upstream", "downstream")))
+  stopifnot(rlang::is_bool(skip_if_missing_yaml))
 
   extract_package_name <- function(repo_and_host, table) {
     table$package_name[table$repo == repo_and_host$repo & table$host == repo_and_host$host]
@@ -526,6 +529,11 @@ check_yamls_consistent <- function(dep_structure) {
   for (index in seq_len(nrow(dep_structure$table))) {
     package_name <- dep_structure$table$package_name[[index]]
     yaml_deps <- get_yaml_deps_info(unlist(dep_structure$table$cache_dir[[index]]))
+
+    # if there is no yaml file then skip checks
+    if (skip_if_missing_yaml && is.function(yaml_deps$current_repo)) {
+      next
+    }
 
     # check that packages upstream in the yaml file are upstream deps
     upstream_packages_in_yaml <- vapply(yaml_deps$upstream_repos, extract_package_name, dep_structure$table,
