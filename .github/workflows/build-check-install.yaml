@@ -205,12 +205,12 @@ jobs:
           x <- staged.dependencies::dependency_table("openpharma/stageddeps.electricity", project_type = "repo@host", feature = "main", verbose = 1)
           print(x)
           print("Checking yaml's consistent")
-          check_yamls_consistent(x)
+          staged.dependencies::check_yamls_consistent(x)
           print("Install upstream deps")
-          install_deps(x, verbose = 1)
+          staged.dependencies::install_deps(x, verbose = 1)
           print("Checking downstream")
-          check_downstream(x)
+          staged.dependencies::check_downstream(x, verbose = 1)
           print("Build, check, install")
-          build_check_install(x)
+          staged.dependencies::build_check_install(x, verbose = 1)
         shell: Rscript {0}
 
