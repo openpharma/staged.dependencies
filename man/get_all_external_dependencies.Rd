@@ -9,7 +9,8 @@ get_all_external_dependencies(
   available_packages = as.data.frame(utils::available.packages()),
   install_direction = "upstream",
   packages_to_process = NULL,
-  include_suggests = FALSE
+  from_internal_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests"),
+  from_external_dependencies = c("Depends", "Imports", "LinkingTo")
 )
 }
 \arguments{
@@ -29,9 +30,13 @@ to install (according to dependency structure). By default this is only "upstrea
 \item{packages_to_process}{(\code{character}) An additional filter, only packages on
 this list will be considered (advanced usage only)}
 
-\item{include_suggests}{(\code{logical}) when considering the external packages, should the 'suggests'
-packages be considered as dependencies. (This does not affect the Suggests packages of your
-internal packages which are always included)}
+\item{from_internal_dependencies}{Vector chosen from \code{c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")}
+which fields of the DESCRIPTION file of the internal packages should be included. Default:
+\code{c("Depends", "Imports", "LinkingTo", "Suggests")}}
+
+\item{from_external_dependencies}{Vector chosen from \code{c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")}
+which fields of the DESCRIPTION file of the internal packages should be included. Default:
+\code{c("Depends", "Imports", "LinkingTo")}}
 }
 \value{
 A vector of 'external' R packages required to install

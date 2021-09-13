@@ -9,16 +9,22 @@ test_that("get_true_deps_graph works", {
     stringsAsFactors = FALSE
   ) %>% dplyr::mutate(cache_dir = file.path(TESTS_GIT_REPOS, package_name))
 
-  # check that the up- and downstream graphs are as expected by DESCRIPTION files
+  # check that the up- and downstream graphs and external deps are as expected by DESCRIPTION files
   expect_equal(
     get_true_deps_graph(pkgs_df, c("upstream", "downstream")),
     list(
       external = list(
-        stageddeps.elecinfra = "testthat",
-        stageddeps.electricity = "testthat",
-        stageddeps.food = c("desc", "SummarizedExperiment", "testthat"),
-        stageddeps.house = c("stageddeps.water", "testthat"), # water treated as external, see above
-        stageddeps.garden = c("stageddeps.water", "testthat")
+        stageddeps.elecinfra = data.frame(type = "Suggests", package = "testthat", version = ">= 2.1.0"),
+        stageddeps.electricity = data.frame(type = "Suggests", package = "testthat", version = ">= 2.1.0"),
+        stageddeps.food = data.frame(type = c("Imports", "Imports", "Suggests"),
+                                     package = c("desc", "SummarizedExperiment", "testthat"),
+                                     version = c("*", "*", ">= 2.1.0")),
+        stageddeps.house = data.frame(type = c("Imports", "Suggests"),
+                                      package = c("stageddeps.water", "testthat"), # water treated as external, see above
+                                      version = c("*", ">= 2.1.0")),
+        stageddeps.garden = data.frame(type = c("Imports", "Suggests"),
+                                       package = c("stageddeps.water", "testthat"),
+                                       version = c("*", ">= 2.1.0"))
       ),
       upstream_deps = list(
         stageddeps.elecinfra = character(0),
