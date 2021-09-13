@@ -204,7 +204,7 @@ jobs:
           print("Creating dependency table")
           x <- staged.dependencies::dependency_table("openpharma/stageddeps.food", project_type = "repo@host", feature = "fixgarden@main", verbose = 1)
           print(x)
-          print(Checking consistent yamls)
+          print("Checking consistent yamls")
           staged.dependencies::check_yamls_consistent(x)
           print("Install upstream deps")
           staged.dependencies::install_deps(x, verbose = 1)
