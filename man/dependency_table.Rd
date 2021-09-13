@@ -10,7 +10,7 @@ dependency_table(
   feature = NULL,
   local_repos = get_local_pkgs_from_config(),
   direction = c("upstream", "downstream"),
-  verbose = 0
+  verbose = 1
 )
 }
 \arguments{
