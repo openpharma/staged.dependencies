@@ -202,7 +202,7 @@ jobs:
       - name: System tests
         run: |
           print("Creating dependency table")
-          x <- staged_dependencies::dependency_table("openpharma/stageddeps.electricity", project_type = "repo@host", feature = "main")
+          x <- staged.dependencies::dependency_table("openpharma/stageddeps.electricity", project_type = "repo@host", feature = "main")
           print(x)
         shell: Rscript {0}
 
