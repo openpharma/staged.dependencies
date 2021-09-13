@@ -198,3 +198,11 @@ jobs:
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
         shell: bash
+
+      - name: System tests
+        run: |
+          print("Creating dependency table")
+          x <- staged_dependencies::dependency_table("openpharma/stageddeps.electricity", project_type = "repo@host", feature = "main")
+          print(x)
+        shell: Rscript {0}
+
