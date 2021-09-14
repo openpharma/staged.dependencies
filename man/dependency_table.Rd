@@ -52,10 +52,12 @@ following rows \code{package_name}, \code{type} (\code{current}, \code{upstream}
 \code{distance} (minimum number of steps from \code{current_pkg}), \code{branch}, \code{repo}, \code{host},
 \code{cache_dir} and \code{install_index} (the order to install the packages).
 Note \code{cache_dir} and \code{install_index} are suppressed when printing the object}
-\item{deps}{\code{list} with two elements, \code{upstream_deps}is the graph where edges point from a package
+\item{deps}{\code{list} with three elements, \code{upstream_deps}is the graph where edges point from a package
 to its upstream dependencies. They are ordered in installation order. The
 \code{downstream_deps} list is the graph with the edge direction flipped,
-and is ordered in reverse installation order.}
+and is ordered in reverse installation order. \code{external} contains the external
+R packages found in the description files of the internal packages. It is a dataframe
+of the form returned by \code{desc::desc_get_deps}}
 \item{direction}{\code{direction} argument used to create object}
 }
 }

@@ -9,10 +9,23 @@ test_that("get_true_deps_graph works", {
     stringsAsFactors = FALSE
   ) %>% dplyr::mutate(cache_dir = file.path(TESTS_GIT_REPOS, package_name))
 
-  # check that the up- and downstream graphs are as expected by DESCRIPTION files
+  # check that the up- and downstream graphs and external deps are as expected by DESCRIPTION files
   expect_equal(
     get_true_deps_graph(pkgs_df, c("upstream", "downstream")),
     list(
+      external = list(
+        stageddeps.elecinfra = data.frame(type = "Suggests", package = "testthat", version = ">= 2.1.0"),
+        stageddeps.electricity = data.frame(type = "Suggests", package = "testthat", version = ">= 2.1.0"),
+        stageddeps.food = data.frame(type = c("Imports", "Imports", "Suggests"),
+                                     package = c("desc", "SummarizedExperiment", "testthat"),
+                                     version = c("*", "*", ">= 2.1.0")),
+        stageddeps.house = data.frame(type = c("Imports", "Suggests"),
+                                      package = c("stageddeps.water", "testthat"), # water treated as external, see above
+                                      version = c("*", ">= 2.1.0")),
+        stageddeps.garden = data.frame(type = c("Imports", "Suggests"),
+                                       package = c("stageddeps.water", "testthat"),
+                                       version = c("*", ">= 2.1.0"))
+      ),
       upstream_deps = list(
         stageddeps.elecinfra = character(0),
         stageddeps.electricity = "stageddeps.elecinfra",
@@ -154,4 +167,24 @@ test_that("run_package_actions works", {
 
     )
   )
+})
+
+# parse_deps_table ----
+test_that("parsae_deps_table works as expected", {
+
+  # empty/NA returns character(0)
+  expect_length(parse_deps_table(""), 0)
+  expect_length(parse_deps_table(NA), 0)
+  expect_is(parse_deps_table(""), "character")
+  expect_is(parse_deps_table(NA), "character")
+
+  # R is removed
+  expect_equal(parse_deps_table("R (>=3.3), utils"), "utils")
+
+  # version numbers removed
+  expect_equal(parse_deps_table("utils, survival (>= 1.17)"), c("utils", "survival"))
+
+  # can handle newline/whitespace chars
+  expect_equal(parse_deps_table("utils,\nsurvival (>= 1.17)"), c("utils", "survival"))
+  expect_equal(parse_deps_table("utils  ,\t  survival  (>= 1.17)"), c("utils", "survival"))
 })

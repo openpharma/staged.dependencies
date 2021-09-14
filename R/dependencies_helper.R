@@ -202,6 +202,8 @@ get_local_pkgs_from_config <- function() {
 # The "downstream_deps" list is the graph with the edge
 # direction flipped, and is ordered in reverse installation order.
 # It preserves the other columns of this data.frame.
+# The "external" list contains the external packages in the DESCRIPTION file,
+# idocument where the names are the dependency type (e.g. Imports, Suggests,...)
 get_true_deps_graph <- function(pkgs_df,
                                 graph_directions = "upstream") {
 
@@ -218,11 +220,22 @@ get_true_deps_graph <- function(pkgs_df,
                           function(file) intersect(pkgs_df$package_name, desc::desc_get_deps(file)$package))
   names(upstream_deps) <- pkgs_df$package_name
 
+  external <- lapply(pkgs_df$cache_dir,
+                     function(file) {
+                       df <- desc::desc_get_deps(file)
+                       df <- df[!df$package %in% c("R",pkgs_df$package_name), ]
+                       rownames(df) <- NULL
+                       df
+                     } )
+  names(external) <- pkgs_df$package_name
+
   # order the dependencies
   install_order <- topological_sort(upstream_deps)
   upstream_deps <- upstream_deps[install_order]
+  external <- external[install_order]
 
   res <- list()
+  res[["external"]] <- external
   if ("upstream" %in% graph_directions) {
     res[["upstream_deps"]] <- upstream_deps
   }
@@ -332,4 +345,20 @@ compute_actions <- function(pkg_df, pkg_names, actions, upstream_pkgs) {
   pkg_df[pkg_df$package_name %in% upstream_pkgs, "actions"] <- "install"
   pkg_df %>% dplyr::arrange(.data$install_index) %>%
     dplyr::select(.data$package_name, .data$cache_dir, .data$actions)
+}
+
+
+# function which takes a string in utils::available.packages$Depends|Imports|Suggests
+# and outputs a vector of packages with "R" removed and version requirements removed
+parse_deps_table <- function(str) {
+  if (is.na(str) || nchar(str) == 0) {
+    return(character(0))
+  }
+  # remove whitespace
+  str <- gsub("\\s", "", str)
+  #split by "," and remove version info within brackets
+  deps <-  gsub("\\s*\\([^\\)]+\\)","",strsplit(str, ",")[[1]])
+  # remove R
+  deps <- deps[deps != "R"]
+  return(deps)
 }
