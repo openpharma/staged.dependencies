@@ -11,7 +11,7 @@ check_downstream(
   dry_install_and_check = FALSE,
   check_args = NULL,
   only_tests = FALSE,
-  verbose = 0,
+  verbose = 1,
   install_external_deps = TRUE,
   ...
 )

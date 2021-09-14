@@ -9,7 +9,7 @@ build_check_install(
   install_direction = c("upstream", "downstream"),
   packages_to_process = NULL,
   dry_install = FALSE,
-  verbose = 0,
+  verbose = 1,
   steps = c("build", "check", "install"),
   rcmd_args = list(check = c("--no-manual")),
   artifact_dir = tempfile(),

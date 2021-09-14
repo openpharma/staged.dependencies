@@ -101,7 +101,7 @@ test_that("dependency_table wih local_pkgs works", {
 
   git2r::checkout(file.path(copied_ecosystem, "stageddeps.garden"), branch = "fixgarden@main")
   expect_silent(
-    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos)
+    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos, verbose = 0)
   )
 })
 

@@ -62,7 +62,7 @@ dependency_table <- function(project = ".",
                              feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              direction = c("upstream", "downstream"),
-                             verbose = 0) {
+                             verbose = 1) {
 
   # validate arguments
   stopifnot(is.data.frame(local_repos) || is.null(local_repos))
@@ -298,7 +298,7 @@ install_deps <- function(dep_structure,
                          install_direction = "upstream",
                          install_external_deps = TRUE,
                          dependency_packages = NULL,
-                         verbose = 0,
+                         verbose = 1,
                          ...) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
@@ -364,7 +364,7 @@ check_downstream <- function(dep_structure,
                              distance = NULL, dry_install_and_check = FALSE,
                              check_args = NULL,
                              only_tests = FALSE,
-                             verbose = 0, install_external_deps = TRUE, ...) {
+                             verbose = 1, install_external_deps = TRUE, ...) {
   stopifnot(
     methods::is(dep_structure, "dependency_structure"),
     is.logical(dry_install_and_check)
@@ -456,7 +456,7 @@ build_check_install <- function(dep_structure,
                                install_direction = c("upstream", "downstream"),
                                packages_to_process = NULL,
                                dry_install = FALSE,
-                               verbose = 0,
+                               verbose = 1,
                                steps = c("build", "check", "install"),
                                rcmd_args = list(check = c("--no-manual")),
                                artifact_dir = tempfile(),
