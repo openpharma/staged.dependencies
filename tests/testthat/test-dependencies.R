@@ -101,7 +101,7 @@ test_that("dependency_table wih local_pkgs works", {
 
   git2r::checkout(file.path(copied_ecosystem, "stageddeps.garden"), branch = "fixgarden@main")
   expect_silent(
-    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos)
+    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos, verbose = 0)
   )
 })
 
@@ -271,4 +271,60 @@ test_that("build_check_install works", {
 
 })
 
+
+test_that("get_all_external_deps works", {
+
+  # dummy dependency_structure object
+
+  deps <- list(
+    external = list(A = data.frame(type = c("Imports", "Suggests"), package = c("X", "Y")),
+                    B = data.frame(type = c("Depends"), package = "Z")),
+    upstream_deps = list(A = "B", B = character(0)),
+    downstream_deps = list(B = "A", character(0))
+  )
+
+  internal_deps <- data.frame(package_name = c("A", "B"), type = c("current", "upstream"))
+
+  x <- structure(
+    list(
+      project = NA,
+      project_type = NA,
+      current_pkg = NA,
+      table = internal_deps,
+      deps = deps,
+      direction = c("upstream", "downstream")
+    ),
+    class = "dependency_structure"
+  )
+
+
+  available_packages <- data.frame(Package = c("T", "U", "V", "W", "X", "Y", "Z"),
+                                   Depends = c(NA, NA, NA, "Q", "U", NA, "T"),
+                                   Imports = c(NA, NA, NA, NA, NA, "U,V", NA),
+                                   Suggests = c(NA, NA, NA, "S", NA, NA, "W"),
+                                   LinkingTo = as.character(rep(NA, 7)))
+
+
+
+  expect_equal(sort(get_all_external_dependencies(x, available_packages = available_packages)),
+               c("T", "U", "V", "X", "Y", "Z"))
+
+  # test from_internal_dependencies 9remove suggests)
+  results <- get_all_external_dependencies(x, available_packages = available_packages, from_internal_dependencies = c("Depends", "Imports", "LinkingTo"))
+  expect_equal(sort(results), c("T", "U", "X", "Z"))
+
+  # only take B's dependencies
+  expect_equal(sort(get_all_external_dependencies(x,
+                      packages_to_process = "B",
+                      available_packages = available_packages)),
+               c("T", "Z"))
+
+  # test from_external_dependencies and check get warning for missing packages
+  expect_warning(results <- get_all_external_dependencies(x, available_packages = available_packages,
+                                                          from_external_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests")),
+                 "Cannot find information about package\\(s\\) Q, S check that options\\('repos'\\) contains expected repos")
+
+  expect_equal(sort(results), c("Q", "S", "T", "U", "V", "W", "X", "Y", "Z"))
+
+})
 

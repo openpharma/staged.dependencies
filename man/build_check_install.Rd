@@ -9,7 +9,7 @@ build_check_install(
   install_direction = c("upstream", "downstream"),
   packages_to_process = NULL,
   dry_install = FALSE,
-  verbose = 0,
+  verbose = 1,
   steps = c("build", "check", "install"),
   rcmd_args = list(check = c("--no-manual")),
   artifact_dir = tempfile(),
@@ -27,7 +27,7 @@ uses \code{dep_structure$deps} to infer upstream dependencies}
 to install (according to dependency structure). By default this is only "upstream"}
 
 \item{packages_to_process}{(\code{character}) An additional filter, only packages on
-this list will be installed (advanced usage only)}
+this list will be considered (advanced usage only)}
 
 \item{dry_install}{(\code{logical}) dry run that lists packages that would be
 installed}

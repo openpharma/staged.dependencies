@@ -5,10 +5,13 @@
 \title{Checks that the staged dependency yamls are consistent with
 the dependencies listed in the DESCRIPTION files}
 \usage{
-check_yamls_consistent(dep_structure)
+check_yamls_consistent(dep_structure, skip_if_missing_yaml = FALSE)
 }
 \arguments{
 \item{dep_structure}{\code{dependency_structure} object}
+
+\item{skip_if_missing_yaml}{\code{logical} should checks be skipped on packages
+without yaml files. Default \code{FALSE}}
 }
 \value{
 NULL if successful. An error is thrown if inconsistencies found

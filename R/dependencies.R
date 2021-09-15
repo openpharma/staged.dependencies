@@ -37,10 +37,12 @@
 #'                `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`,
 #'                `cache_dir` and `install_index` (the order to install the packages).
 #'                Note `cache_dir` and `install_index` are suppressed when printing the object}
-#'   \item{deps}{`list` with two elements, `upstream_deps`is the graph where edges point from a package
+#'   \item{deps}{`list` with three elements, `upstream_deps`is the graph where edges point from a package
 #'               to its upstream dependencies. They are ordered in installation order. The
 #'               `downstream_deps` list is the graph with the edge direction flipped,
-#'               and is ordered in reverse installation order.}
+#'               and is ordered in reverse installation order. `external` contains the external
+#'               R packages found in the description files of the internal packages. It is a dataframe
+#'               of the form returned by `desc::desc_get_deps`}
 #'   \item{direction}{`direction` argument used to create object}
 #' }
 #' @md
@@ -60,7 +62,7 @@ dependency_table <- function(project = ".",
                              feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              direction = c("upstream", "downstream"),
-                             verbose = 0) {
+                             verbose = 1) {
 
   # validate arguments
   stopifnot(is.data.frame(local_repos) || is.null(local_repos))
@@ -106,6 +108,7 @@ dependency_table <- function(project = ".",
 
   # deps$upstream_deps[["a"]] is vector of upstream_deps of "a"
   # deps$downstream_deps[["a"]] is a vector of downstream_deps of "a"
+  # deps$external[["a"]] is a vector of external packages in "a"s DESCRIPTION file
   # where the elements of the lists are the package names found in internal_deps
   # deps is ordered topologically
   deps <- get_true_deps_graph(internal_deps, graph_directions = c("upstream", "downstream"))
@@ -295,7 +298,7 @@ install_deps <- function(dep_structure,
                          install_direction = "upstream",
                          install_external_deps = TRUE,
                          dependency_packages = NULL,
-                         verbose = 0,
+                         verbose = 1,
                          ...) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
@@ -361,7 +364,7 @@ check_downstream <- function(dep_structure,
                              distance = NULL, dry_install_and_check = FALSE,
                              check_args = NULL,
                              only_tests = FALSE,
-                             verbose = 0, install_external_deps = TRUE, ...) {
+                             verbose = 1, install_external_deps = TRUE, ...) {
   stopifnot(
     methods::is(dep_structure, "dependency_structure"),
     is.logical(dry_install_and_check)
@@ -435,7 +438,7 @@ update_with_direct_deps <- function(dep_structure) {
 #'   `install` which are vectors that are passed as separate arguments
 #'   to the `R CMD` commands
 #' @param packages_to_process (`character`) An additional filter, only packages on
-#'   this list will be installed (advanced usage only)
+#'   this list will be considered (advanced usage only)
 #' @param artifact_dir (`character`) directory to place built R packages
 #'   and logs
 #' @return list with entries
@@ -453,7 +456,7 @@ build_check_install <- function(dep_structure,
                                install_direction = c("upstream", "downstream"),
                                packages_to_process = NULL,
                                dry_install = FALSE,
-                               verbose = 0,
+                               verbose = 1,
                                steps = c("build", "check", "install"),
                                rcmd_args = list(check = c("--no-manual")),
                                artifact_dir = tempfile(),
@@ -504,6 +507,8 @@ build_check_install <- function(dep_structure,
 #'   in each yaml file are found in the appropriate package DESCRIPTION file
 #'
 #' @param dep_structure `dependency_structure` object
+#' @param skip_if_missing_yaml `logical` should checks be skipped on packages
+#'   without yaml files. Default `FALSE`
 #' @return NULL if successful. An error is thrown if inconsistencies found
 #' @export
 #'
@@ -512,10 +517,11 @@ build_check_install <- function(dep_structure,
 #' x <- dependency_table(project = ".")
 #' check_yamls_consistent(x)
 #' }
-check_yamls_consistent <- function(dep_structure) {
+check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(setequal(dep_structure$direction, c("upstream", "downstream")))
+  stopifnot(rlang::is_bool(skip_if_missing_yaml))
 
   extract_package_name <- function(repo_and_host, table) {
     table$package_name[table$repo == repo_and_host$repo & table$host == repo_and_host$host]
@@ -526,6 +532,11 @@ check_yamls_consistent <- function(dep_structure) {
   for (index in seq_len(nrow(dep_structure$table))) {
     package_name <- dep_structure$table$package_name[[index]]
     yaml_deps <- get_yaml_deps_info(unlist(dep_structure$table$cache_dir[[index]]))
+
+    # if there is no yaml file then skip checks
+    if (skip_if_missing_yaml && is.function(yaml_deps$current_repo)) {
+      next
+    }
 
     # check that packages upstream in the yaml file are upstream deps
     upstream_packages_in_yaml <- vapply(yaml_deps$upstream_repos, extract_package_name, dep_structure$table,
@@ -553,4 +564,115 @@ check_yamls_consistent <- function(dep_structure) {
   }
 
   return(invisible(NULL))
+}
+
+
+#' List the external R packages required to be installed
+#'
+#'
+#' @param available_packages (`data.frame`) A dataframe of the format given by
+#'   `as.data.frame(utils::available.packages)`. It is unlikely this default needs to be changed;
+#'   however you need to ensure the `options("repos")` contains the urls of all expected repos
+#'   (e.g. Bioconductor).
+#' @param from_internal_dependencies Vector chosen from `c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")`
+#'   which fields of the DESCRIPTION file of the internal packages should be included. Default:
+#'   `c("Depends", "Imports", "LinkingTo", "Suggests")`
+#' @param from_external_dependencies Vector chosen from `c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")`
+#'   which fields of the DESCRIPTION file of the internal packages should be included. Default:
+#'   `c("Depends", "Imports", "LinkingTo")`
+#' @inheritParams build_check_install
+#' @md
+#' @return A vector of 'external' R packages required to install
+#'   the selected 'internal' packages. This can be used with `remotes::system_requirements`
+#'   to extract the system requirements needed for your packages, see example below.
+#' @examples
+#' \dontrun{
+#'   x <- dependency_table("openpharma/stageddeps.electricity",
+#'     project_type = "repo@@host", feature = "main")
+#'
+#'   # get external package dependencies
+#'   ex_deps <- get_all_external_dependencies(x)
+#'   print(ex_deps)
+#'
+#'   # get system dependencies (in this case there are none)
+#'   unique(unlist(lapply(ex_deps,
+#'     function(pkg, ...)
+#'       remotes::system_requirements(package = pkg, ...),
+#'     os = "ubuntu",
+#'     os_release = "20.04")
+#'  ))
+#' }
+#' @export
+get_all_external_dependencies <- function(dep_structure,
+                                          available_packages = as.data.frame(utils::available.packages()),
+                                          install_direction = "upstream",
+                                          packages_to_process = NULL,
+                                          from_internal_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests"),
+                                          from_external_dependencies = c("Depends", "Imports", "LinkingTo")) {
+  stopifnot(methods::is(dep_structure, "dependency_structure"))
+
+  stopifnot(methods::is(available_packages, "data.frame"))
+  stopifnot(all(c("Depends", "Suggests", "Imports", "Package") %in% colnames(available_packages)))
+
+  match.arg(from_internal_dependencies, c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances"), several.ok = TRUE)
+  match.arg(from_external_dependencies, c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances"), several.ok = TRUE)
+
+
+  if (!all(install_direction %in% dep_structure$direction)) {
+    stop("Invalid install_direction argument for this dependency object")
+  }
+
+  r_core_packages <- c("base", "compiler", "datasets", "graphics", "grDevices", "grid",
+  "methods", "parallel", "splines", "stats", "stats4", "tcltk", "tools", "translations", "utils")
+
+  # get the packages to consider
+  pkg_df <- dep_structure$table
+
+  pkg_names <- filter_pkgs(pkg_df, install_direction = install_direction,
+                           include_project = TRUE,
+                           dependency_packages = packages_to_process)
+
+
+  # we also need to consider the upstream dependencies of e.g. the downstream dependencies
+  # they may have been filtered out by the above.
+  # deps["upstream_deps"] is a topologically sorted list where dep_structure$deps["upstream_deps"]["x"]
+  # are the upstream deps of package x, get_descendants gets all of the children of a list parents_to_children
+  # so in this case are upstream "descendants"
+  upstream_pkgs <- get_descendants(dep_structure$deps[["upstream_deps"]], pkg_names)
+
+  # the external packages we have considered
+  external_packages <- character(0)
+  # and those to consider
+  packages_to_consider <- unique(unlist(
+    lapply(dep_structure$deps$external[names(dep_structure$deps$external) %in% c(upstream_pkgs, pkg_names)],
+      function(df) df$package[df$type %in% from_internal_dependencies])
+    )
+  )
+
+  while (length(packages_to_consider) > 0) {
+
+    if (any(!packages_to_consider %in% c(available_packages$Package, r_core_packages))) {
+      warning("Cannot find information about package(s) ",
+        toString(packages_to_consider[!packages_to_consider %in% c(available_packages$Package, r_core_packages)]),
+        " check that options('repos') contains expected repos")
+    }
+
+    # get appropriate rows of data.frame
+    filtered_available_packages <- available_packages[available_packages$Package %in% packages_to_consider, ]
+
+    # get appropriate columns
+    deps <- unname(unlist(filtered_available_packages[, from_external_dependencies]))
+
+    # parse to get new packages
+    new_packages_to_consider <- unique(unlist(lapply(deps, parse_deps_table)))
+
+    # move those that have been processed to external_packages vector and
+    # update the packages to be considered for the next iteration
+    external_packages <- c(external_packages, packages_to_consider)
+
+    packages_to_consider <- setdiff(new_packages_to_consider, external_packages)
+  }
+
+  return(external_packages)
+
 }
