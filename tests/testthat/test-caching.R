@@ -91,7 +91,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     )
   )
   expect_setequal(
-    res$branch,
+    res$ref,
     c("fix1@main", "main", "main")
   )
 

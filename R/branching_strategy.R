@@ -65,26 +65,26 @@ determine_branch <- function(feature, available_branches, branch_sep = "@") {
        toString(branches_to_check), "'")
 }
 
-# infer the feature if it is null from the project branch
-# if feature is provided, check it is consistent with the checked out project branch
-# returns feature
-infer_feature_from_branch <- function(feature = NULL, project = ".") {
+# infer the ref if it is null from the project branch
+# if ref is provided, check it is consistent with the checked out project branch
+# returns ref
+infer_ref_from_branch <- function(ref = NULL, project = ".") {
   stopifnot(
-    is.null(feature) || is_non_empty_char(feature)
+    is.null(ref) || is_non_empty_char(ref)
   )
   check_dir_exists(project)
   current_branch <- get_current_branch(project)
-  if (is.null(feature)) {
-    feature <- current_branch
+  if (is.null(ref)) {
+    ref <- current_branch
   }
 
   expected_current_branch <- determine_branch(
-    feature, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
+    ref, available_branches = setdiff(gsub("origin/", "", names(git2r::branches(project)), fixed = TRUE), "HEAD")
   )
   if (current_branch != expected_current_branch) {
-    warning("feature ", feature, " would match ", expected_current_branch, " in project ", project,
+    warning("Branch ", ref, " would match ", expected_current_branch, " in project ", project,
             ", but currently checked out branch is ", current_branch)
   }
 
-  feature
+  ref
 }

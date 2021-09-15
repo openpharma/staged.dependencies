@@ -83,7 +83,7 @@ x <- dependency_table(project = "../stageddeps.electricity", verbose = 1)
 # ... or directly from a remote 
 x <- dependency_table(project = "openpharma/stageddeps.electricity@https://github.com", 
                       project_type = "repo@host", 
-                      feature = "main", 
+                      ref = "main", 
                       verbose = 1)
 
 # print and plot it
@@ -111,7 +111,7 @@ is described by the examples below:
 
 - Given a branch name `a@b@c@d@main`, `staged.dependencies` checks for branches in each repository in the following order:
 `a@b@c@d@main`, `b@c@d@main`, `c@d@main`, `d@main` and `main`.
-- Suppose one implements a new feature called `feature1` that involves `repoB, repoC` with the dependency 
+- Suppose one implements a new feature on a branch called `feature1` that involves `repoB, repoC` with the dependency 
 graph `repoA --> repoB --> repoC`, where `repoA` is an additional upstream dependency. One then notices that 
 `feature1` requires a fix in `repoB`, so one creates a new branch `fix1@feature1@main` on `repoB`. 
 The setup can be summarized as follows:
@@ -122,10 +122,10 @@ repoC: feature1@main, main
 ```
 A PR on repoB `fix1@feature1@main --> feature1@main` takes 
 `repoA: main, repoB: fix1@feature1@main, repoC: feature1@main`. 
-This can be checked by setting `feature = fix1@feature1@main` and running `check_downstream` on either `repoC` or
+This can be checked by setting `ref = fix1@feature1@main` and running `check_downstream` on either `repoC` or
 `check_downstream` on `repoB` (which adds `repoC` to its downstream dependencies).
 A PR on either `repoB` or `repoC` `feature1@main --> main` takes 
-`repoA: main, repoB:feature1@main, repoC: feature1@main`, setting `feature = feature1@main`.
+`repoA: main, repoB:feature1@main, repoC: feature1@main`, setting `ref = feature1@main`.
 
 
 ### Working with local packages

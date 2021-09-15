@@ -149,7 +149,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
   }
 }
 
-#' Recursively check out all repos to match branch determined by feature
+#' Recursively check out all repos to match branch determined by ref
 #' starting from repos_to_process.
 #'
 #' This uses the `staged_dependencies.yaml` to discover the upstream
@@ -161,7 +161,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'
 #' @md
 #' @param repos_to_process `list` of `list(repo, host)` repos to start from
-#' @param feature (`character`) feature to build
+#' @param ref (`character`) tag/branch to build
 #' @param direction (`character`) direction in which to discover packages
 #'   either or both of "upstream" and "downstream"
 #'   to recursively checkout upstream and/or downstream dependencies
@@ -173,7 +173,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'
 #' @return A data frame, one row per checked out repository with columns
 #' repo, host and cache_dir
-rec_checkout_internal_deps <- function(repos_to_process, feature,
+rec_checkout_internal_deps <- function(repos_to_process, ref,
                                       direction = c("upstream"),
                                       local_repos = get_local_pkgs_from_config(),
                                       verbose = 0) {
@@ -204,7 +204,7 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
       repo_info <- copy_local_repo_to_cachedir(
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
         select_branch_rule = function(available_branches) {
-          determine_branch(feature, available_branches)
+          determine_branch(ref, available_branches)
         },
         verbose = verbose
       )
@@ -214,7 +214,7 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
         get_repo_url(repo_and_host$repo, repo_and_host$host),
         token_envvar = get_authtoken_envvar(repo_and_host$host),
         select_branch_rule = function(available_branches) {
-          determine_branch(feature, available_branches)
+          determine_branch(ref, available_branches)
         },
         verbose = verbose
       )
@@ -238,6 +238,6 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
 
   df <- data.frame(unhash_repo_and_host(names(hashed_processed_repos)), stringsAsFactors = FALSE)
   df$cache_dir <- unlist(unname(hashed_processed_repos))
-  df$branch <- unlist(unname(hashed_repos_branches))
+  df$ref <- unlist(unname(hashed_repos_branches))
   return(df)
 }

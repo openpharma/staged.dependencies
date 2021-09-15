@@ -13,7 +13,7 @@
 #'   If host is not included in the string then the default `https://github.com`
 #'   is assumed.
 #' @param project_type (`character`) See `project` argument
-#' @param feature (`character`) feature we want to build; inferred from the
+#' @param ref (`character`) git branch (or tag) inferred from the
 #'   branch of the project if not provided; warning if not consistent with
 #'   current branch of project. If `project_type` is not `local` then this argument
 #'   must be provided
@@ -34,7 +34,7 @@
 #'   \item{current_pkg}{The R package name of code in the `project` directory}
 #'   \item{table}{`data.frame` contain one row per r package discovered, with the
 #'                following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
-#'                `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`,
+#'                `distance` (minimum number of steps from `current_pkg`), `ref`, `repo`, `host`,
 #'                `cache_dir` and `install_index` (the order to install the packages).
 #'                Note `cache_dir` and `install_index` are suppressed when printing the object}
 #'   \item{deps}{`list` with three elements, `upstream_deps`is the graph where edges point from a package
@@ -51,7 +51,8 @@
 #' \dontrun{
 #'   dependency_table(verbose = 1)
 #'   dependency_table(project = "openpharma/stageddeps.food@@https://github.com",
-#'                    project_type = "repo@@host")
+#'                    project_type = "repo@@host",
+#'                    ref = "main")
 #'   x <- dependency_table(project = "path/to/project",
 #'                         direction = c("upstream"))
 #'   print(x)
@@ -59,7 +60,7 @@
 #' }
 dependency_table <- function(project = ".",
                              project_type = c("local", "repo@host")[1],
-                             feature = NULL,
+                             ref = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              direction = c("upstream", "downstream"),
                              verbose = 1) {
@@ -70,15 +71,15 @@ dependency_table <- function(project = ".",
   check_direction_arg(direction)
   stopifnot(project_type %in% c("local", "repo@host"))
 
-  if (project_type == "repo@host" && (is.null(feature) || nchar(feature) == 0)) {
-    stop("For non-local projects the feature (branch) must be specified")
+  if (project_type == "repo@host" && (is.null(ref) || nchar(ref) == 0)) {
+    stop("For non-local projects the (branch/tag) must be specified")
   }
   if (project_type == "local") {
     check_dir_exists(project)
     error_if_stageddeps_inexistent(project)
     # infer feature
-    if (is.null(feature) || nchar(feature) == 0) {
-      feature <- infer_feature_from_branch(NULL, project)
+    if (is.null(ref) || nchar(ref) == 0) {
+      ref <- infer_ref_from_branch(NULL, project)
     }
   }
 
@@ -91,9 +92,9 @@ dependency_table <- function(project = ".",
     repo_to_process <- list(parse_remote_project(project))
   }
 
-  # a dataframe with columns repo, host, branch, cache_dir
+  # a dataframe with columns repo, host, ref, cache_dir
   internal_deps <- rec_checkout_internal_deps(
-    repo_to_process, feature, direction = direction,
+    repo_to_process, ref, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
 
@@ -133,7 +134,7 @@ dependency_table <- function(project = ".",
 
   # sort the table
   internal_deps <- internal_deps[order(internal_deps$type, internal_deps$distance),
-                                 c("package_name", "type", "distance", "branch",
+                                 c("package_name", "type", "distance", "ref",
                                    "repo", "host", "cache_dir")]
   rownames(internal_deps) <- NULL
 
@@ -176,8 +177,8 @@ plot.dependency_structure <- function(x, y, ...){
   nodes <- x$table %>% dplyr::mutate(
     id = .data$package_name,
     # label does not support html tags
-    label = paste0(.data$package_name, "\n", .data$branch),
-    title = paste0("<p>", .data$package_name,  "<br/>", .data$type, "<br/>", .data$branch, "</p>"),
+    label = paste0(.data$package_name, "\n", .data$ref),
+    title = paste0("<p>", .data$package_name,  "<br/>", .data$type, "<br/>", .data$ref, "</p>"),
     value = 3,
     group = .data$type
   ) %>% dplyr::select(c("id", "label", "title", "value", "group"))
