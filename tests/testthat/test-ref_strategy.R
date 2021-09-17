@@ -38,56 +38,57 @@ test_that("infer_ref_from_branch works", {
   unlink(repo_dir, recursive = TRUE)
 })
 
-test_that("determine_branch works", {
+test_that("determine_ref works", {
   # feature1 is an existing branch
   expect_equal(
-    determine_branch("feature1", c("main", "feature1")),
-    "feature1"
+    determine_ref("feature1", data.frame(ref = c("main", "feature1"), type = "branch")),
+    structure("feature1", type = "branch")
   )
 
   # branch "feature1@devel" does not exist, but "devel" exists
   expect_equal(
-    determine_branch("feature1@devel", c("main", "devel", "feature1")),
-    "devel"
+    determine_ref("feature1@devel", data.frame(ref = c("main", "devel", "feature1"), type = "branch")),
+    structure("devel", type = "branch")
   )
 
   # branch "fix1@feature1@devel" exists
   expect_equal(
-    determine_branch(
-      feature = "fix1@feature1@devel",
-      available_branches = c("main", "devel", "feature1", "feature1@devel",
-                             "fix1@feature1@devel", "fix1")
+    determine_ref(
+      "fix1@feature1@devel",
+      data.frame(ref = c("main", "devel", "feature1", "feature1@devel",
+                             "fix1@feature1@devel", "fix1"),
+                 type = "branch")
     ),
-    "fix1@feature1@devel"
+    structure("fix1@feature1@devel", type = "branch")
   )
 
   # branch "fix1@feature1@devel" does not exist, but "feature1@devel" exists
   expect_equal(
-    determine_branch(
+    determine_ref(
       "fix1@feature1@devel",
-      c("main", "devel", "feature1", "feature1@devel", "fix1")
+      data.frame(ref = c("main", "devel", "feature1", "feature1@devel", "fix1"), type = "branch")
     ),
-    "feature1@devel"
+    structure("feature1@devel", type = "branch")
   )
 
   # "devel" matches most closely
   expect_equal(
-    determine_branch(
+    determine_ref(
       "fix1@feature1@devel",
-      c("main", "devel", "feature1", "fix1")
+      data.frame(ref = c("main", "devel", "feature1", "fix1"), type = "branch")
     ),
-    "devel"
+    structure("devel", type = "branch")
   )
 
   # neither "feature1@release" nor "release" branches exist, so "main" is the fallback
   expect_equal(
-    determine_branch("feature1@release", c("main", "devel")),
-    "main"
+    determine_ref("feature1@release", data.frame(ref = c("main", "devel"), type = "branch")),
+    structure("main", type = "branch")
   )
 
   # fallback "main" branch is not an available branch, so error
   expect_error(
-    determine_branch("feature1@release", c("master", "devel")),
+    determine_ref("feature1@release", data.frame(ref = c("master", "devel"), type = "branch")),
     regexp = "at least one of 'feature1@release, release, main'", fixed = TRUE
   )
 })

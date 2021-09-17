@@ -38,7 +38,7 @@ test_that("clear_cache", {
 test_that("rec_checkout_internal_deps works (with mocking checkout)", {
 
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
-  mockery::stub(rec_checkout_internal_deps, 'checkout_repo', function(repo_dir, repo_url, select_branch_rule, ...) {
+  mockery::stub(rec_checkout_internal_deps, 'checkout_repo', function(repo_dir, repo_url, select_ref_rule, ...) {
     repo_name <- basename(repo_url)
     repo_name <- substr(repo_name, 0, nchar(repo_name) - nchar(".git"))
     cat(paste0("Mocking checkout_repo for ", repo_name, "\n"))
@@ -46,12 +46,11 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     unlink(repo_dir, recursive = TRUE)
     fs::dir_copy(file.path(TESTS_GIT_REPOS, repo_name), repo_dir)
 
-    available_branches <- names(git2r::branches(repo_dir))
-    available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
-    branch_without_prefix <- select_branch_rule(available_branches)
+    available_refs <- available_references(repo_dir)
+    selected_ref <- select_ref_rule(available_refs)
     # do not do actual checkout of branch
 
-    return(list(dir = repo_dir, branch = branch_without_prefix))
+    return(list(dir = repo_dir, ref = selected_ref))
   })
 
   output <- capture.output(res <- rec_checkout_internal_deps(
@@ -170,8 +169,8 @@ test_that("copy_local_repo_to_cachedir works", {
       copy_local_repo_to_cachedir(
         repo_dir,
         repo = "openpharma/stageddeps.food", host = "https://github.com",
-        select_branch_rule = function(available_branches) {
-          "main"
+        select_ref_rule = function(available_refs) {
+          structure("main", type = "branch")
         },
         verbose = 2
       ),
@@ -179,7 +178,7 @@ test_that("copy_local_repo_to_cachedir works", {
     )
     expect_true(startsWith(res$dir, file.path(get_packages_cache_dir(), "local_")))
     expect_true(file.exists(file.path(res$dir, "inexistentFile1.md")))
-    expect_equal(res$branch, "local (main)")
+    expect_equal(res$ref, "local (main)")
     expect_true(git_status_clean(res$dir))
   })
 
