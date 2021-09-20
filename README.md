@@ -26,7 +26,7 @@ The package also provides:
 
 - RStudio addins to perform the above tasks with a single click.
 - Install all dependencies app: A Shiny application to un-select those 
-  dependencies that should not be installed. 
+  dependencies that should not be installed.
 
 ## Usage
 
@@ -83,7 +83,7 @@ x <- dependency_table(project = "../stageddeps.electricity", verbose = 1)
 # ... or directly from a remote 
 x <- dependency_table(project = "openpharma/stageddeps.electricity@https://github.com", 
                       project_type = "repo@host", 
-                      ref = "main", 
+                      ref = "main",
                       verbose = 1)
 
 # print and plot it
@@ -127,6 +127,8 @@ This can be checked by setting `ref = fix1@feature1@main` and running `check_dow
 A PR on either `repoB` or `repoC` `feature1@main --> main` takes 
 `repoA: main, repoB:feature1@main, repoC: feature1@main`, setting `ref = feature1@main`.
 
+By setting `ref = <<tag_name>>`, `staged.dependencies` will checkout each repository at the tagged commit (or `main`)
+if tag does not exist. The check for tag name takes priority over the branch procedure described above.
 
 ### Working with local packages
 
