@@ -109,11 +109,20 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
   current_branch <- get_current_branch(repo_dir)
   if (!is.null(current_branch)) {
     available_refs <- available_references(repo_dir, branch_flag = "local")
-    branch <- select_ref_rule(available_refs)
-    stopifnot(branch %in% available_refs$ref)
-    if (branch != get_current_branch(repo_dir)) {
-      stop("You must check out branch ", branch, " for repository in directory ", repo_dir,
-           ", currently ", get_current_branch(repo_dir), " is checked out.")
+    ref <- select_ref_rule(available_refs)
+    stopifnot(ref %in% available_refs$ref)
+
+    if (ref != get_current_branch(repo_dir)) {
+      # if ref is a branch and you are on the wrong branch throw error
+      if (attr(ref, "type") == "branch") {
+        stop("You must check out branch ", ref, " for repository in directory ", repo_dir,
+             ", currently ", get_current_branch(repo_dir), " is checked out.")
+      }
+      # if ref is a tag, just throw warning as may want to work from elsewhere here
+      else {
+        warning("You should check out a branch from tag ", ref, " for repository in directory ", repo_dir,
+                ", currently branch ", get_current_branch(repo_dir), " is checked out.")
+      }
     }
   }
 

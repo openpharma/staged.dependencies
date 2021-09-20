@@ -22,10 +22,11 @@ get_current_branch <- function(git_repo) {
   git2r::repository_head(git_repo)$name
 }
 
-# checks that all branches start with origin/
+# checks that all branches start with origin/ (or staged_dep_tag_ which is the name of a branch where
+# staged_dep has previously checked out a version where ref = <<tag_name>>)
 check_only_remote_branches <- function(git_repo) {
   all_branches <- names(git2r::branches(git_repo))
-  stopifnot(all(vapply(all_branches, function(x) startsWith(x, "origin/"), logical(1))))
+  stopifnot(all(vapply(all_branches, function(x) startsWith(x, "origin/") || startsWith(x, "staged_dep_tag_"), logical(1))))
 }
 
 # clones the repo and only keeps remote branches
@@ -113,7 +114,6 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     }
 
     git_repo <- git2r::repository(repo_dir)
-    check_only_remote_branches(git_repo)
     # prune (remove) remote branches that were deleted from remote
     git2r::config(git_repo, remote.origin.prune = "true")
     git2r::fetch(git_repo, name = "origin", credentials = creds, verbose = verbose >= 2)
