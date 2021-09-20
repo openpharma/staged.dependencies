@@ -20,7 +20,7 @@ install_deps_app <- function(project = ".", default_feature = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              run_gadget = TRUE, run_as_job = TRUE,
                              verbose = 1, install_external_deps = TRUE, ...) {
-  require_pkgs(c("shiny", "miniUI"))
+  require_pkgs(c("shiny", "miniUI", "visNetwork"))
 
   # take local version of project (rather than remote)
   local_repos <- add_project_to_local_repos(project, local_repos)

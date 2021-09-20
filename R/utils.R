@@ -71,7 +71,7 @@ check_direction_arg <- function(direction) {
 require_pkgs <- function(pkgs) {
   for (pkg in pkgs) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
-      stop("Please install ", pkg)
+      stop("Please install R package ", pkg)
     }
   }
 }
