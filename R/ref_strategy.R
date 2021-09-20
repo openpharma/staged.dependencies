@@ -54,6 +54,17 @@
 #'
 #' # error because neither `feature1@release` nor `release` branch exists
 #' # determine_ref("feature1@release", data.frame(ref = c("master", "devel"), type = "branch"))
+#'
+#' # tag examples
+#' determine_ref("v0.1",
+#'   data.frame(ref = c("main", "devel", "feature1", "v0.1"), type = c(rep("branch", 3), "tag"))
+#' ) == structure("v0.1", type = "tag")
+#'
+#' determine_ref("v0.2",
+#'   data.frame(ref = c("main", "devel", "feature1", "v0.1"), type = c(rep("branch", 3), "tag"))
+#' ) == structure("main", type = "branch")
+#'
+#'
 determine_ref <- function(ref, available_refs, branch_sep = "@") {
   stopifnot(
     is_non_empty_char(ref),
