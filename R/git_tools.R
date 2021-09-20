@@ -131,7 +131,8 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar =
   }
   git2r::checkout(git_repo, branch = branch, force = TRUE)
 
-  return(list(dir = repo_dir, branch = branch_without_prefix))
+  return(list(dir = repo_dir, branch = branch_without_prefix,
+              sha = substr(git2r::sha(git2r::repository_head(repo_dir)), 1, 7)))
 }
 
 # Install the external deps required for a package
