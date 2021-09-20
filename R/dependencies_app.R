@@ -23,6 +23,8 @@ install_deps_app <- function(project = ".", default_feature = NULL,
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
 
   # take local version of project (rather than remote)
+  check_dir_exists(project)
+  error_if_stageddeps_inexistent(project)
   local_repos <- add_project_to_local_repos(project, local_repos)
 
   app <- shiny::shinyApp(
