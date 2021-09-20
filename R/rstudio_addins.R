@@ -16,7 +16,11 @@ test_downstream_addin <- function(...) {
 }
 
 install_deps_addin <- function(...) {
-  install_deps_job(...)
+  install_deps_job()
+}
+
+install_deps_not_current_addin <- function(...) {
+  install_deps_job(install_project = FALSE)
 }
 
 upgrade_package_addin <- function(...) {
