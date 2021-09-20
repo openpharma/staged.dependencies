@@ -50,7 +50,7 @@
 #' @examples
 #' \dontrun{
 #'   dependency_table(verbose = 1)
-#'   dependency_table(project = "openpharma/stageddeps.food@@https://github.com",
+#'   dependency_table(project = "openpharma/stageddeps.food@https://github.com",
 #'                    project_type = "repo@@host",
 #'                    ref = "main")
 #'   x <- dependency_table(project = "path/to/project",
@@ -589,7 +589,7 @@ check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) 
 #' @examples
 #' \dontrun{
 #'   x <- dependency_table("openpharma/stageddeps.electricity",
-#'     project_type = "repo@@host", feature = "main")
+#'     project_type = "repo@host", feature = "main")
 #'
 #'   # get external package dependencies
 #'   ex_deps <- get_all_external_dependencies(x)
