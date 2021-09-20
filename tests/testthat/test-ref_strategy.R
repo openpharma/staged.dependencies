@@ -80,10 +80,48 @@ test_that("determine_ref works", {
     structure("devel", type = "branch")
   )
 
+
   # neither "feature1@release" nor "release" branches exist, so "main" is the fallback
   expect_equal(
     determine_ref("feature1@release", data.frame(ref = c("main", "devel"), type = "branch")),
     structure("main", type = "branch")
+  )
+
+  # tags are ignored if unmatched
+  expect_equal(
+    determine_ref(
+      "devel",
+      data.frame(ref = c("main", "devel", "v0.1", "v0.2"), type = c(rep("branch", 2), rep("tag", 2)))
+    ),
+    structure("devel", type = "branch")
+  )
+
+  # tags are matched
+  expect_equal(
+    determine_ref(
+      "v0.2",
+      data.frame(ref = c("main", "devel", "v0.1", "v0.2"), type = c(rep("branch", 2), rep("tag", 2)))
+    ),
+    structure("v0.2", type = "tag")
+  )
+
+  # if no tag/branch matched then fallback to main
+  expect_equal(
+    determine_ref(
+      "v0.3",
+      data.frame(ref = c("main", "devel", "v0.1", "v0.2"), type = c(rep("branch", 2), rep("tag", 2)))
+    ),
+    structure("main", type = "branch")
+  )
+
+
+  # tags and branch named the same, take the tag
+  expect_equal(
+    determine_ref(
+      "devel",
+      data.frame(ref = c("main", "devel", "v0.1", "devel"), type = c(rep("branch", 2), rep("tag", 2)))
+    ),
+    structure("devel", type = "tag")
   )
 
   # fallback "main" branch is not an available branch, so error
