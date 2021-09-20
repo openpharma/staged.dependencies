@@ -77,10 +77,11 @@ dependency_table <- function(project = ".",
   if (project_type == "local") {
     check_dir_exists(project)
     error_if_stageddeps_inexistent(project)
-    # infer feature
+    # infer ref if not given
     if (is.null(ref) || nchar(ref) == 0) {
-      ref <- infer_ref_from_branch(NULL, project)
+      ref <- infer_ref_from_branch(project)
     }
+    check_ref_consistency(ref, project)
   }
 
   if (project_type == "local") {

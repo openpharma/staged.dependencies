@@ -106,7 +106,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
   # in this case, for the local repo, we skip the checks
   # so that for example gitlab automation (which uses a detached HEAD)
   # does not incorrectly fail
-  current_branch <- git2r::repository_head(repo_dir)$name
+  current_branch <- get_current_branch(repo_dir)
   if (!is.null(current_branch)) {
     available_refs <- available_references(repo_dir, branch_flag = "local")
     branch <- select_ref_rule(available_refs)

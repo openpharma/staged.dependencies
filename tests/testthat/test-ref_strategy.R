@@ -3,35 +3,45 @@ test_that("infer_ref_from_branch works", {
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
 
-  # check that it infers the feature from branch name when no feature provided
+  # check that it infers the ref from branch name when no feature provided
   expect_equal(
-    infer_ref_from_branch(NULL, repo_dir),
+    infer_ref_from_branch(repo_dir),
     "main"
   )
 
-  # feature fix1@main matches existing branch fix1@main better than main, so a warning
+  # change branch and check that inferred ref matches new branch
+  git2r::checkout(repo_dir, "fix1@main")
+  expect_equal(
+    infer_ref_from_branch(repo_dir),
+    "fix1@main"
+  )
+
+  unlink(repo_dir, recursive = TRUE)
+})
+
+test_that("check_ref_consistency works" , {
+
+  repo_dir <- tempfile("stageddeps.food")
+  fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::checkout(repo_dir, "main")
+
+  # ref fix1@main matches existing branch fix1@main better than main, so a warning
   expect_warning(
-    infer_ref_from_branch("fix1@main", repo_dir),
+    check_ref_consistency("fix1@main", repo_dir),
     regexp = "Branch fix1@main would match fix1@main", fixed = TRUE
   )
 
   # checked out branch "main" is consistent with feature "superfix@main",
   # it still returns the feature "superfix@main" since it was provided
-  expect_equal(
-    infer_ref_from_branch("superfix@main", repo_dir),
-    "superfix@main"
+  expect_silent(
+    check_ref_consistency("superfix@main", repo_dir)
   )
 
-  # change branch and check that inferred feature matches new branch
   git2r::checkout(repo_dir, "fix1@main")
-  expect_equal(
-    infer_ref_from_branch(NULL, repo_dir),
-    "fix1@main"
-  )
 
   # checked out branch fix1@main is not consistent with provided branch superfix@main
   expect_warning(
-    infer_ref_from_branch("superfix@main", repo_dir),
+    check_ref_consistency("superfix@main", repo_dir),
     refexp = "fix1@main", fixed = TRUE
   )
 

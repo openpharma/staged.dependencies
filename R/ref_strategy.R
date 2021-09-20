@@ -99,26 +99,25 @@ determine_ref <- function(ref, available_refs, branch_sep = "@") {
        toString(branches_to_check), "'")
 }
 
-# infer the ref if it is null from the project branch
-# if ref is provided, check it is consistent with the checked out project branch
-# returns ref
-infer_ref_from_branch <- function(ref = NULL, project = ".") {
-  stopifnot(
-    is.null(ref) || is_non_empty_char(ref)
-  )
+# infer the ref if it is null
+infer_ref_from_branch <- function(project = ".") {
+  check_dir_exists(project)
+  return(get_current_branch(project))
+}
+
+
+check_ref_consistency <- function(ref, project = ".") {
   check_dir_exists(project)
   current_branch <- get_current_branch(project)
-  if (is.null(ref)) {
-    ref <- current_branch
+  # if in detached HEAD then we ignore the ref_consistency check (i.e. so gitlab
+  # automation does not throw a warning)
+  if (!is.null(current_branch)) {
+    expected_current_branch <- determine_ref(ref, available_refs = available_references(project))
+    if (current_branch != expected_current_branch) {
+      warning("Branch ", ref, " would match ", expected_current_branch, " in project ", project,
+              ", but currently checked out branch is ", current_branch)
+    }
   }
-
-  expected_current_branch <- determine_ref(ref, available_refs = available_references(project))
-  if (current_branch != expected_current_branch) {
-    warning("Branch ", ref, " would match ", expected_current_branch, " in project ", project,
-            ", but currently checked out branch is ", current_branch)
-  }
-
-  ref
 }
 
 
