@@ -244,7 +244,7 @@ get_true_deps_graph <- function(pkgs_df,
       # check if repo and host match for any inaccessible package
       for (downstream_dep in downstream_deps) {
         inaccessible_deps <- dplyr::filter(pkgs_df, .data$repo == downstream_dep$repo,
-          .data$host == downstream_dep$host, .data$accessible)
+          .data$host == downstream_dep$host, !.data$accessible)
 
         for (package_name in inaccessible_deps$package_name) {
           upstream_deps[[package_name]] <- c(upstream_deps[[package_name]], current_package_name)

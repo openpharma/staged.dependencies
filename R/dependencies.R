@@ -138,7 +138,7 @@ dependency_table <- function(project = ".",
   # sort the table
   internal_deps <- internal_deps[order(internal_deps$type, internal_deps$distance),
                                  c("package_name", "type", "distance", "branch",
-                                   "repo", "host", "cache_dir")]
+                                   "repo", "host", "cache_dir", "accessible")]
   rownames(internal_deps) <- NULL
 
   # install_index: order in which to install packages
