@@ -50,6 +50,7 @@ Collate:
     'dependencies_helper.R'
     'git_tools.R'
     'graph_methods.R'
+    'host.R'
     'rstudio_jobs.R'
     'rstudio_addins.R'
     'utils.R'

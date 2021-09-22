@@ -53,7 +53,10 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar =
       message(paste("clone", repo_url, "to directory", repo_dir))
     }
 
-    tryCatch({
+    cloned_repo <- tryCatch({
+      if (repo_url == "https://github.com/openpharma/stageddeps.food.git") {
+        stop("Test")
+      }
       git_repo <- git2r::clone(
         url = repo_url, local_path = repo_dir,
         credentials = creds, progress = verbose >= 2
@@ -69,31 +72,35 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar =
         stop("Host ", host, " not reachable")
       }
 
-      if (identical("https://github.com", host) || identical("https://code.roche.com", host)) {
-        # these queries should also work for Enterprise hosts
-        if (identical("https://github.com", host)) {
-          resp <- httr::GET(
-            paste0("https://api.github.com/repos/", repo),
-            # `token` argument not working
-            httr::add_headers(c(Authorization = paste("token", Sys.getenv(token_envvar))))
+      resp <- get_repo_access(repo, host, token_envvar)
+      if (!is.null(resp) && httr::status_code(resp) > 200) {
+        warning(
+          paste0("You cannot access ", repo, " at host ", host,
+            ". If you expect to be able to access this repo then ",
+            "Check that repo and token in envvar '", token_envvar,
+            "' are correct.\n",
+            "The response's content was:\n", paste(httr::content(resp), collapse = "\n"),
+            " Staged dependencies will continue, ignoring this repository. Some packages may ",
+            "not be able to be installed and its package name is assumed to match repository name."
           )
-        } else if (identical("https://code.roche.com", host)) {
-          resp <- httr::GET(
-            paste0(
-              "https://code.roche.com/api/v4/projects/",
-              utils::URLencode(repo, reserved = TRUE)
-            ),
-            httr::add_headers(c(Authorization = paste("Bearer", Sys.getenv(token_envvar))))
+        )
+      } else{
+        warning(
+          paste0(
+            "Repo ", repo, " could ",
+            "not be cloned. The git2r::clone error is: ", e$cond,
+            "\nStaged dependencies will continue, ignoring this repository. Some packages may ",
+            "not be able to be installed and its package name is assumed to match repository name."
           )
-        }
-        if (!identical(resp$status, 200L)) {
-          stop(paste0("Could not access repo ", repo, " at host ", host,
-                      "'. Check that repo and token in envvar '", token_envvar,
-                      "' are correct.\n",
-                      "The response's content was:\n", paste(httr::content(resp), collapse = "\n")))
-        }
+        )
       }
+
+      return(NULL)
     })
+
+    if (is.null(cloned_repo)) {
+      return(list(dir = as.character(NA), branch = as.character(NA), accessible = FALSE))
+    }
 
     # git automatically created local tracking branch (for master or main), checkout
     # corresponding remote branch and delete local branch, so we only have remote
@@ -131,7 +138,7 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar =
   }
   git2r::checkout(git_repo, branch = branch, force = TRUE)
 
-  return(list(dir = repo_dir, branch = branch_without_prefix))
+  return(list(dir = repo_dir, branch = branch_without_prefix, accessible = TRUE))
 }
 
 # Install the external deps required for a package

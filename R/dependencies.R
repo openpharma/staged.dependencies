@@ -91,13 +91,16 @@ dependency_table <- function(project = ".",
     repo_to_process <- list(parse_remote_project(project))
   }
 
-  # a dataframe with columns repo, host, branch, cache_dir
+  # a dataframe with columns repo, host, branch, cache_dir, accessible (logical)
   internal_deps <- rec_checkout_internal_deps(
     repo_to_process, feature, direction = direction,
     local_repos = local_repos, verbose = verbose
   )
 
-  internal_deps$package_name <- get_pkg_names_from_paths(internal_deps$cache_dir)
+  internal_deps$package_name[internal_deps$accessible] <-
+    get_pkg_names_from_paths(internal_deps$cache_dir[internal_deps$accessible])
+  internal_deps$package_name[!internal_deps$accessible] <-
+    unlist(lapply(strsplit(internal_deps$repo[!internal_deps$accessible], "/"), tail, 1))
 
   if (length(internal_deps$package_name) != length(unique(internal_deps$package_name))) {
     stop("Each R package must have a unique name")
@@ -111,6 +114,7 @@ dependency_table <- function(project = ".",
   # deps$external[["a"]] is a vector of external packages in "a"s DESCRIPTION file
   # where the elements of the lists are the package names found in internal_deps
   # deps is ordered topologically
+
   deps <- get_true_deps_graph(internal_deps, graph_directions = c("upstream", "downstream"))
 
   current_pkg <- internal_deps$package_name[
@@ -138,9 +142,9 @@ dependency_table <- function(project = ".",
   rownames(internal_deps) <- NULL
 
   # install_index: order in which to install packages
-  internal_deps$install_index <- vapply(internal_deps$package_name,
-                                        function(y) which(names(deps[["upstream_deps"]]) == y),
-                                        FUN.VALUE = numeric(1))
+  #internal_deps$install_index <- vapply(internal_deps$package_name,
+  #                                      function(y) which(names(deps[["upstream_deps"]]) == y),
+  #                                      FUN.VALUE = numeric(1))
   structure(
     list(
       project = if (project_type == "local") fs::path_abs(project) else project,

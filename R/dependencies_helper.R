@@ -217,11 +217,49 @@ get_true_deps_graph <- function(pkgs_df,
   # from the package DESCRIPTION files, filter for only
   # the internal packages
   upstream_deps <- lapply(pkgs_df$cache_dir,
-                          function(file) intersect(pkgs_df$package_name, desc::desc_get_deps(file)$package))
+    function(file) {
+      if (is.na(file)) {
+        return(character(0))
+      }
+      intersect(pkgs_df$package_name, desc::desc_get_deps(file)$package)
+    }
+  )
   names(upstream_deps) <- pkgs_df$package_name
+
+  # for inaccessible packages we need to get their upstream
+  # dependencies from yaml files of accessible repos
+  if (!all(pkgs_df$accessible)) {
+
+    # for each accessible package
+    for (idx in seq_len(nrow(pkgs_df))) {
+      if (!pkgs_df$accessible[idx]) {
+        next
+      }
+
+      current_package_name <- pkgs_df$package_name[idx]
+
+      # get the downstream deps of package_name (as specified by the yaml files)
+      downstream_deps <- get_yaml_deps_info(pkgs_df$cache_dir[idx])$downstream_repos
+
+      # check if repo and host match for any inaccessible package
+      for (downstream_dep in downstream_deps) {
+        inaccessible_deps <- dplyr::filter(pkgs_df, .data$repo == downstream_dep$repo,
+          .data$host == downstream_dep$host, .data$accessible)
+
+        for (package_name in inaccessible_deps$package_name) {
+          upstream_deps[[package_name]] <- c(upstream_deps[[package_name]], current_package_name)
+        }
+      }
+
+    }
+  }
+
 
   external <- lapply(pkgs_df$cache_dir,
                      function(file) {
+                       if (is.na(file)) {
+                         return(character(0))
+                       }
                        df <- desc::desc_get_deps(file)
                        df <- df[!df$package %in% c("R",pkgs_df$package_name), ]
                        rownames(df) <- NULL
