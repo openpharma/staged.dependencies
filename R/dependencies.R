@@ -562,6 +562,12 @@ check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) 
 
   for (index in seq_len(nrow(dep_structure$table))) {
     package_name <- dep_structure$table$package_name[[index]]
+
+    if (!dep_structure$table$accessible[index]) {
+      message("Skipping package ", package_name, " as it is inaccessible")
+      next
+    }
+
     yaml_deps <- get_yaml_deps_info(unlist(dep_structure$table$cache_dir[[index]]))
 
     # if there is no yaml file then skip checks

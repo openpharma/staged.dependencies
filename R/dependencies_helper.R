@@ -262,15 +262,16 @@ get_true_deps_graph <- function(pkgs_df,
 
 
   external <- lapply(pkgs_df$cache_dir,
-                     function(file) {
-                       if (is.na(file)) {
-                         return(character(0))
-                       }
-                       df <- desc::desc_get_deps(file)
-                       df <- df[!df$package %in% c("R",pkgs_df$package_name), ]
-                       rownames(df) <- NULL
-                       df
-                     } )
+    function(file) {
+      if (is.na(file)) {
+        return(data.frame(type = character(0), package = character(0), version = character(0)))
+      }
+      df <- desc::desc_get_deps(file)
+      df <- df[!df$package %in% c("R",pkgs_df$package_name), ]
+      rownames(df) <- NULL
+      df
+    }
+  )
   names(external) <- pkgs_df$package_name
 
   # order the dependencies
