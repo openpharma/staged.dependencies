@@ -35,8 +35,8 @@
 #'   \item{table}{`data.frame` contain one row per r package discovered, with the
 #'                following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
 #'                `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`,
-#'                `cache_dir` and `install_index` (the order to install the packages).
-#'                Note `cache_dir` and `install_index` are suppressed when printing the object}
+#'                `cache_dir`, `accessible`, `installable` and `install_index` (the order to install the packages).
+#'                Note some items are are suppressed when printing the object}
 #'   \item{deps}{`list` with three elements, `upstream_deps`is the graph where edges point from a package
 #'               to its upstream dependencies. They are ordered in installation order. The
 #'               `downstream_deps` list is the graph with the edge direction flipped,
@@ -135,16 +135,36 @@ dependency_table <- function(project = ".",
   internal_deps$distance[internal_deps$package_name %in% downstream_nodes$id] <-
     downstream_nodes$distance
 
+
+  # work out if any accessible packages are not installable
+  internal_deps$installable <- internal_deps$accessible
+
+  uninstallable_packages <- unique(
+    unlist(
+      lapply(internal_deps$package_name[!internal_deps$accessible],
+        function(pkg) get_descendants_distance(deps[["downstream_deps"]], pkg)$id
+      )
+    )
+  )
+
+  internal_deps$installable[internal_deps$package_name %in% uninstallable_packages] <- FALSE
+
+
   # sort the table
   internal_deps <- internal_deps[order(internal_deps$type, internal_deps$distance),
                                  c("package_name", "type", "distance", "branch",
-                                   "repo", "host", "cache_dir", "accessible")]
+                                   "repo", "host", "cache_dir", "accessible", "installable")]
   rownames(internal_deps) <- NULL
 
   # install_index: order in which to install packages
-  #internal_deps$install_index <- vapply(internal_deps$package_name,
-  #                                      function(y) which(names(deps[["upstream_deps"]]) == y),
-  #                                      FUN.VALUE = numeric(1))
+  internal_deps$install_index <- vapply(internal_deps$package_name,
+                                        function(y) which(names(deps[["upstream_deps"]]) == y),
+                                        FUN.VALUE = numeric(1))
+  # remove those that are not installable and relabel others 1, 2, 3...
+  internal_deps$install_index[!internal_deps$installable] <- NA
+  relabel_verctor <- seq_len(sum(!is.na(internal_deps$install_index)))
+  internal_deps$install_index[order(internal_deps$install_index)[relabel_verctor]] <- relabel_verctor
+
   structure(
     list(
       project = if (project_type == "local") fs::path_abs(project) else project,
@@ -161,11 +181,23 @@ dependency_table <- function(project = ".",
 
 #' @export
 print.dependency_structure <- function(x, ...) {
-  # do not show the cache dir or install order when printing
+
   table <- x$table
+  # do not show the cache dir or install order when printing
   table$cache_dir <- NULL
   table$install_index <- NULL
+
+  if (!all(table$installable)) {
+    table$package_name <- paste0(table$package_name, ifelse(table$installable, "", "*"))
+    cat("packages denoted with '*' cannot be installed as either they or one of their internal",
+        "dependencies is not accessible\n")
+  }
+
+  table$accessible <- NULL
+  table$installable <- NULL
+
   print(table, ...)
+
 }
 
 
