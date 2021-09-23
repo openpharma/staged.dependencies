@@ -2,7 +2,7 @@
 #'
 #' @md
 #' @param pkg_actions sorted `data.frame` with columns `cache_dir` pointing
-#' to package source and `actions`, processed from top to bottom in order
+#' to package source, `installable` and `actions`, processed from top to bottom in order
 #'  Each `actions` is a subset of "test", "build", "check", "install";
 #'  -  if test: run with `devtools::test`
 #'  -  if build: `R CMD build`
@@ -51,12 +51,18 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
   }
 
   message_if_verbose("Processing packages in order: ",
-                     toString(get_pkg_names_from_paths(pkg_actions$cache_dir)),
+                     toString(pkg_actions$package_name),
                      verbose = verbose)
 
   for (idx in seq_along(pkg_actions$cache_dir)) {
-    cache_dir <- pkg_actions$cache_dir[[idx]]
-    actions <- pkg_actions$actions[[idx]]
+    cache_dir <- pkg_actions$cache_dir[idx]
+    actions <- pkg_actions$actions[idx]
+
+    if (!pkg_actions$installable[idx]) {
+      message_if_verbose("skipping package ", pkg_actions$package_name[idx],
+        " as it (or one of its upstream dependencies) is not accessible", verbose = verbose)
+      next
+    }
 
     if (!dry) {
 
@@ -382,7 +388,7 @@ compute_actions <- function(pkg_df, pkg_names, actions, upstream_pkgs) {
   ) # outer list() to assign list elements to column
   pkg_df[pkg_df$package_name %in% upstream_pkgs, "actions"] <- "install"
   pkg_df %>% dplyr::arrange(.data$install_index) %>%
-    dplyr::select(.data$package_name, .data$cache_dir, .data$actions)
+    dplyr::select(.data$package_name, .data$cache_dir, .data$actions, .data$installable)
 }
 
 

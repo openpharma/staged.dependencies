@@ -160,11 +160,6 @@ dependency_table <- function(project = ".",
   internal_deps$install_index <- vapply(internal_deps$package_name,
                                         function(y) which(names(deps[["upstream_deps"]]) == y),
                                         FUN.VALUE = numeric(1))
-  # remove those that are not installable and relabel others 1, 2, 3...
-  internal_deps$install_index[!internal_deps$installable] <- NA
-  relabel_verctor <- seq_len(sum(!is.na(internal_deps$install_index)))
-  internal_deps$install_index[order(internal_deps$install_index)[relabel_verctor]] <- relabel_verctor
-
   structure(
     list(
       project = if (project_type == "local") fs::path_abs(project) else project,
