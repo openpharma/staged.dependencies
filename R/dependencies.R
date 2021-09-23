@@ -210,8 +210,9 @@ plot.dependency_structure <- function(x, y, ...){
     label = paste0(.data$package_name, "\n", .data$branch),
     title = paste0("<p>", .data$package_name,  "<br/>", .data$type, "<br/>", .data$branch, "</p>"),
     value = 3,
-    group = .data$type
-  ) %>% dplyr::select(c("id", "label", "title", "value", "group"))
+    group = .data$type,
+    shape = ifelse(.data$installable, "dot", "square")
+  ) %>% dplyr::select(c("id", "label", "title", "value", "group", "shape"))
 
   edges <- rbind(
     cbind_handle_empty(
@@ -256,6 +257,9 @@ plot.dependency_structure <- function(x, y, ...){
     dplyr::select(-tidyr::one_of("listed_by"))
 
   plot_title <- paste0("Dependency graph starting from ", x$current_pkg)
+  if (!all(x$table$accessible)) {
+    plot_title <- paste0(plot_title, "\n(installable packages denoted by circle nodes)")
+  }
   graph <- visNetwork::visNetwork(nodes, edges, width = "100%", main = plot_title) %>%
     # topological sort
     visNetwork::visHierarchicalLayout(sortMethod = "directed", direction = "RL") %>%
