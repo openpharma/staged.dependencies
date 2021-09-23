@@ -100,7 +100,7 @@ dependency_table <- function(project = ".",
   internal_deps$package_name[internal_deps$accessible] <-
     get_pkg_names_from_paths(internal_deps$cache_dir[internal_deps$accessible])
   internal_deps$package_name[!internal_deps$accessible] <-
-    unlist(lapply(strsplit(internal_deps$repo[!internal_deps$accessible], "/"), tail, 1))
+    unlist(lapply(strsplit(internal_deps$repo[!internal_deps$accessible], "/"), utils::tail, 1))
 
   if (length(internal_deps$package_name) != length(unique(internal_deps$package_name))) {
     stop("Each R package must have a unique name")
