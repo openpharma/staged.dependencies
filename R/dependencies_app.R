@@ -79,14 +79,14 @@ install_deps_app <- function(project = ".", default_feature = NULL,
 
       output$nodesToInstall <- shiny::renderText({
         paste(setdiff(
-          compute_dep_structure()$table$package_name,
+          compute_dep_structure()$table$package_name[compute_dep_structure()$table$installable],
           input$network_proxy_nodes_selectedNodes
         ), collapse = "\n")
       })
       shiny::observeEvent(input$done, {
 
         dependency_packages <- setdiff(
-          compute_dep_structure()$table$package_name,
+          compute_dep_structure()$table$package_name[compute_dep_structure()$table$installable],
           input$network_proxy_nodes_selectedNodes
         )
 
