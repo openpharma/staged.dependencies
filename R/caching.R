@@ -217,6 +217,7 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
         select_branch_rule = function(available_branches) {
           determine_branch(feature, available_branches)
         },
+        must_work = (length(hashed_processed_repos) == 0), # first repo must be accessible
         verbose = verbose
       )
     }

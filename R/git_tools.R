@@ -33,9 +33,10 @@ check_only_remote_branches <- function(git_repo) {
 # no longer there
 # select_branch_rule is a function that is given the available branches
 # and selects one of them
+# if must_work is TRUE then error is thrown if repo is not accessible, if FALSE then wantning is thrown
 # verbose level: 0: none, 1: print high-level git operations, 2: print git clone detailed messages etc.
 # returns: list of repo_dir and checked out branch (according to branch rule)
-checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar = NULL, verbose = 0) {
+checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar = NULL, must_work = FALSE, verbose = 0) {
   stopifnot(
     is.function(select_branch_rule),
     endsWith(repo_url, ".git")
@@ -72,24 +73,26 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar =
         stop("Host ", host, " not reachable")
       }
 
+      notification_function <- if (must_work) stop else warning
+
       resp <- get_repo_access(repo, host, token_envvar)
       if (!is.null(resp) && httr::status_code(resp) > 200) {
-        warning(
+        notification_function(
           paste0("You cannot access ", repo, " at host ", host,
             ". If you expect to be able to access this repo then ",
-            "Check that repo and token in envvar '", token_envvar,
+            "check that repo and token in envvar '", token_envvar,
             "' are correct.\n",
             "The response's content was:\n", paste(httr::content(resp), collapse = "\n"),
-            " Staged dependencies will continue, ignoring this repository. Some packages may ",
+            if (!must_work) " Staged dependencies will continue, ignoring this repository. Some packages may ",
             "not be able to be installed and its package name is assumed to match repository name."
           )
         )
       } else{
-        warning(
+        notification_function(
           paste0(
             "Repo ", repo, " could ",
             "not be cloned. The git2r::clone error is: ", e$cond,
-            "\nStaged dependencies will continue, ignoring this repository. Some packages may ",
+            if (!must_work) "\nStaged dependencies will continue, ignoring this repository. Some packages may ",
             "not be able to be installed and its package name is assumed to match repository name."
           )
         )
