@@ -33,6 +33,11 @@ install_deps_job <- function(project = ".", verbose = 1, create_args = list(), .
   script <- glue::glue('x <- do.call(staged.dependencies::dependency_table, {create_args_str})
                        print(x)
                        do.call(staged.dependencies::install_deps, {install_args_str})')
+  dot_args <- list(...)
+
+  if (!is.null(dot_args[["install_project"]]) && !dot_args[["install_project"]]) {
+    script <- paste(script, "\n", "message('Use devtools::install() to install the current package if required')")
+  }
   run_job(script, "install_deps", paste0("Install deps of ", basename(project)))
 }
 

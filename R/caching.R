@@ -132,7 +132,8 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rul
     )
   }
 
-  return(list(dir = repo_dir, branch = paste0("local (", current_branch, ")"), accessible = TRUE))
+  return(list(dir = repo_dir, branch = paste0("local (", current_branch, ")"),
+              sha = get_short_sha(repo_dir), accessible = TRUE))
 }
 
 # local_repos: data.frame that maps repo and host to local directory
@@ -192,6 +193,7 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
   hashed_processed_repos <- list()
   hashed_repos_branches <- list()
   hashed_repos_accessible <- list()
+  hashed_repos_shas <- list()
 
   while (length(hashed_repos_to_process) > 0) {
     hashed_repo_and_host <- hashed_repos_to_process[[1]]
@@ -237,6 +239,7 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
     hashed_processed_repos[[hashed_repo_and_host]] <- repo_info$dir
     hashed_repos_branches[[hashed_repo_and_host]] <- repo_info$branch
     hashed_repos_accessible[[hashed_repo_and_host]] <- repo_info$accessible
+    hashed_repos_shas[[hashed_repo_and_host]] <- repo_info$sha
     hashed_repos_to_process <- union(
       hashed_repos_to_process, setdiff(hashed_new_repos, names(hashed_processed_repos))
     )
@@ -246,5 +249,6 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
   df$cache_dir <- unlist(unname(hashed_processed_repos))
   df$branch <- unlist(unname(hashed_repos_branches))
   df$accessible <- unlist(unname(hashed_repos_accessible))
+  df$sha <- unlist(unname(hashed_repos_shas))
   return(df)
 }

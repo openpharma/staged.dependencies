@@ -17,7 +17,7 @@ run_package_actions(
 }
 \arguments{
 \item{pkg_actions}{sorted \code{data.frame} with columns \code{cache_dir} pointing
-to package source, \code{installable} and \code{actions}, processed from top to bottom in order
+to package source, \code{sha}, \code{installable} and \code{actions}, processed from top to bottom in order
 Each \code{actions} is a subset of "test", "build", "check", "install";
 \itemize{
 \item if test: run with \code{devtools::test}

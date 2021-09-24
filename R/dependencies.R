@@ -34,7 +34,7 @@
 #'   \item{current_pkg}{The R package name of code in the `project` directory}
 #'   \item{table}{`data.frame` contain one row per r package discovered, with the
 #'                following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
-#'                `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`,
+#'                `distance` (minimum number of steps from `current_pkg`), `branch`, `repo`, `host`, `sha`
 #'                `cache_dir`, `accessible`, `installable` and `install_index` (the order to install the packages).
 #'                Note some items are are suppressed when printing the object}
 #'   \item{deps}{`list` with three elements, `upstream_deps`is the graph where edges point from a package
@@ -91,7 +91,8 @@ dependency_table <- function(project = ".",
     repo_to_process <- list(parse_remote_project(project))
   }
 
-  # a dataframe with columns repo, host, branch, cache_dir, accessible (logical)
+
+  # a dataframe with columns repo, host, branch, sha, cache_dir, accessible (logical)
   internal_deps <- rec_checkout_internal_deps(
     repo_to_process, feature, direction = direction,
     local_repos = local_repos, verbose = verbose
@@ -153,7 +154,8 @@ dependency_table <- function(project = ".",
   # sort the table
   internal_deps <- internal_deps[order(internal_deps$type, internal_deps$distance),
                                  c("package_name", "type", "distance", "branch",
-                                   "repo", "host", "cache_dir", "accessible", "installable")]
+                                   "repo", "host", "sha", "cache_dir", "accessible", "installable")]
+
   rownames(internal_deps) <- NULL
 
   # install_index: order in which to install packages
@@ -202,7 +204,7 @@ print.dependency_structure <- function(x, ...) {
 plot.dependency_structure <- function(x, y, ...){
 
   # construct visNetwork graph
-  require_pkgs(c("dplyr", "visNetwork"))
+  require_pkgs("visNetwork")
   # todo: put branch below node: https://github.com/almende/vis/issues/3436
   nodes <- x$table %>% dplyr::mutate(
     id = .data$package_name,

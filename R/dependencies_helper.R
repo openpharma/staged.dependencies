@@ -2,7 +2,7 @@
 #'
 #' @md
 #' @param pkg_actions sorted `data.frame` with columns `cache_dir` pointing
-#' to package source, `installable` and `actions`, processed from top to bottom in order
+#' to package source, `sha`, `installable` and `actions`, processed from top to bottom in order
 #'  Each `actions` is a subset of "test", "build", "check", "install";
 #'  -  if test: run with `devtools::test`
 #'  -  if build: `R CMD build`
@@ -55,6 +55,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
                      verbose = verbose)
 
   for (idx in seq_along(pkg_actions$cache_dir)) {
+
     cache_dir <- pkg_actions$cache_dir[idx]
     actions <- pkg_actions$actions[idx]
 
@@ -62,6 +63,15 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
       message_if_verbose("skipping package ", pkg_actions$package_name[idx],
         " as it (or one of its upstream dependencies) is not accessible", verbose = verbose)
       next
+    }
+
+
+    # check cached sha matches expect sha
+    sha <- pkg_actions$sha[idx]
+    cached_sha <- get_short_sha(cache_dir)
+    if (sha != cached_sha) {
+      stop("The SHA in ", cache_dir, ": ", cached_sha,
+           " does not match the sha in the dependency_structure object: ", sha)
     }
 
     if (!dry) {
@@ -389,7 +399,7 @@ compute_actions <- function(pkg_df, pkg_names, actions, upstream_pkgs) {
   ) # outer list() to assign list elements to column
   pkg_df[pkg_df$package_name %in% upstream_pkgs, "actions"] <- "install"
   pkg_df %>% dplyr::arrange(.data$install_index) %>%
-    dplyr::select(.data$package_name, .data$cache_dir, .data$actions, .data$installable)
+    dplyr::select(.data$package_name, .data$cache_dir, .data$actions, .data$sha, .data$installable)
 }
 
 
