@@ -226,7 +226,7 @@ install_repo_add_sha <- function(repo_dir,
 
   # only install if SHA differs
   if (identical(commit_sha, get_local_sha(desc$Package))) {
-    message("Skipping installation of", repo_dir, "since same commit sha already installed")
+    message("Skipping installation of ", repo_dir, " since same commit sha already installed")
     return(invisible(NULL))
   }
 

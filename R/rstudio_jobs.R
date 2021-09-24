@@ -36,7 +36,7 @@ install_deps_job <- function(project = ".", verbose = 1, create_args = list(), .
   dot_args <- list(...)
 
   if (!is.null(dot_args[["install_project"]]) && !dot_args[["install_project"]]) {
-    script <- paste(script, "\n", "print('Use devtools::install() to install the current package if required')")
+    script <- paste(script, "\n", "message('Use devtools::install() to install the current package if required')")
   }
   run_job(script, "install_deps", paste0("Install deps of ", basename(project)))
 }
