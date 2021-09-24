@@ -133,7 +133,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rul
   }
 
   return(list(dir = repo_dir, branch = paste0("local (", current_branch, ")"),
-              sha = substr(git2r::sha(git2r::repository_head(repo_dir)), 1, 7)))
+              sha = get_short_sha(repo_dir)))
 }
 
 # local_repos: data.frame that maps repo and host to local directory
