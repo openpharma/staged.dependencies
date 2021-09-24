@@ -91,7 +91,7 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar =
         notification_function(
           paste0(
             "Repo ", repo, " could ",
-            "not be cloned. The git2r::clone error is: ", e$cond,
+            "not be cloned. The git2r::clone error is: ", e$message,
             if (!must_work) "\nStaged dependencies will continue, ignoring this repository. Some packages may ",
             "not be able to be installed and its package name is assumed to match repository name."
           )
