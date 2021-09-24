@@ -35,7 +35,7 @@ install_deps_job <- function(project = ".", verbose = 1, create_args = list(), .
                        do.call(staged.dependencies::install_deps, {install_args_str})')
   dot_args <- list(...)
   if (!is.null(dot_args[["install_projects"]]) && !dot_args[["install_projects"]]) {
-    script <- paste(script, "\n", "Use devtools::install() to install the current package if required")
+    script <- paste(script, "\n", "print('Use devtools::install() to install the current package if required')")
   }
   run_job(script, "install_deps", paste0("Install deps of ", basename(project)))
 }
