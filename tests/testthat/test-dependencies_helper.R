@@ -154,6 +154,8 @@ test_that("run_package_actions works", {
       data.frame(
         cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
         actions = c("install", "install"),
+        sha = c(get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra"))),
+                get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.electricity")))),
         stringsAsFactors = FALSE
       ),
       install_external_deps = FALSE
@@ -167,6 +169,23 @@ test_that("run_package_actions works", {
 
     )
   )
+
+  #invalid sha
+  expect_error(
+    run_package_actions(
+      data.frame(
+        cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
+        actions = c("install", "install"),
+        sha = c("xxx","yyy"),
+        stringsAsFactors = FALSE
+      ),
+      install_external_deps = FALSE
+    )
+
+  )
+
+
+
 })
 
 # parse_deps_table ----

@@ -34,7 +34,7 @@
 #'   \item{current_pkg}{The R package name of code in the `project` directory}
 #'   \item{table}{`data.frame` contain one row per r package discovered, with the
 #'                following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
-#'                `distance` (minimum number of steps from `current_pkg`), `ref`, `repo`, `host`,
+#'                `distance` (minimum number of steps from `current_pkg`), `ref`, `repo`, `host`, `sha`,
 #'                `cache_dir` and `install_index` (the order to install the packages).
 #'                Note `cache_dir` and `install_index` are suppressed when printing the object}
 #'   \item{deps}{`list` with three elements, `upstream_deps`is the graph where edges point from a package
@@ -93,7 +93,8 @@ dependency_table <- function(project = ".",
     repo_to_process <- list(parse_remote_project(project))
   }
 
-  # a dataframe with columns repo, host, ref, cache_dir
+
+  # a dataframe with columns repo, host, ref, sha, cache_dir
   internal_deps <- rec_checkout_internal_deps(
     repo_to_process, ref, direction = direction,
     local_repos = local_repos, verbose = verbose
@@ -135,8 +136,9 @@ dependency_table <- function(project = ".",
 
   # sort the table
   internal_deps <- internal_deps[order(internal_deps$type, internal_deps$distance),
+
                                  c("package_name", "type", "distance", "ref",
-                                   "repo", "host", "cache_dir")]
+                                   "repo", "host", "sha", "cache_dir")]
   rownames(internal_deps) <- NULL
 
   # install_index: order in which to install packages
@@ -173,7 +175,7 @@ print.dependency_structure <- function(x, ...) {
 plot.dependency_structure <- function(x, y, ...){
 
   # construct visNetwork graph
-  require_pkgs(c("dplyr", "visNetwork"))
+  require_pkgs("visNetwork")
   # todo: put branch below node: https://github.com/almende/vis/issues/3436
   nodes <- x$table %>% dplyr::mutate(
     id = .data$package_name,

@@ -143,7 +143,8 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     stop("The selected reference should have a type attribute as 'branch' or 'tag'")
   }
 
-  return(list(dir = repo_dir, ref = selected_ref))
+  return(list(dir = repo_dir, ref = selected_ref,
+              sha = get_short_sha(repo_dir)))
 }
 
 # Install the external deps required for a package
@@ -246,4 +247,9 @@ install_repo_add_sha <- function(repo_dir,
   # we do not clean up the DESCRIPTION file
 
   invisible(NULL)
+}
+
+
+get_short_sha <- function(repo_dir) {
+  substr(git2r::sha(git2r::repository_head(repo_dir)), 1, 7)
 }

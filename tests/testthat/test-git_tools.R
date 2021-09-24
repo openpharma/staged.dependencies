@@ -42,10 +42,13 @@ test_that("checkout_repo works (requires Internet access)", {
       regex = "ref inexistantBranch is unavailable for this repo", fixed = TRUE
     )
     # checkout existing branch
+    x <- checkout_repo(repo_dir, "https://github.com/openpharma/stageddeps.water.git",
+                       function(...) structure("main", type = "branch"), token_envvar = NULL)
+    # do not test SHA equality, just that it is there
+    x$sha <- "test"
     expect_equal(
-      checkout_repo(repo_dir, "https://github.com/openpharma/stageddeps.water.git",
-                    function(...) structure("main", type = "branch"), token_envvar = NULL),
-      list(dir = repo_dir, ref = structure("main", type = "branch"))
+      x,
+      list(dir = repo_dir, ref = structure("main", type = "branch"), sha = "test")
     )
     unlink(repo_dir, recursive = TRUE)
 
