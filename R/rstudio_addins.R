@@ -16,10 +16,6 @@ test_downstream_addin <- function(...) {
 }
 
 install_deps_addin <- function(...) {
-  install_deps_job(project = rstudioapi::getActiveProject())
-}
-
-install_deps_not_current_addin <- function(...) {
   install_deps_job(project = rstudioapi::getActiveProject(), install_project = FALSE)
 }
 
