@@ -171,7 +171,7 @@ print.dependency_structure <- function(x, ...) {
 plot.dependency_structure <- function(x, y, ...){
 
   # construct visNetwork graph
-  require_pkgs(c("dplyr", "visNetwork"))
+  require_pkgs("visNetwork")
   # todo: put branch below node: https://github.com/almende/vis/issues/3436
   nodes <- x$table %>% dplyr::mutate(
     id = .data$package_name,
