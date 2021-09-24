@@ -126,7 +126,12 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar =
     check_only_remote_branches(git_repo)
     # prune (remove) remote branches that were deleted from remote
     git2r::config(git_repo, remote.origin.prune = "true")
-    git2r::fetch(git_repo, name = "origin", credentials = creds, verbose = verbose >= 2)
+    tryCatch({
+      git2r::fetch(git_repo, name = "origin", credentials = creds, verbose = verbose >= 2)
+    }, error = function(cond) {
+      warning("Unable to fetch from remote for ", repo_dir, " using state of repo found in cache.\n",
+              "Error message when trying to fetch: ", cond$message)
+    })
   }
 
   check_only_remote_branches(git_repo)
