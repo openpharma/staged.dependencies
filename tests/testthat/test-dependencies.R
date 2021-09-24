@@ -15,13 +15,14 @@ mock_rec_checkout_internal_deps <- function(source_dir) function(repos_to_proces
     repo = paste0("openpharma/", local_pkgs),
     host = rep("https://github.com", 6),
     branch = c("main", "main", "local (main)", "main", "main", "main"),
+    sha = rep("test", 6),
     stringsAsFactors = FALSE
   ) %>% dplyr::mutate(cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", branch))))
   # fs::dir_copy does not seem to be vectorized (although stated in the doc) -> use Map
   clear_cache()
   Map(fs::dir_copy, file.path(source_dir, internal_deps$pkg), internal_deps$cache_dir)
 
-  return(internal_deps %>% dplyr::select(repo, host, cache_dir, branch))
+  return(internal_deps %>% dplyr::select(repo, host, cache_dir, branch, sha))
 }
 
 test_that("dependency_table works", {
@@ -58,8 +59,9 @@ test_that("dependency_table works", {
       ) %>% dplyr::mutate(
         repo = paste0("openpharma/", package_name),
         host = rep("https://github.com", 6),
-        cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", branch)))
-      ) %>% dplyr::select(package_name, type, distance, branch, repo, host, cache_dir, install_index)
+        cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", branch))),
+        sha =  rep("test", 6)
+      ) %>% dplyr::select(package_name, type, distance, branch, repo, host, sha, cache_dir, install_index)
     )
 
     expect_output(
