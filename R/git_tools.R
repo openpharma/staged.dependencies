@@ -138,6 +138,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     if (verbose >= 1) {
       message(paste("   - checkout tag", selected_ref, "in directory", repo_dir))
       git2r::branch_create(commit = git2r::commits(repo = repo_dir, ref = selected_ref, n = 1)[[1]], force = TRUE, name = paste0("staged_dep_tag_", selected_ref))
+      git2r::checkout(git_repo, branch =  paste0("staged_dep_tag_", selected_ref), force = TRUE)
     }
   } else{
     stop("The selected reference should have a type attribute as 'branch' or 'tag'")
