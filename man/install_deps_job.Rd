@@ -47,7 +47,7 @@ Install dependencies job
 \examples{
 \dontrun{
 install_deps_job()
-install_deps_job(create_args = list(feature = "6_makegraph@main"))
+install_deps_job(create_args = list(ref = "6_makegraph@main"))
 
 # install all dependencies
 install_deps_job(create_args = list(direction = c("upstream", "downstream")))

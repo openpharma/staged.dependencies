@@ -48,7 +48,7 @@ Check & install downstream job
 \dontrun{
 check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"))
 check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"),
-                     list(create_arg = feature = "6_makegraph@main"))
+                     list(create_arg = list(ref = "6_makegraph@main")))
 check_downstream_job(only_tests = TRUE)
 }
 }

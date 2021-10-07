@@ -22,22 +22,23 @@ get_current_branch <- function(git_repo) {
   git2r::repository_head(git_repo)$name
 }
 
-# checks that all branches start with origin/
+# checks that all branches start with origin/ (or staged_dep_tag_ which is the name of a branch where
+# staged_dep has previously checked out a version where ref = <<tag_name>>)
 check_only_remote_branches <- function(git_repo) {
   all_branches <- names(git2r::branches(git_repo))
-  stopifnot(all(vapply(all_branches, function(x) startsWith(x, "origin/"), logical(1))))
+  stopifnot(all(vapply(all_branches, function(x) startsWith(x, "origin/") || startsWith(x, "staged_dep_tag_"), logical(1))))
 }
 
 # clones the repo and only keeps remote branches
 # if repo is already there, fetches and prunes (removes) remote branches that are
 # no longer there
-# select_branch_rule is a function that is given the available branches
+# select_ref_rule is a function that is given the available refs
 # and selects one of them
 # verbose level: 0: none, 1: print high-level git operations, 2: print git clone detailed messages etc.
-# returns: list of repo_dir and checked out branch (according to branch rule)
-checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar = NULL, verbose = 0) {
+# returns: list of repo_dir and checked out branch/ref (according to ref/branch rule)
+checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NULL, verbose = 0) {
   stopifnot(
-    is.function(select_branch_rule),
+    is.function(select_ref_rule),
     endsWith(repo_url, ".git")
   )
   check_verbose_arg(verbose)
@@ -113,25 +114,37 @@ checkout_repo <- function(repo_dir, repo_url, select_branch_rule, token_envvar =
     }
 
     git_repo <- git2r::repository(repo_dir)
-    check_only_remote_branches(git_repo)
     # prune (remove) remote branches that were deleted from remote
     git2r::config(git_repo, remote.origin.prune = "true")
     git2r::fetch(git_repo, name = "origin", credentials = creds, verbose = verbose >= 2)
   }
 
   check_only_remote_branches(git_repo)
-  available_branches <- names(git2r::branches(git_repo))
-  available_branches <- setdiff(gsub("origin/", "", available_branches, fixed = TRUE), "HEAD")
-  branch_without_prefix <- select_branch_rule(available_branches)
-  stopifnot(branch_without_prefix %in% available_branches)
-  branch <- paste0("origin/", branch_without_prefix)
 
-  if (verbose >= 1) {
-    message(paste("   - checkout branch", branch, "in directory", repo_dir))
+  available_refs <- available_references(repo_dir)
+  selected_ref <- select_ref_rule(available_refs)
+
+  if (attr(selected_ref, "type") == "branch") {
+    if (!selected_ref %in% available_refs$ref[available_refs$type == "branch"]) {
+      stop("ref ", selected_ref, " is unavailable for this repo")
+    }
+
+    branch <- paste0("origin/", selected_ref)
+    if (verbose >= 1) {
+      message(paste("   - checkout branch", branch, "in directory", repo_dir))
+    }
+    git2r::checkout(git_repo, branch = branch, force = TRUE)
+  } else if (attr(selected_ref, "type") == "tag") {
+    if (verbose >= 1) {
+      message(paste("   - checkout tag", selected_ref, "in directory", repo_dir))
+      git2r::branch_create(commit = git2r::commits(repo = repo_dir, ref = selected_ref, n = 1)[[1]], force = TRUE, name = paste0("staged_dep_tag_", selected_ref))
+      git2r::checkout(git_repo, branch =  paste0("staged_dep_tag_", selected_ref), force = TRUE)
+    }
+  } else{
+    stop("The selected reference should have a type attribute as 'branch' or 'tag'")
   }
-  git2r::checkout(git_repo, branch = branch, force = TRUE)
 
-  return(list(dir = repo_dir, branch = branch_without_prefix,
+  return(list(dir = repo_dir, ref = selected_ref,
               sha = get_short_sha(repo_dir)))
 }
 

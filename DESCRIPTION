@@ -43,13 +43,13 @@ Suggests:
     visNetwork
 VignetteBuilder: knitr
 Collate: 
-    'branching_strategy.R'
     'caching.R'
     'dependencies.R'
     'dependencies_app.R'
     'dependencies_helper.R'
     'git_tools.R'
     'graph_methods.R'
+    'ref_strategy.R'
     'rstudio_jobs.R'
     'rstudio_addins.R'
     'utils.R'
