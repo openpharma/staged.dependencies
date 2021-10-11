@@ -6,8 +6,8 @@
 #' @md
 #' @param project (`character`) directory of project (for which to calculate the
 #'   dependency structure); must be a git repository.
-#' @param default_feature (`character`) default feature, see also the parameter
-#'   `feature` of `\link{install_deps}`
+#' @param default_ref (`character`) default ref (branch/tag), see also the parameter
+#'   `ref` of `\link{dependency_table}`
 #' @param local_repos (`data.frame`) repositories that should be taken from
 #'   local rather than cloned; columns are `repo, host, directory`
 #' @param run_gadget (`logical`) whether to run the app as a gadget
@@ -16,13 +16,15 @@
 #' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
 #'
-install_deps_app <- function(project = ".", default_feature = NULL,
+install_deps_app <- function(project = ".", default_ref = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              run_gadget = TRUE, run_as_job = TRUE,
                              verbose = 1, install_external_deps = TRUE, ...) {
-  require_pkgs(c("shiny", "miniUI"))
+  require_pkgs(c("shiny", "miniUI", "visNetwork"))
 
   # take local version of project (rather than remote)
+  check_dir_exists(project)
+  error_if_stageddeps_inexistent(project)
   local_repos <- add_project_to_local_repos(project, local_repos)
 
   app <- shiny::shinyApp(
@@ -30,7 +32,7 @@ install_deps_app <- function(project = ".", default_feature = NULL,
       miniUI::miniPage(
         shiny::fillCol(
           shiny::tagList(
-            shiny::textInput("feature", label = "Feature: ", value = default_feature),
+            shiny::textInput("ref", label = "Ref: ", value = default_ref),
             shiny::actionButton("compute_graph", "Compute graph")
           ),
           miniUI::miniContentPanel(
@@ -50,11 +52,11 @@ install_deps_app <- function(project = ".", default_feature = NULL,
     },
     server = function(input, output, session) {
       compute_dep_structure <- shiny::eventReactive(input$compute_graph, {
-        message_if_verbose("Computing dependency structure for feature ",
-                           input$feature, " starting from project ", project,
+        message_if_verbose("Computing dependency structure for ref ",
+                           input$ref, " starting from project ", project,
                            verbose = verbose)
 
-        dependency_table(project, feature = input$feature,
+        dependency_table(project, ref = input$ref,
                          local_repos = local_repos, verbose = 2)
       },
       # do not ignore NULL to also compute initially with the default feature when
@@ -97,7 +99,7 @@ install_deps_app <- function(project = ".", default_feature = NULL,
           # this could be changed by using the importEnv argument
           # to jobRunScript and creating an install_deps job if dep_structure already exists in env
           install_deps_job(project = fs::path_abs(project), verbose = verbose,
-                           create_args = list(local_repos = local_repos, feature = input$feature),
+                           create_args = list(local_repos = local_repos, ref = input$ref),
                            dependency_packages = dependency_packages,
                            install_external_deps = TRUE,
                            install_direction = c("upstream", "downstream"),

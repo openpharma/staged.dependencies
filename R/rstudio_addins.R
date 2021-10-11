@@ -4,19 +4,19 @@ NULL
 # Helper functions for addins since the addin functions are invoked without arguments
 
 install_deps_app_addin <- function(...) {
-  install_deps_app(verbose = 1)
+  install_deps_app(verbose = 1, project = rstudioapi::getActiveProject())
 }
 
 check_downstream_addin <- function(...) {
-  check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"))
+  check_downstream_job(project = rstudioapi::getActiveProject(), check_args = Sys.getenv("RCMDCHECK_ARGS"))
 }
 
 test_downstream_addin <- function(...) {
-  check_downstream_job(only_tests = TRUE)
+  check_downstream_job(project = rstudioapi::getActiveProject(), only_tests = TRUE)
 }
 
 install_deps_addin <- function(...) {
-  install_deps_job(...)
+  install_deps_job(project = rstudioapi::getActiveProject(), install_project = FALSE)
 }
 
 upgrade_package_addin <- function(...) {

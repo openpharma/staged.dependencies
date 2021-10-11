@@ -2,12 +2,12 @@
 % Please edit documentation in R/caching.R
 \name{rec_checkout_internal_deps}
 \alias{rec_checkout_internal_deps}
-\title{Recursively check out all repos to match branch determined by feature
+\title{Recursively check out all repos to match branch determined by ref
 starting from repos_to_process.}
 \usage{
 rec_checkout_internal_deps(
   repos_to_process,
-  feature,
+  ref,
   direction = c("upstream"),
   local_repos = get_local_pkgs_from_config(),
   verbose = 0
@@ -16,7 +16,7 @@ rec_checkout_internal_deps(
 \arguments{
 \item{repos_to_process}{\code{list} of \code{list(repo, host)} repos to start from}
 
-\item{feature}{(\code{character}) feature to build}
+\item{ref}{(\code{character}) tag/branch to build}
 
 \item{direction}{(\code{character}) direction in which to discover packages
 either or both of "upstream" and "downstream"

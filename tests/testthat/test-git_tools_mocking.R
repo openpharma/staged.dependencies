@@ -37,7 +37,7 @@ test_that("checkout_repo with mocking works", {
     expect_output(
       checkout_repo(repo_dir,
                     "REPLACED/stageddeps.food.git",
-                    function(...) "unittest_branch1", token_envvar = NULL),
+                    function(...) structure("unittest_branch1", type = "branch"), token_envvar = NULL),
       regexp = "Mocking git2r::clone", fixed = TRUE
     )
 
@@ -46,8 +46,8 @@ test_that("checkout_repo with mocking works", {
       expect_error(
         checkout_repo(repo_dir,
                       "REPLACED/stageddeps.food.git",
-                      function(...) "inexistantBranch", token_envvar = NULL),
-        regexp = "available_branches", fixed = TRUE
+                      function(...) structure("inexistantBranch", type = "branch"), token_envvar = NULL),
+        regexp = "ref inexistantBranch is unavailable for this repo", fixed = TRUE
       ),
       regexp = "Mocking git2r::fetch", fixed = TRUE
     )
@@ -55,7 +55,7 @@ test_that("checkout_repo with mocking works", {
     expect_output(
       checkout_repo(repo_dir,
                     "REPLACED/stageddeps.food.git",
-                    function(...) "unittest_branch2", token_envvar = NULL),
+                    function(...) structure("unittest_branch2", type = "branch"), token_envvar = NULL),
       regexp = "Mocking git2r::fetch", fixed = TRUE
     )
 

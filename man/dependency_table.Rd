@@ -7,7 +7,7 @@
 dependency_table(
   project = ".",
   project_type = c("local", "repo@host")[1],
-  feature = NULL,
+  ref = NULL,
   local_repos = get_local_pkgs_from_config(),
   direction = c("upstream", "downstream"),
   verbose = 1
@@ -23,7 +23,7 @@ is assumed.}
 
 \item{project_type}{(\code{character}) See \code{project} argument}
 
-\item{feature}{(\code{character}) feature we want to build; inferred from the
+\item{ref}{(\code{character}) git branch (or tag) inferred from the
 branch of the project if not provided; warning if not consistent with
 current branch of project. If \code{project_type} is not \code{local} then this argument
 must be provided}
@@ -49,7 +49,7 @@ the object (absolute path if \code{project_type} is \code{local}}
 \item{current_pkg}{The R package name of code in the \code{project} directory}
 \item{table}{\code{data.frame} contain one row per r package discovered, with the
 following rows \code{package_name}, \code{type} (\code{current}, \code{upstream}, \code{downstream} or \code{other}),
-\code{distance} (minimum number of steps from \code{current_pkg}), \code{branch}, \code{repo}, \code{host},
+\code{distance} (minimum number of steps from \code{current_pkg}), \code{ref}, \code{repo}, \code{host}, \code{sha},
 \code{cache_dir} and \code{install_index} (the order to install the packages).
 Note \code{cache_dir} and \code{install_index} are suppressed when printing the object}
 \item{deps}{\code{list} with three elements, \code{upstream_deps}is the graph where edges point from a package
@@ -68,7 +68,8 @@ Create dependency structure of your package collection
 \dontrun{
   dependency_table(verbose = 1)
   dependency_table(project = "openpharma/stageddeps.food@https://github.com",
-                   project_type = "repo@host")
+                   project_type = "repo@host",
+                   ref = "main")
   x <- dependency_table(project = "path/to/project",
                         direction = c("upstream"))
   print(x)
