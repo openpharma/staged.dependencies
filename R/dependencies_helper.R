@@ -324,7 +324,7 @@ filter_pkgs <- function(pkg_df,
   check_direction_arg(install_direction)
 
   # filter by install_direction
-  if (install_direction !=  "all") {
+  if (install_direction != "all") {
     pkg_names <- pkg_df$package_name[pkg_df$type %in% c("current", install_direction)]
   } else {
     pkg_names <- pkg_df$package_name
