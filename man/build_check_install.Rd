@@ -6,7 +6,7 @@
 \usage{
 build_check_install(
   dep_structure,
-  install_direction = c("upstream", "downstream"),
+  install_direction = "all",
   packages_to_process = NULL,
   dry_install = FALSE,
   verbose = 1,
@@ -23,7 +23,7 @@ build_check_install(
 to apply action to and infer installation order;
 uses \code{dep_structure$deps} to infer upstream dependencies}
 
-\item{install_direction}{"upstream", "downstream" or both; which packages
+\item{install_direction}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
 
 \item{packages_to_process}{(\code{character}) An additional filter, only packages on

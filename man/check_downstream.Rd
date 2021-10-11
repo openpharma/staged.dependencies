@@ -51,7 +51,7 @@ ignored unless \code{install_direction = "upstream"} (because downstream
 deps automatically install all their upstream deps)}
     \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
 installed}
-    \item{\code{install_direction}}{"upstream", "downstream" or both; which packages
+    \item{\code{install_direction}}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
     \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
 list will be installed (advanced usage only)}

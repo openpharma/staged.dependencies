@@ -102,14 +102,14 @@ install_deps_app <- function(project = ".", default_ref = NULL,
                            create_args = list(local_repos = local_repos, ref = input$ref),
                            dependency_packages = dependency_packages,
                            install_external_deps = TRUE,
-                           install_direction = c("upstream", "downstream"),
+                           install_direction = "all",
                            ...)
         } else{
           install_deps(compute_dep_structure(),
                        dependency_packages = dependency_packages,
                        verbose = verbose,
                        install_external_deps = TRUE,
-                       install_direction = c("upstream", "downstream"),
+                       install_direction = "all",
                        ...)
         }
 

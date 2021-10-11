@@ -29,7 +29,7 @@ deps automatically install all their upstream deps)}
 \item{dry_install}{(\code{logical}) dry run that lists packages that would be
 installed}
 
-\item{install_direction}{"upstream", "downstream" or both; which packages
+\item{install_direction}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
 
 \item{install_external_deps}{logical to describe whether to install
@@ -56,7 +56,7 @@ x <- dependency_table(project = "./path/to/project")
 install_deps(x)
 
 # install all dependencies
-install_deps(x, direction = c("upstream", "downstream"))
+install_deps(x, install_direction = "all")
 
 }
 }

@@ -24,7 +24,7 @@ uses \code{dep_structure$deps} to infer upstream dependencies}
 however you need to ensure the \code{options("repos")} contains the urls of all expected repos
 (e.g. Bioconductor).}
 
-\item{install_direction}{"upstream", "downstream" or both; which packages
+\item{install_direction}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
 
 \item{packages_to_process}{(\code{character}) An additional filter, only packages on

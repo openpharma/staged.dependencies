@@ -221,6 +221,7 @@ get_true_deps_graph <- function(pkgs_df,
     is.data.frame(pkgs_df),
     all(c("package_name", "cache_dir") %in% colnames(pkgs_df))
   )
+  graph_directions <- check_direction_arg_deprecated(graph_directions)
   check_direction_arg(graph_directions)
 
   # get the Imports, Suggests, Depends for each package
@@ -246,10 +247,10 @@ get_true_deps_graph <- function(pkgs_df,
 
   res <- list()
   res[["external"]] <- external
-  if ("upstream" %in% graph_directions) {
+  if (graph_directions %in% c("upstream", "all")) {
     res[["upstream_deps"]] <- upstream_deps
   }
-  if ("downstream" %in% graph_directions) {
+  if (graph_directions %in% c("downstream", "all")) {
     downstream_deps <- lapply(upstream_deps, function(x) c())
     for (x in names(upstream_deps)) {
       for (y in upstream_deps[[x]]) {
@@ -323,7 +324,7 @@ filter_pkgs <- function(pkg_df,
   check_direction_arg(install_direction)
 
   # filter by install_direction
-  if (length(install_direction) == 1) {
+  if (install_direction !=  "all") {
     pkg_names <- pkg_df$package_name[pkg_df$type %in% c("current", install_direction)]
   } else {
     pkg_names <- pkg_df$package_name

@@ -9,7 +9,7 @@ dependency_table(
   project_type = c("local", "repo@host")[1],
   ref = NULL,
   local_repos = get_local_pkgs_from_config(),
-  direction = c("upstream", "downstream"),
+  direction = "all",
   verbose = 1
 )
 }
@@ -32,9 +32,7 @@ must be provided}
 local file system rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{direction}{(\code{character}) direction in which to discover packages
-either or both of "upstream" and "downstream".
-Note if both are chosen then the entire graph is created
-(i.e. upstream dependencies of downstream dependencies)}
+either "upstream","downstream" or "all".}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,

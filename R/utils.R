@@ -64,9 +64,17 @@ check_verbose_arg <- function(verbose) {
 }
 
 check_direction_arg <- function(direction) {
-  stopifnot(length(direction) <= 2 || length(direction) > 0)
-  stopifnot(all(direction %in% c("upstream", "downstream")))
+  stopifnot(rlang::is_scalar_character(direction) && direction %in% c("upstream", "downstream", "all"))
 }
+
+check_direction_arg_deprecated <- function(direction) {
+  if (length(direction) == 2 && all(c("upstream", "downstream") %in% direction)) {
+    warning('c("upstream", "downstream") is deprecated - please use "all".')
+    direction <- "all"
+  }
+  return(direction)
+}
+
 
 require_pkgs <- function(pkgs) {
   for (pkg in pkgs) {

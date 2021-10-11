@@ -2,6 +2,8 @@
 
 ## Breaking changes
 
+* Soft deprecated `direction = c("upstream", "downstream")`, now use `direction = "all"`.
+
 ## New feature and improvements
 
 ## Other improvements

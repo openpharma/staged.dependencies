@@ -20,9 +20,7 @@
 #' @param local_repos (`data.frame`) repositories that should be taken from
 #'   local file system rather than cloned; columns are `repo, host, directory`
 #' @param direction (`character`) direction in which to discover packages
-#'   either or both of "upstream" and "downstream".
-#'   Note if both are chosen then the entire graph is created
-#'   (i.e. upstream dependencies of downstream dependencies)
+#'   either "upstream","downstream" or "all".
 #' @param verbose (`numeric`) verbosity level, incremental;
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
@@ -62,12 +60,13 @@ dependency_table <- function(project = ".",
                              project_type = c("local", "repo@host")[1],
                              ref = NULL,
                              local_repos = get_local_pkgs_from_config(),
-                             direction = c("upstream", "downstream"),
+                             direction = "all",
                              verbose = 1) {
 
   # validate arguments
   stopifnot(is.data.frame(local_repos) || is.null(local_repos))
   check_verbose_arg(verbose)
+  direction <- check_direction_arg_deprecated(direction)
   check_direction_arg(direction)
   stopifnot(project_type %in% c("local", "repo@host"))
 
@@ -114,7 +113,7 @@ dependency_table <- function(project = ".",
   # deps$external[["a"]] is a vector of external packages in "a"s DESCRIPTION file
   # where the elements of the lists are the package names found in internal_deps
   # deps is ordered topologically
-  deps <- get_true_deps_graph(internal_deps, graph_directions = c("upstream", "downstream"))
+  deps <- get_true_deps_graph(internal_deps, graph_directions = "all")
 
   current_pkg <- internal_deps$package_name[
     internal_deps$repo == repo_to_process[[1]]$repo &
@@ -271,7 +270,7 @@ plot.dependency_structure <- function(x, y, ...){
 #'   deps automatically install all their upstream deps)
 #' @param dry_install (`logical`) dry run that lists packages that would be
 #'   installed
-#' @param install_direction "upstream", "downstream" or both; which packages
+#' @param install_direction "upstream", "downstream" or "all"; which packages
 #'   to install (according to dependency structure). By default this is only "upstream"
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of packages using `remotes::install_deps`.
@@ -293,7 +292,7 @@ plot.dependency_structure <- function(x, y, ...){
 #' install_deps(x)
 #'
 #' # install all dependencies
-#' install_deps(x, direction = c("upstream", "downstream"))
+#' install_deps(x, install_direction = "all")
 #'
 #' }
 install_deps <- function(dep_structure,
@@ -308,7 +307,8 @@ install_deps <- function(dep_structure,
   stopifnot(methods::is(dep_structure, "dependency_structure"))
   stopifnot(is.logical(install_project), is.logical(dry_install))
 
-  if (!all(install_direction %in% dep_structure$direction)) {
+  install_direction <- check_direction_arg_deprecated(install_direction)
+  if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
     stop("Invalid install_direction argument for this dependency object")
   }
 
@@ -374,7 +374,7 @@ check_downstream <- function(dep_structure,
     is.logical(dry_install_and_check)
   )
 
-  if (!"downstream" %in% dep_structure$direction) {
+  if (!dep_structure$direction %in% c("all", "downstream")) {
     stop("Invalid dependency table - downstream dependencies must be have been calculated")
   }
 
@@ -457,7 +457,7 @@ update_with_direct_deps <- function(dep_structure) {
 #'
 #' }
 build_check_install <- function(dep_structure,
-                               install_direction = c("upstream", "downstream"),
+                               install_direction = "all",
                                packages_to_process = NULL,
                                dry_install = FALSE,
                                verbose = 1,
@@ -469,7 +469,8 @@ build_check_install <- function(dep_structure,
   steps <- match.arg(steps, several.ok = TRUE)
   stopifnot(methods::is(dep_structure, "dependency_structure"))
 
-  if (!all(install_direction %in% dep_structure$direction)) {
+  install_direction <- check_direction_arg_deprecated(install_direction)
+  if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
     stop("Invalid install_direction argument for this dependency object")
   }
 
@@ -524,7 +525,7 @@ build_check_install <- function(dep_structure,
 check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
-  stopifnot(setequal(dep_structure$direction, c("upstream", "downstream")))
+  stopifnot(dep_structure$direction == "all")
   stopifnot(rlang::is_bool(skip_if_missing_yaml))
 
   extract_package_name <- function(repo_and_host, table) {
@@ -622,7 +623,8 @@ get_all_external_dependencies <- function(dep_structure,
   match.arg(from_external_dependencies, c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances"), several.ok = TRUE)
 
 
-  if (!all(install_direction %in% dep_structure$direction)) {
+  install_direction <- check_direction_arg_deprecated(install_direction)
+  if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
     stop("Invalid install_direction argument for this dependency object")
   }
 

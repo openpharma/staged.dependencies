@@ -196,7 +196,7 @@ test_that("install_deps works", {
     expected_result
   )
 
-  # check install_direction = c("upstream", "downstream")
+  # check install_direction = "all"
   # in theory may fail because topological order is not unique,
   # although topological order is not unique our implementation should be deterministic
   expected_result <- data.frame(
@@ -206,9 +206,9 @@ test_that("install_deps works", {
     stringsAsFactors = FALSE
   )
   expected_result$actions <- rep(list("install"), 6)
+
   expect_equal(
-    install_deps(dep_table, dry_install = TRUE, install_direction = c("upstream", "downstream")
-    )[, c("package_name", "actions")],
+    install_deps(dep_table, dry_install = TRUE, install_direction = "all")[, c("package_name", "actions")],
     expected_result
   )
 
@@ -294,7 +294,7 @@ test_that("get_all_external_deps works", {
       current_pkg = NA,
       table = internal_deps,
       deps = deps,
-      direction = c("upstream", "downstream")
+      direction = "all"
     ),
     class = "dependency_structure"
   )
