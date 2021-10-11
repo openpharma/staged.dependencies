@@ -14,15 +14,14 @@ mock_rec_checkout_internal_deps <- function(source_dir) function(repos_to_proces
     pkg = local_pkgs,
     repo = paste0("openpharma/", local_pkgs),
     host = rep("https://github.com", 6),
-    branch = c("main", "main", "local (main)", "main", "main", "main"),
+    ref = c("main", "main", "local (main)", "main", "main", "main"),
     sha = rep("test", 6),
     stringsAsFactors = FALSE
-  ) %>% dplyr::mutate(cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", branch))))
+  ) %>% dplyr::mutate(cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", ref))))
   # fs::dir_copy does not seem to be vectorized (although stated in the doc) -> use Map
   clear_cache()
   Map(fs::dir_copy, file.path(source_dir, internal_deps$pkg), internal_deps$cache_dir)
-
-  return(internal_deps %>% dplyr::select(repo, host, cache_dir, branch, sha))
+  return(internal_deps %>% dplyr::select(repo, host, cache_dir, ref, sha))
 }
 
 test_that("dependency_table works", {
@@ -36,7 +35,7 @@ test_that("dependency_table works", {
   with_tmp_cachedir({
 
     expect_output(
-      dep_table <- dependency_table(repo_dir, feature = "main"),
+      dep_table <- dependency_table(repo_dir, ref = "main"),
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
     )
 
@@ -53,19 +52,20 @@ test_that("dependency_table works", {
         type = factor(c("current", "upstream", "upstream", "downstream", "other", "other"),
                       levels = c("current", "upstream", "downstream", "other")),
         distance = c(0, 1, 2, 1, NA, NA),
-        branch = c("local (main)", "main", "main", "main", "main", "main"),
+        ref = c("local (main)", "main", "main", "main", "main", "main"),
         install_index = c(3, 1, 2, 5, 6, 4),
         stringsAsFactors = FALSE
       ) %>% dplyr::mutate(
         repo = paste0("openpharma/", package_name),
         host = rep("https://github.com", 6),
-        cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", branch))),
+        cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", ref))),
         sha =  rep("test", 6)
-      ) %>% dplyr::select(package_name, type, distance, branch, repo, host, sha, cache_dir, install_index)
+      ) %>% dplyr::select(package_name, type, distance, ref, repo, host, sha, cache_dir, install_index)
+
     )
 
     expect_output(
-      dep_table2 <- dependency_table(repo_dir, feature = "main", direction = "upstream"),
+      dep_table2 <- dependency_table(repo_dir, ref = "main", direction = "upstream"),
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
     )
     # check direction upstream only, should not matter since yamls agree with DESCRIPTION files
@@ -97,13 +97,13 @@ test_that("dependency_table wih local_pkgs works", {
 
   # stageddeps.garden has branch fixgarden@main, so it should check it out
   expect_error(
-    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos),
+    dependency_table(repo_dir, ref = "fixgarden@main", local_repos = local_repos),
     regexp = "must check out branch fixgarden@main", fixed = TRUE
   )
 
   git2r::checkout(file.path(copied_ecosystem, "stageddeps.garden"), branch = "fixgarden@main")
   expect_silent(
-    dependency_table(repo_dir, feature = "fixgarden@main", local_repos = local_repos, verbose = 0)
+    dependency_table(repo_dir, ref = "fixgarden@main", local_repos = local_repos, verbose = 0)
   )
 })
 
@@ -121,7 +121,7 @@ test_that("check_yamls_consistent works", {
     expect_output(
       expect_error(
         check_yamls_consistent(
-          dependency_table(repo_dir, feature = "main")
+          dependency_table(repo_dir, ref = "main")
         ),
         regexp = "for package stageddeps.garden", fixed = TRUE
       ),
@@ -131,7 +131,7 @@ test_that("check_yamls_consistent works", {
     git2r::checkout(file.path(copied_ecosystem, "stageddeps.garden"), branch = "fixgarden@main")
     expect_output(
       check_yamls_consistent(
-        dependency_table(repo_dir, feature = "fixgarden@main")
+        dependency_table(repo_dir, ref = "fixgarden@main")
       ),
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
     )
@@ -148,7 +148,7 @@ test_that("plot.dependency_structure works", {
   # check that it works by saving the plot to a file which requires the plot code to be
   # executed (otherwise lazy eval)
   expect_output(
-    dep_table <- dependency_table(repo_dir, feature = "main"),
+    dep_table <- dependency_table(repo_dir, ref = "main"),
     regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
   )
   plot_file <- tempfile("dep_plot", fileext = ".html")
@@ -163,7 +163,7 @@ test_that("install_deps works", {
   git2r::checkout(repo_dir, "main")
 
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
-  capture.output(dep_table <- dependency_table(repo_dir, feature = "fixgarden@main")) # capture.output to make silent
+  capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent
 
   mockery::stub(install_deps, 'run_package_actions', function(pkg_actions, ...) {
     pkg_actions
@@ -220,7 +220,7 @@ test_that("check_downstream works", {
   git2r::checkout(repo_dir, "main")
 
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
-  capture.output(dep_table <- dependency_table(repo_dir, feature = "fixgarden@main")) # capture.output to make silent
+  capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent
 
   mockery::stub(check_downstream, 'run_package_actions', function(pkg_actions, ...) {
     pkg_actions
@@ -253,7 +253,7 @@ test_that("build_check_install works", {
   git2r::checkout(repo_dir, "main")
 
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
-  capture.output(dep_table <- dependency_table(repo_dir, feature = "fixgarden@main")) # capture.output to make silent
+  capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent
 
   mockery::stub(build_check_install, 'run_package_actions', function(pkg_actions, ...) {
     pkg_actions

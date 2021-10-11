@@ -71,7 +71,7 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
 # copies a local directory to the cache dir and commits the current state in
 # that cache dir, so the SHA can be added to the DESCRIPTION file
 # note: files in .gitignore are also available to the package locally
-copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rule, verbose = 0) {
+copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, verbose = 0) {
   check_dir_exists(local_dir, prefix = "Local directory: ")
   check_verbose_arg(verbose)
 
@@ -106,14 +106,23 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rul
   # in this case, for the local repo, we skip the checks
   # so that for example gitlab automation (which uses a detached HEAD)
   # does not incorrectly fail
-  current_branch <- git2r::repository_head(repo_dir)$name
+  current_branch <- get_current_branch(repo_dir)
   if (!is.null(current_branch)) {
-    available_branches <- names(git2r::branches(repo_dir, flags = "local"))
-    branch <- select_branch_rule(available_branches)
-    stopifnot(branch %in% available_branches)
-    if (branch != get_current_branch(repo_dir)) {
-      stop("You must check out branch ", branch, " for repository in directory ", repo_dir,
-           ", currently ", get_current_branch(repo_dir), " is checked out.")
+    available_refs <- available_references(repo_dir, branch_flag = "local")
+    ref <- select_ref_rule(available_refs)
+    stopifnot(ref %in% available_refs$ref)
+
+    if (ref != get_current_branch(repo_dir)) {
+      # if ref is a branch and you are on the wrong branch throw error
+      if (attr(ref, "type") == "branch") {
+        stop("You must check out branch ", ref, " for repository in directory ", repo_dir,
+             ", currently ", get_current_branch(repo_dir), " is checked out.")
+      }
+      # if ref is a tag, just throw warning as may want to work from elsewhere here
+      else {
+        warning("You should check out a branch from tag ", ref, " for repository in directory ", repo_dir,
+                ", currently branch ", get_current_branch(repo_dir), " is checked out.")
+      }
     }
   }
 
@@ -132,7 +141,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_branch_rul
     )
   }
 
-  return(list(dir = repo_dir, branch = paste0("local (", current_branch, ")"),
+  return(list(dir = repo_dir, ref = paste0("local (", current_branch, ")"),
               sha = get_short_sha(repo_dir), accessible = TRUE))
 }
 
@@ -150,7 +159,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
   }
 }
 
-#' Recursively check out all repos to match branch determined by feature
+#' Recursively check out all repos to match branch determined by ref
 #' starting from repos_to_process.
 #'
 #' This uses the `staged_dependencies.yaml` to discover the upstream
@@ -162,7 +171,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'
 #' @md
 #' @param repos_to_process `list` of `list(repo, host)` repos to start from
-#' @param feature (`character`) feature to build
+#' @param ref (`character`) tag/branch to build
 #' @param direction (`character`) direction in which to discover packages
 #'   either or both of "upstream" and "downstream"
 #'   to recursively checkout upstream and/or downstream dependencies
@@ -174,7 +183,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'
 #' @return A data frame, one row per checked out repository with columns
 #' repo, host and cache_dir
-rec_checkout_internal_deps <- function(repos_to_process, feature,
+rec_checkout_internal_deps <- function(repos_to_process, ref,
                                       direction = c("upstream"),
                                       local_repos = get_local_pkgs_from_config(),
                                       verbose = 0) {
@@ -191,9 +200,10 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
   rm(repos_to_process)
 
   hashed_processed_repos <- list()
-  hashed_repos_branches <- list()
   hashed_repos_accessible <- list()
+  hashed_repos_refs <- list()
   hashed_repos_shas <- list()
+
 
   while (length(hashed_repos_to_process) > 0) {
     hashed_repo_and_host <- hashed_repos_to_process[[1]]
@@ -206,8 +216,8 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
     if (hashed_repo_and_host %in% names(local_repo_to_dir)) {
       repo_info <- copy_local_repo_to_cachedir(
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
-        select_branch_rule = function(available_branches) {
-          determine_branch(feature, available_branches)
+        select_ref_rule = function(available_refs) {
+          determine_ref(ref, available_refs)
         },
         verbose = verbose
       )
@@ -216,8 +226,8 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
         get_repo_cache_dir(repo_and_host$repo, repo_and_host$host),
         get_repo_url(repo_and_host$repo, repo_and_host$host),
         token_envvar = get_authtoken_envvar(repo_and_host$host),
-        select_branch_rule = function(available_branches) {
-          determine_branch(feature, available_branches)
+        select_ref_rule = function(available_refs) {
+          determine_ref(ref, available_refs)
         },
         must_work = (length(hashed_processed_repos) == 0), # first repo must be accessible
         verbose = verbose
@@ -237,8 +247,8 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
     }
 
     hashed_processed_repos[[hashed_repo_and_host]] <- repo_info$dir
-    hashed_repos_branches[[hashed_repo_and_host]] <- repo_info$branch
     hashed_repos_accessible[[hashed_repo_and_host]] <- repo_info$accessible
+    hashed_repos_refs[[hashed_repo_and_host]] <- repo_info$ref
     hashed_repos_shas[[hashed_repo_and_host]] <- repo_info$sha
     hashed_repos_to_process <- union(
       hashed_repos_to_process, setdiff(hashed_new_repos, names(hashed_processed_repos))
@@ -247,8 +257,8 @@ rec_checkout_internal_deps <- function(repos_to_process, feature,
 
   df <- data.frame(unhash_repo_and_host(names(hashed_processed_repos)), stringsAsFactors = FALSE)
   df$cache_dir <- unlist(unname(hashed_processed_repos))
-  df$branch <- unlist(unname(hashed_repos_branches))
   df$accessible <- unlist(unname(hashed_repos_accessible))
+  df$ref <- unlist(unname(hashed_repos_refs))
   df$sha <- unlist(unname(hashed_repos_shas))
   return(df)
 }

@@ -29,7 +29,7 @@ test_that("checkout_repo works (requires Internet access)", {
     dir.create(existing_dir)
     expect_error(
       checkout_repo(existing_dir, "https://github.com/openpharma/stageddeps.water.git",
-                    function(...) "main", token_envvar = NULL),
+                    function(...) structure("main", type = "branch"), token_envvar = NULL),
       regex = "not in a git repository", fixed = TRUE
     )
     unlink(existing_dir, recursive = TRUE)
@@ -38,17 +38,17 @@ test_that("checkout_repo works (requires Internet access)", {
     repo_dir <- tempfile()
     expect_error(
       checkout_repo(repo_dir, "https://github.com/openpharma/stageddeps.water.git",
-                    function(...) "inexistantBranch", token_envvar = NULL),
-      regex = "available_branches", fixed = TRUE
+                    function(...) structure("inexistantBranch", type = "branch"), token_envvar = NULL),
+      regex = "ref inexistantBranch is unavailable for this repo", fixed = TRUE
     )
     # checkout existing branch
     x <- checkout_repo(repo_dir, "https://github.com/openpharma/stageddeps.water.git",
-                       function(...) "main", token_envvar = NULL)
+                       function(...) structure("main", type = "branch"), token_envvar = NULL)
     # do not test SHA equality, just that it is there
     x$sha <- "test"
     expect_equal(
       x,
-      list(dir = repo_dir, branch = "main", sha = "test")
+      list(dir = repo_dir, ref = structure("main", type = "branch"), sha = "test")
     )
     unlink(repo_dir, recursive = TRUE)
 
@@ -56,7 +56,7 @@ test_that("checkout_repo works (requires Internet access)", {
     withr::with_envvar(list(INCORRECT_TOKEN = "adfs"), {
       expect_error(
         checkout_repo(repo_dir, "https://github.com/inexistentOrg/inexistentRepo.git",
-                      function(...) "main", token_envvar = "INCORRECT_TOKEN"),
+                      function(...) structure("main", type = "branch"), token_envvar = "INCORRECT_TOKEN"),
         regexp = "Bad credentials", fixed = TRUE
       )
     })
