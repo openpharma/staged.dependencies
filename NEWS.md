@@ -9,3 +9,5 @@
 * Added a `NEWS.md` file to track changes to the package.
 
 ## Bugfixes
+
+* Allow a remote other than `origin`. Note `staged.dependencies` still expects a single remote.

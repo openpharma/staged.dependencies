@@ -124,7 +124,7 @@ check_ref_consistency <- function(ref, project = ".") {
 # return a dataframe with columns ref (git tag or branch name), type ("branch" or "tag")
 available_references <- function(repo = ".", branch_flag = "remote") {
   branches <- names(git2r::branches(repo = repo, flags = branch_flag))
-  branches <- setdiff(gsub("origin/", "", branches, fixed = TRUE), "HEAD")
+  branches <- setdiff(gsub(paste0(git2r::remotes(repo)[1], "/"), "", branches, fixed = TRUE), "HEAD")
   refs <- data.frame(ref = branches, type = "branch")
   tags <- names(git2r::tags(repo))
   if (length(tags) > 0) {
