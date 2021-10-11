@@ -88,6 +88,13 @@ jobs:
         env:
           GITHUB_PAT: ${{ secrets.REPO_GITHUB_TOKEN }} # or ${{ secrets.GITHUB_TOKEN }}
 
+
+      - name: Build R package
+        run: |
+          R CMD build ${{ github.event.repository.name }}
+          echo "PKGBUILD=$(echo *.tar.gz)" >> $GITHUB_ENV
+        shell: bash
+
       - name: Install staged.dependencies
         run: R CMD INSTALL ${{ env.PKGBUILD }}
         shell: bash
