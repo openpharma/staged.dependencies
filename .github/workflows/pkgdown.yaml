@@ -89,11 +89,12 @@ jobs:
           GITHUB_PAT: ${{ secrets.REPO_GITHUB_TOKEN }} # or ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install staged.dependencies
-        run: R CMD INSTALL .
+        run: R CMD INSTALL ${{ env.PKGBUILD }}
         shell: bash
 
       - name: Build docs
         run: |
+          setwd("${{ github.event.repository.name }}")
           options(repos = c(CRAN = "https://cloud.r-project.org/"))
           "pkgdown" %in% installed.packages() || install.packages("pkgdown", upgrade = "never")
           pkgdown::build_site(".", devel = TRUE)
@@ -109,6 +110,7 @@ jobs:
       - name: Publish docs
         if: github.ref == 'refs/heads/main' # Only after merge or push to master
         run: |
+          cd ${{ github.event.repository.name }}
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE)'
