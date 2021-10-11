@@ -274,11 +274,11 @@ plot.dependency_structure <- function(x, y, ...){
 #'   to install (according to dependency structure). By default this is only "upstream"
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of packages using `remotes::install_deps`.
+#' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'.
 #' @param dependency_packages (`character`) An additional filter, only packages on this
 #'   list will be installed (advanced usage only)
 #' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
-#' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
-#'   is set to "never" and shouldn't be passed into this function.
+#' @param ... Additional args passed to `remotes::install_deps.
 #'
 #' @return `data.frame` of performed actions
 #'
@@ -300,6 +300,7 @@ install_deps <- function(dep_structure,
                          dry_install = FALSE,
                          install_direction = "upstream",
                          install_external_deps = TRUE,
+                         upgrade = "never",
                          dependency_packages = NULL,
                          verbose = 1,
                          ...) {
@@ -328,6 +329,7 @@ install_deps <- function(dep_structure,
 
   run_package_actions(pkg_actions, dry = dry_install,
                       install_external_deps = install_external_deps,
+                      upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
                       verbose = verbose, ...)
   pkg_actions
@@ -368,7 +370,8 @@ check_downstream <- function(dep_structure,
                              distance = NULL, dry_install_and_check = FALSE,
                              check_args = NULL,
                              only_tests = FALSE,
-                             verbose = 1, install_external_deps = TRUE, ...) {
+                             verbose = 1, install_external_deps = TRUE,
+                             upgrade = "never", ...) {
   stopifnot(
     methods::is(dep_structure, "dependency_structure"),
     is.logical(dry_install_and_check)
@@ -396,6 +399,7 @@ check_downstream <- function(dep_structure,
 
   run_package_actions(pkg_actions, dry = dry_install_and_check,
                       install_external_deps = install_external_deps,
+                      upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
                       rcmd_args = list(check = check_args),
                       verbose = verbose, ...)
@@ -464,7 +468,8 @@ build_check_install <- function(dep_structure,
                                steps = c("build", "check", "install"),
                                rcmd_args = list(check = c("--no-manual")),
                                artifact_dir = tempfile(),
-                               install_external_deps = TRUE, ...) {
+                               install_external_deps = TRUE,
+                               upgrade = "never", ...) {
 
   steps <- match.arg(steps, several.ok = TRUE)
   stopifnot(methods::is(dep_structure, "dependency_structure"))
@@ -494,6 +499,7 @@ build_check_install <- function(dep_structure,
 
   run_package_actions(pkg_actions, dry = dry_install,
                       install_external_deps = install_external_deps,
+                      upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
                       rcmd_args = rcmd_args,
                       artifact_dir = artifact_dir,

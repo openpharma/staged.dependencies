@@ -19,7 +19,8 @@
 install_deps_app <- function(project = ".", default_ref = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              run_gadget = TRUE, run_as_job = TRUE,
-                             verbose = 1, install_external_deps = TRUE, ...) {
+                             verbose = 1, install_external_deps = TRUE,
+                             upgrade = "never", ...) {
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
 
   # take local version of project (rather than remote)
@@ -101,14 +102,16 @@ install_deps_app <- function(project = ".", default_ref = NULL,
           install_deps_job(project = fs::path_abs(project), verbose = verbose,
                            create_args = list(local_repos = local_repos, ref = input$ref),
                            dependency_packages = dependency_packages,
-                           install_external_deps = TRUE,
+                           install_external_deps = install_external_deps,
+                           upgrade = upgrade,
                            install_direction = "all",
                            ...)
         } else{
           install_deps(compute_dep_structure(),
                        dependency_packages = dependency_packages,
                        verbose = verbose,
-                       install_external_deps = TRUE,
+                       install_external_deps = install_external_deps,
+                       upgrade = upgrade,
                        install_direction = "all",
                        ...)
         }

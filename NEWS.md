@@ -9,5 +9,8 @@
 ## Other improvements
 
 * Added a `NEWS.md` file to track changes to the package.
+* `upgrade` argument of `remotes::install_deps` to choose whether to install external dependencies is now exposed (and default is `never`). For example, setting `upgrade` to `always` will update all external dependencies giving an up-to-date environment. 
 
 ## Bugfixes
+
+* `install_external_deps` argument to `install_deps_app` is now respected.

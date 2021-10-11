@@ -25,6 +25,7 @@
 run_package_actions <- function(pkg_actions, internal_pkg_deps,
                                 dry = FALSE,
                                 install_external_deps = TRUE,
+                                upgrade = "never",
                                 rcmd_args = NULL,
                                 artifact_dir = NULL,
                                 verbose = 0, ...) {
@@ -122,7 +123,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
       if ("install" %in% actions) {
         if (install_external_deps) {
           install_external_deps(cache_dir, internal_pkg_deps = internal_pkg_deps,
-                                dependencies = TRUE, upgrade = "never", ...)
+                                dependencies = TRUE, upgrade = upgrade, ...)
         }
 
         # install the tar.gz if it exists otherwise install using staged.deps
