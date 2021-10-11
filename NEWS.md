@@ -4,6 +4,8 @@
 
 ## New feature and improvements
 
+* Create addin to install current project's dependencies alongside current project.
+
 ## Other improvements
 
 * Added a `NEWS.md` file to track changes to the package.
