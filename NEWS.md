@@ -4,6 +4,8 @@
 
 ## New feature and improvements
 
+* `staged.dependencies` can handle only having access to part of the internal dependency graph.
+
 ## Other improvements
 
 * Added a `NEWS.md` file to track changes to the package.
