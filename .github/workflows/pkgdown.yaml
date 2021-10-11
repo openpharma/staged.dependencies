@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: docs
-          path: docs/
+          path: ${{ github.event.repository.name }}/docs/
 
       - name: Publish docs
         if: github.ref == 'refs/heads/main' # Only after merge or push to master
