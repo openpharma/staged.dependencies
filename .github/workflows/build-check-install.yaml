@@ -204,15 +204,15 @@ jobs:
       - name: System tests
         run: |
           print("Creating dependency table")
-          x <- staged.dependencies::dependency_table("openpharma/stageddeps.food", project_type = "repo@host", feature = "fixgarden@main", verbose = 1)
+          x <- staged.dependencies::dependency_table("openpharma/stageddeps.food", "repo@host", ref = "fixgarden@main")
           print(x)
           print("Checking consistent yamls")
           staged.dependencies::check_yamls_consistent(x)
           print("Install upstream deps")
-          staged.dependencies::install_deps(x, verbose = 1)
+          staged.dependencies::install_deps(x)
           print("Checking downstream")
-          staged.dependencies::check_downstream(x, verbose = 1)
+          staged.dependencies::check_downstream(x)
           print("Build, check, install")
-          staged.dependencies::build_check_install(x, verbose = 1)
+          staged.dependencies::build_check_install(x)
         shell: Rscript {0}
 
