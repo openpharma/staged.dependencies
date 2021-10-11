@@ -116,7 +116,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     git_repo <- git2r::repository(repo_dir)
     # prune (remove) remote branches that were deleted from remote
     git2r::config(git_repo, remote.origin.prune = "true")
-    git2r::fetch(git_repo, name = git2r::remotes(repo)[1], credentials = creds, verbose = verbose >= 2)
+    git2r::fetch(git_repo, name = git2r::remotes(repo_dir)[1], credentials = creds, verbose = verbose >= 2)
   }
 
   check_only_remote_branches(git_repo)
@@ -129,7 +129,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
       stop("ref ", selected_ref, " is unavailable for this repo")
     }
 
-    branch <- paste0(git2r::remotes(repo)[1], "/", selected_ref)
+    branch <- paste0(git2r::remotes(repo_dir)[1], "/", selected_ref)
     if (verbose >= 1) {
       message(paste("   - checkout branch", branch, "in directory", repo_dir))
     }

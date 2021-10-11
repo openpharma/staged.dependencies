@@ -76,6 +76,6 @@ test_that("check_only_remote_branches works", {
   git2r::checkout(repo_dir, branch = "main")
   expect_error(
     check_only_remote_branches(repo_dir),
-    regexp = "origin", fixed = TRUE
+    regexp = "git2r::remotes(git_repo)[1]", fixed = TRUE
   )
 })
