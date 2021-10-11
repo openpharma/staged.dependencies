@@ -9,3 +9,5 @@
 * Added a `NEWS.md` file to track changes to the package.
 
 ## Bugfixes
+
+* Fix bug when calling `check_downstream` after `install_deps` whereby incorrect error was shown saying sha has changed. 

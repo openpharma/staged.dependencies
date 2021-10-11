@@ -234,6 +234,12 @@ install_repo_add_sha <- function(repo_dir,
     #RemoteRef = x$ref,
     RemoteSha = commit_sha
   )
+
+  # once we have installed or failed to install the package we reset the repo
+  # so that further operations on the repo do not fail by the above
+  # "the git directory contains changes" check
+  on.exit(git2r::reset(repo_dir, reset_type = "hard"))
+
   desc <- utils::modifyList(desc, metadata)
   write_dcf(source_desc, desc)
 
@@ -244,8 +250,6 @@ install_repo_add_sha <- function(repo_dir,
   }
 
   utils::install.packages(repo_dir, repos = NULL, type = "source")
-
-  # we do not clean up the DESCRIPTION file
 
   invisible(NULL)
 }
