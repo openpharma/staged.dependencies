@@ -234,11 +234,11 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
     }
 
     hashed_new_repos <- c()
-    if ("upstream" %in% direction) {
+    if (direction %in% c("upstream", "all")) {
       hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$upstream_repos, hash_repo_and_host)
       hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
     }
-    if ("downstream" %in% direction) {
+    if (direction %in% c("downstream", "all")) {
       hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$downstream_repos, hash_repo_and_host)
       hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
     }
