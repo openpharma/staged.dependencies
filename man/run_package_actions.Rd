@@ -9,6 +9,7 @@ run_package_actions(
   internal_pkg_deps,
   dry = FALSE,
   install_external_deps = TRUE,
+  upgrade = "never",
   rcmd_args = NULL,
   artifact_dir = NULL,
   verbose = 0,

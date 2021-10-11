@@ -12,6 +12,7 @@ install_deps_app(
   run_as_job = TRUE,
   verbose = 1,
   install_external_deps = TRUE,
+  upgrade = "never",
   ...
 )
 }
@@ -34,8 +35,9 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
 
-\item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
-is set to "never" and shouldn't be passed into this function.}
+\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+
+\item{...}{Additional args passed to `remotes::install_deps.}
 }
 \value{
 \code{shiny.app} or value returned by app (executed as a gadget)

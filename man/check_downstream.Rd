@@ -9,10 +9,11 @@ check_downstream(
   downstream_packages = NULL,
   distance = NULL,
   dry_install_and_check = FALSE,
-  check_args = NULL,
+  check_args = c("--no-multiarch", "--with-keep.source", "--install-tests"),
   only_tests = FALSE,
   verbose = 1,
   install_external_deps = TRUE,
+  upgrade = "never",
   ...
 )
 }
@@ -41,6 +42,8 @@ what would be installed}
 
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
+
+\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
 
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}

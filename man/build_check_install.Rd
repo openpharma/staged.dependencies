@@ -11,9 +11,11 @@ build_check_install(
   dry_install = FALSE,
   verbose = 1,
   steps = c("build", "check", "install"),
-  rcmd_args = list(check = c("--no-manual")),
+  rcmd_args = list(check = c("--no-multiarch", "--with-keep.source",
+    "--install-tests")),
   artifact_dir = tempfile(),
   install_external_deps = TRUE,
+  upgrade = "never",
   ...
 )
 }
@@ -46,6 +48,8 @@ and logs}
 
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
+
+\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
 
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}

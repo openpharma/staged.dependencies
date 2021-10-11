@@ -39,6 +39,7 @@ to apply action to and infer installation order;
 uses \code{dep_structure$deps} to infer upstream dependencies}
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
+    \item{\code{upgrade}}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
   }}
 }
 \description{
