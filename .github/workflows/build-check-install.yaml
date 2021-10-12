@@ -203,18 +203,20 @@ jobs:
 
       - name: System tests
         run: |
+          library(staged.dependencies)
           print("Creating dependency table")
-          x <- staged.dependencies::dependency_table("openpharma/stageddeps.food", "repo@host", ref = "fixgarden@main")
+          x <- dependency_table("openpharma/stageddeps.food", "repo@host", ref = "fixgarden@main")
           print(x)
           print("Checking consistent yamls")
-          staged.dependencies::check_yamls_consistent(x)
+          check_yamls_consistent(x)
           print("Install upstream deps")
-          staged.dependencies::install_deps(x)
+          install_deps(x)
           print("Checking downstream")
-          staged.dependencies::check_downstream(x)
+          check_downstream(x, check_args = "--no-manual")
           print("Build, check, install")
-          staged.dependencies::build_check_install(x, packages_to_process = "stageddeps.house")
+          build_check_install(x, packages_to_process = "stageddeps.house", rcmd_args = list(check = "--no-manual"))
           print("Get all external dependencies")
-          staged.dependencies::get_all_external_dependencies()
+          deps <- get_all_external_dependencies()
+          print(deps)
         shell: Rscript {0}
 
