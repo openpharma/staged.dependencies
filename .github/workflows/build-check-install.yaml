@@ -213,6 +213,6 @@ jobs:
           print("Checking downstream")
           staged.dependencies::check_downstream(x)
           print("Build, check, install")
-          staged.dependencies::build_check_install(x)
+          staged.dependencies::build_check_install(x, packages_to_process = "stageddeps.house")
         shell: Rscript {0}
 
