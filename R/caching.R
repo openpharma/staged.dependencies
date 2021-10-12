@@ -109,7 +109,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
   current_branch <- get_current_branch(repo_dir)
   if (!is.null(current_branch)) {
     available_refs <- available_references(repo_dir, branch_flag = "local")
-    ref <- select_ref_rule(available_refs)
+    ref <- select_ref_rule(available_refs, fallback_branch =  get_default_branch(repo_dir))
     stopifnot(ref %in% available_refs$ref)
 
     if (ref != get_current_branch(repo_dir)) {
@@ -215,8 +215,8 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
     if (hashed_repo_and_host %in% names(local_repo_to_dir)) {
       repo_info <- copy_local_repo_to_cachedir(
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
-        select_ref_rule = function(available_refs) {
-          determine_ref(ref, available_refs)
+        select_ref_rule = function(available_refs, fallback_branch) {
+          determine_ref(ref, available_refs, fallback_branch = fallback_branch)
         },
         verbose = verbose
       )
@@ -225,8 +225,8 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
         get_repo_cache_dir(repo_and_host$repo, repo_and_host$host),
         get_repo_url(repo_and_host$repo, repo_and_host$host),
         token_envvar = get_authtoken_envvar(repo_and_host$host),
-        select_ref_rule = function(available_refs) {
-          determine_ref(ref, available_refs)
+        select_ref_rule = function(available_refs, fallback_branch) {
+          determine_ref(ref, available_refs, fallback_branch = fallback_branch)
         },
         verbose = verbose
       )

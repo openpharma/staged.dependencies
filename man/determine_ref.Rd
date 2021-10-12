@@ -4,7 +4,7 @@
 \alias{determine_ref}
 \title{Determine the branch/tag to install based on feature (staging rules)}
 \usage{
-determine_ref(ref, available_refs, branch_sep = "@")
+determine_ref(ref, available_refs, branch_sep = "@", fallback_branch = "main")
 }
 \arguments{
 \item{ref}{ref we want to build}
@@ -14,6 +14,8 @@ and \code{type} (\code{branch} or \code{tag})}
 
 \item{branch_sep}{separator between branches in \code{feature}, \code{/} does not
 work well with \code{git} because it clashes with the filesystem paths}
+
+\item{fallback_branch}{the default branch to try to use if no other matches found}
 }
 \value{
 branch/tag to choose to match feature, error if no suitable branch was provided

@@ -32,7 +32,7 @@ check_only_remote_branches <- function(git_repo) {
 # clones the repo and only keeps remote branches
 # if repo is already there, fetches and prunes (removes) remote branches that are
 # no longer there
-# select_ref_rule is a function that is given the available refs
+# select_ref_rule is a function that is given the available refs and fallback branch names
 # and selects one of them
 # verbose level: 0: none, 1: print high-level git operations, 2: print git clone detailed messages etc.
 # returns: list of repo_dir and checked out branch/ref (according to ref/branch rule)
@@ -122,7 +122,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
   check_only_remote_branches(git_repo)
 
   available_refs <- available_references(repo_dir)
-  selected_ref <- select_ref_rule(available_refs)
+  selected_ref <- select_ref_rule(available_refs, get_default_branch(repo_dir))
 
   if (attr(selected_ref, "type") == "branch") {
     if (!selected_ref %in% available_refs$ref[available_refs$type == "branch"]) {
@@ -256,4 +256,12 @@ install_repo_add_sha <- function(repo_dir,
 
 get_short_sha <- function(repo_dir) {
   substr(git2r::sha(git2r::repository_head(repo_dir)), 1, 7)
+}
+
+get_default_branch <- function(repo_dir) {
+  default_branch <- tryCatch({
+    x <- gert::git_remote_ls(remote = git2r::remotes()[1], repo = repo_dir)$symref
+    utils::tail(strsplit(x[!is.na(x)], split = "/")[[1]], 1)
+  }, error = function(e) "main")
+  return(default_branch)
 }

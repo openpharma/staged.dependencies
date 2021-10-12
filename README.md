@@ -127,8 +127,8 @@ This can be checked by setting `ref = fix1@feature1@main` and running `check_dow
 A PR on either `repoB` or `repoC` `feature1@main --> main` takes 
 `repoA: main, repoB:feature1@main, repoC: feature1@main`, setting `ref = feature1@main`.
 
-By setting `ref = <<tag_name>>`, `staged.dependencies` will checkout each repository at the tagged commit (or `main`)
-if tag does not exist. The check for tag name takes priority over the branch procedure described above.
+By setting `ref = <<tag_name>>`, `staged.dependencies` will checkout each repository at the tagged commit (or git reference
+branch - typically `main`) if tag does not exist. The check for tag name takes priority over the branch procedure described above.
 
 ### Working with local packages
 
