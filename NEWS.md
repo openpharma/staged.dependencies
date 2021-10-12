@@ -4,7 +4,7 @@
 
 ## New feature and improvements
 
-* `get_all_external_dependencies` now returns the vector of external packages ordered by install order. 
+* `get_all_external_dependencies` now returns the vector of external packages ordered by install order and the core R packages are not included. 
 
 ## Other improvements
 
