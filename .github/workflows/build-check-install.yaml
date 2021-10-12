@@ -214,5 +214,7 @@ jobs:
           staged.dependencies::check_downstream(x)
           print("Build, check, install")
           staged.dependencies::build_check_install(x, packages_to_process = "stageddeps.house")
+          print("Get all external dependencies")
+          staged.dependencies::get_all_external_dependencies()
         shell: Rscript {0}
 
