@@ -12,7 +12,6 @@ Imports:
     digest,
     dplyr,
     fs,
-    gert,
     git2r,
     glue,
     httr,

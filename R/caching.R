@@ -71,9 +71,15 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
 # copies a local directory to the cache dir and commits the current state in
 # that cache dir, so the SHA can be added to the DESCRIPTION file
 # note: files in .gitignore are also available to the package locally
-copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, verbose = 0) {
+copy_local_repo_to_cachedir <- function(local_dir, repo, host, token_envvar, select_ref_rule, verbose = 0) {
   check_dir_exists(local_dir, prefix = "Local directory: ")
   check_verbose_arg(verbose)
+
+  creds <- if (is.null(token_envvar)) {
+    NULL
+  } else {
+    git2r::cred_token(token = token_envvar)
+  }
 
   repo_dir <- get_repo_cache_dir(repo, host, local = TRUE)
   if (dir.exists(repo_dir)) {
@@ -109,7 +115,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
   current_branch <- get_current_branch(repo_dir)
   if (!is.null(current_branch)) {
     available_refs <- available_references(repo_dir, branch_flag = "local")
-    ref <- select_ref_rule(available_refs, fallback_branch = get_default_branch(repo_dir))
+    ref <- select_ref_rule(available_refs, fallback_branch = get_default_branch(repo_dir, creds))
     stopifnot(ref %in% available_refs$ref)
 
     if (ref != get_current_branch(repo_dir)) {
@@ -215,8 +221,9 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
     if (hashed_repo_and_host %in% names(local_repo_to_dir)) {
       repo_info <- copy_local_repo_to_cachedir(
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
+        token_envvar = get_authtoken_envvar(repo_and_host$host),
         select_ref_rule = function(available_refs, fallback_branch) {
-          determine_ref(ref, available_refs, fallback_branch = fallback_branch)
+          determine_ref(ref, available_refs, fallback_branch)
         },
         verbose = verbose
       )
@@ -226,7 +233,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
         get_repo_url(repo_and_host$repo, repo_and_host$host),
         token_envvar = get_authtoken_envvar(repo_and_host$host),
         select_ref_rule = function(available_refs, fallback_branch) {
-          determine_ref(ref, available_refs, fallback_branch = fallback_branch)
+          determine_ref(ref, available_refs, fallback_branch)
         },
         verbose = verbose
       )

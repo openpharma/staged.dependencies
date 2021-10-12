@@ -47,7 +47,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     fs::dir_copy(file.path(TESTS_GIT_REPOS, repo_name), repo_dir)
 
     available_refs <- available_references(repo_dir)
-    selected_ref <- select_ref_rule(available_refs)
+    selected_ref <- select_ref_rule(available_refs, fallback_branch = "main")
     # do not do actual checkout of branch
 
     return(list(dir = repo_dir, ref = selected_ref))
@@ -169,7 +169,8 @@ test_that("copy_local_repo_to_cachedir works", {
       copy_local_repo_to_cachedir(
         repo_dir,
         repo = "openpharma/stageddeps.food", host = "https://github.com",
-        select_ref_rule = function(available_refs) {
+        token_envvar = NULL,
+        select_ref_rule = function(available_refs, fallback_branch) {
           structure("main", type = "branch")
         },
         verbose = 2

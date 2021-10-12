@@ -81,7 +81,6 @@ dependency_table <- function(project = ".",
     if (is.null(ref) || nchar(ref) == 0) {
       ref <- infer_ref_from_branch(project)
     }
-    check_ref_consistency(ref, project)
   }
 
   if (project_type == "local") {
@@ -89,6 +88,7 @@ dependency_table <- function(project = ".",
     local_repos <- add_project_to_local_repos(project, local_repos)
     repo_deps_info <- get_yaml_deps_info(project)
     repo_to_process <- list(repo_deps_info$current_repo)
+    check_ref_consistency(ref, project, repo_to_process[[1]])
   } else {
     repo_to_process <- list(parse_remote_project(project))
   }

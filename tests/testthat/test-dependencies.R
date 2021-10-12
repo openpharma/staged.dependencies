@@ -86,7 +86,6 @@ test_that("dependency_table wih local_pkgs works", {
     git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
   })
 
-
   local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
   local_repos <- data.frame(
     repo = paste0("openpharma/", local_pkgs),
@@ -94,6 +93,10 @@ test_that("dependency_table wih local_pkgs works", {
     directory = file.path(copied_ecosystem, local_pkgs),
     stringsAsFactors = FALSE
   )
+
+  mockery::stub(dependency_table, "get_default_branch", depth = 3, function(project, creds) {
+    return("main")
+  })
 
   # stageddeps.garden has branch fixgarden@main, so it should check it out
   expect_error(

@@ -19,7 +19,12 @@ test_that("infer_ref_from_branch works", {
   unlink(repo_dir, recursive = TRUE)
 })
 
-test_that("check_ref_consistency works" , {
+test_that("check_ref_consistency works", {
+
+  mockery::stub(check_ref_consistency, "get_default_branch", function(project, creds) {
+    return("main")
+  })
+
 
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
@@ -27,21 +32,21 @@ test_that("check_ref_consistency works" , {
 
   # ref fix1@main matches existing branch fix1@main better than main, so a warning
   expect_warning(
-    check_ref_consistency("fix1@main", repo_dir),
+    check_ref_consistency("fix1@main", repo_dir, list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
     regexp = "Branch fix1@main would match fix1@main", fixed = TRUE
   )
 
   # checked out branch "main" is consistent with feature "superfix@main",
   # it still returns the feature "superfix@main" since it was provided
   expect_silent(
-    check_ref_consistency("superfix@main", repo_dir)
+    check_ref_consistency("superfix@main", repo_dir, list(repo = "openpharma/stageddeps.food", host = "https://github.com"))
   )
 
   git2r::checkout(repo_dir, "fix1@main")
 
   # checked out branch fix1@main is not consistent with provided branch superfix@main
   expect_warning(
-    check_ref_consistency("superfix@main", repo_dir),
+    check_ref_consistency("superfix@main", repo_dir, list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
     refexp = "fix1@main", fixed = TRUE
   )
 

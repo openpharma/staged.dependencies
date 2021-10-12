@@ -122,7 +122,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
   check_only_remote_branches(git_repo)
 
   available_refs <- available_references(repo_dir)
-  selected_ref <- select_ref_rule(available_refs, get_default_branch(repo_dir))
+  selected_ref <- select_ref_rule(available_refs, get_default_branch(repo_dir, credentials = creds))
 
   if (attr(selected_ref, "type") == "branch") {
     if (!selected_ref %in% available_refs$ref[available_refs$type == "branch"]) {
@@ -258,10 +258,11 @@ get_short_sha <- function(repo_dir) {
   substr(git2r::sha(git2r::repository_head(repo_dir)), 1, 7)
 }
 
-get_default_branch <- function(repo_dir) {
+get_default_branch <- function(repo_dir, credentials) {
   default_branch <- tryCatch({
-    x <- gert::git_remote_ls(remote = git2r::remotes()[1], repo = repo_dir)$symref
-    utils::tail(strsplit(x[!is.na(x)], split = "/")[[1]], 1)
+    x <- git2r::remote_ls(name = "origin", repo = git2r::repository(repo_dir), credentials = credentials)
+    y <- names(x[x == x[names(x) == "HEAD"]])
+    utils::tail(strsplit(y[y != "HEAD"], split = "/")[[1]], 1)
   }, error = function(e) "main")
   return(default_branch)
 }
