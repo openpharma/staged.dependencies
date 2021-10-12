@@ -50,7 +50,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     selected_ref <- select_ref_rule(available_refs)
     # do not do actual checkout of branch
 
-    return(list(dir = repo_dir, ref = selected_ref))
+    return(list(dir = repo_dir, ref = selected_ref, accessible = TRUE))
   })
 
   output <- capture.output(res <- rec_checkout_internal_deps(

@@ -156,6 +156,7 @@ test_that("run_package_actions works", {
         actions = c("install", "install"),
         sha = c(get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra"))),
                 get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.electricity")))),
+        installable = c(TRUE, TRUE),
         stringsAsFactors = FALSE
       ),
       install_external_deps = FALSE
@@ -177,6 +178,7 @@ test_that("run_package_actions works", {
         cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
         actions = c("install", "install"),
         sha = c("xxx","yyy"),
+        installable = c(TRUE, TRUE),
         stringsAsFactors = FALSE
       ),
       install_external_deps = FALSE

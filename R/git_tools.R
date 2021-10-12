@@ -56,9 +56,6 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     }
 
     cloned_repo <- tryCatch({
-      if (repo_url == "https://github.com/openpharma/stageddeps.food.git") {
-        stop("Test")
-      }
       git_repo <- git2r::clone(
         url = repo_url, local_path = repo_dir,
         credentials = creds, progress = verbose >= 2
