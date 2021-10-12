@@ -201,7 +201,7 @@ jobs:
         run: R CMD INSTALL ${{ env.PKGBUILD }}
         shell: bash
 
-      - name: System tests
+      - name: E2e package functionality
         run: |
           library(staged.dependencies)
           print("Creating dependency table")
@@ -216,7 +216,7 @@ jobs:
           print("Build, check, install")
           build_check_install(x, packages_to_process = "stageddeps.house", rcmd_args = list(check = "--no-manual"))
           print("Get all external dependencies")
-          deps <- get_all_external_dependencies()
+          deps <- get_all_external_dependencies(x)
           print(deps)
         shell: Rscript {0}
 
