@@ -685,12 +685,17 @@ get_all_external_dependencies <- function(dep_structure,
     message("Packages will not be ordered as this requires 'Depends', 'Imports' and 'LinkingTo' to
       included in from_external_dependencies argument.")
   } else {
-    external_package_table <- available_packages[available_packages$Package %in% external_packages,]
-    external_packages <- topological_sort(
-      apply(external_package_table, 1, function(row)
-        unique(unlist(lapply(c("Depends", "Imports", "LinkingTo"), function(x) parse_deps_table(row[x]))))
-      )
+    external_package_table <- available_packages[available_packages$Package %in% external_packages, ]
+
+    package_deps <- apply(external_package_table, 1, function(row)
+      unique(unlist(lapply(c("Depends", "Imports", "LinkingTo"), function(x) parse_deps_table(row[x]))))
     )
+    names(package_deps) <- external_package_table$Package
+    ordered_external_packages <- topological_sort(package_deps)
+
+    # there may be packages missed in ordered_external_packages (e.g. if a package is only in suggests)
+    # so make sure they are added in
+    external_packages <- c(ordered_external_packages, setdiff(external_packages, ordered_external_packages))
   }
   # remove R core packages when returning the packages
   return(external_packages[!external_packages %in% r_core_packages])
