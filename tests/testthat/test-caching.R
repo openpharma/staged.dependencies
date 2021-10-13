@@ -43,14 +43,16 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     repo_name <- substr(repo_name, 0, nchar(repo_name) - nchar(".git"))
     cat(paste0("Mocking checkout_repo for ", repo_name, "\n"))
 
-    unlink(repo_dir, recursive = TRUE)
+    if (fs::dir_exists(repo_dir)) {
+      fs::dir_delete(repo_dir)
+    }
     fs::dir_copy(file.path(TESTS_GIT_REPOS, repo_name), repo_dir)
 
     available_refs <- available_references(repo_dir)
     selected_ref <- select_ref_rule(available_refs)
     # do not do actual checkout of branch
 
-    return(list(dir = repo_dir, ref = selected_ref, accessible = TRUE))
+    return(list(dir = repo_dir, ref = selected_ref, sha = "xxx", accessible = TRUE))
   })
 
   output <- capture.output(res <- rec_checkout_internal_deps(
@@ -97,33 +99,44 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
   # todo: check when local_repos not null, direction is upstream and downstream
 })
 
-# todo: end2end test
-# test_that("rec_checkout_internal_deps works (without mocking)", {
-#
-# })
-# dependency_table(repo_dir, "fix1@main")
-# internal_deps <- internal_deps %>% dplyr::arrange(repo)
-# res1 <- res1 %>% dplyr::arrange(repo)
-# expect_equal(
-#   internal_deps,
-#   res1
-# )
-#
-# local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food", "stageddeps.house", "stageddeps.garden", "stageddeps.water")
-# local_repos <- data.frame(
-#   repo = paste0("openpharma/", local_pkgs),
-#   host = rep("https://github.com", 6),
-#   directory = file.path(TESTS_GIT_REPOS, local_pkgs),
-#   stringsAsFactors = FALSE
-# )
-# res <- data.frame(
-#   repo = paste0("openpharma/", local_pkgs),
-#   host = rep("https://github.com", 6),
-#   branch = c("main", "main", "local (main)", "main", "main", "main"),
-#   stringsAsFactors = FALSE
-# ) %>% dplyr::mutate(cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", branch)))) %>%
-#   dplyr::select(repo, host, cache_dir, branch)
+test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking checkout)", {
 
+  # mock checkout_repo by copying the appropriate directory to the repo_dir directory
+  # but stageddeps.water is not accessible
+  mockery::stub(rec_checkout_internal_deps, 'checkout_repo', function(repo_dir, repo_url, select_ref_rule, ...) {
+    if (repo_url == "https://github.com/openpharma/stageddeps.water.git") {
+      return(list(dir = as.character(NA), ref = as.character(NA), sha = as.character(NA), accessible = FALSE))
+    }
+
+    repo_name <- basename(repo_url)
+    repo_name <- substr(repo_name, 0, nchar(repo_name) - nchar(".git"))
+
+    if (fs::dir_exists(repo_dir)) {
+      fs::dir_delete(repo_dir)
+    }
+    fs::dir_copy(file.path(TESTS_GIT_REPOS, repo_name), repo_dir)
+
+    available_refs <- available_references(repo_dir)
+    selected_ref <- select_ref_rule(available_refs)
+    # do not do actual checkout of branch
+
+    return(list(dir = repo_dir, ref = selected_ref, sha = "xxx", accessible = TRUE))
+  })
+
+  res <- rec_checkout_internal_deps(
+    list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
+    "main", local_repos = NULL, verbose = 0, direction = c("upstream", "downstream")
+  )
+
+  # we should not see garden and water should not be accessible
+  expect_equal(
+    res$repo, paste0("openpharma/stageddeps.", c("food", "electricity", "house", "elecinfra", "water"))
+  )
+
+  expect_equal(res$accessible, c(TRUE, TRUE, TRUE, TRUE, FALSE))
+  expect_equal(res$ref, c("main", "main", "main", "main", NA))
+
+})
 
 test_that("get_hashed_repo_to_dir_mapping works", {
   expect_equal(
