@@ -3,7 +3,8 @@
 ## Breaking changes
 
 * Soft deprecated `direction = c("upstream", "downstream")`, now use `direction = "all"`.
-* `dry_install` and `dry_install_and_check` have been renamed `dry`.
+* `dry_install` and `dry_install_and_check` arguments have both been renamed `dry`.
+* `dependency_packages`, `downstream_packages` and `packages_to_process` arguments have all been renamed `package_list`.
 
 ## New feature and improvements
 

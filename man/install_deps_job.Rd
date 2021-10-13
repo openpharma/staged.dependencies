@@ -36,8 +36,8 @@ to install (according to dependency structure). By default this is only "upstrea
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
     \item{\code{upgrade}}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
-    \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
-list will be installed (advanced usage only)}
+    \item{\code{package_list}}{(\code{character}) If not NULL, an additional filter, only packages on this
+list will be considered and their dependencies installed if needed (advanced usage only).}
     \item{\code{dry}}{(\code{logical}) dry run that outputs what would happen without actually
 doing it.}
   }}

@@ -10,7 +10,7 @@ install_deps(
   install_direction = "upstream",
   install_external_deps = TRUE,
   upgrade = "never",
-  dependency_packages = NULL,
+  package_list = NULL,
   dry = FALSE,
   verbose = 1,
   ...
@@ -35,8 +35,8 @@ external dependencies of packages using \code{remotes::install_deps}.}
 
 \item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
 
-\item{dependency_packages}{(\code{character}) An additional filter, only packages on this
-list will be installed (advanced usage only)}
+\item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
+list will be considered and their dependencies installed if needed (advanced usage only).}
 
 \item{dry}{(\code{logical}) dry run that outputs what would happen without actually
 doing it.}

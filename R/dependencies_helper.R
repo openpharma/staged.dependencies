@@ -315,7 +315,7 @@ parse_remote_project <- function(project) {
 filter_pkgs <- function(pkg_df,
                         install_direction,
                         include_project = TRUE,
-                        dependency_packages = NULL,
+                        package_list = NULL,
                         distance = NULL) {
   stopifnot(
     is.data.frame(pkg_df),
@@ -336,8 +336,8 @@ filter_pkgs <- function(pkg_df,
   }
 
   # filter by dependency_packages: restrict actions to those packages
-  if (!is.null(dependency_packages)) {
-    pkg_names <- intersect(pkg_names, dependency_packages)
+  if (!is.null(package_list)) {
+    pkg_names <- intersect(pkg_names, package_list)
   }
 
   if (!is.null(distance)) {

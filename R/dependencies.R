@@ -273,8 +273,8 @@ plot.dependency_structure <- function(x, y, ...){
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of packages using `remotes::install_deps`.
 #' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'.
-#' @param dependency_packages (`character`) An additional filter, only packages on this
-#'   list will be installed (advanced usage only)
+#' @param package_list (`character`) If not NULL, an additional filter, only packages on this
+#'   list will be considered and their dependencies installed if needed (advanced usage only).
 #' @param dry (`logical`) dry run that outputs what would happen without actually
 #'   doing it.
 #' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
@@ -300,7 +300,7 @@ install_deps <- function(dep_structure,
                          install_direction = "upstream",
                          install_external_deps = TRUE,
                          upgrade = "never",
-                         dependency_packages = NULL,
+                         package_list = NULL,
                          dry = FALSE,
                          verbose = 1,
                          ...) {
@@ -318,7 +318,7 @@ install_deps <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction,
                            include_project = install_project,
-                           dependency_packages = dependency_packages)
+                           package_list = package_list)
 
 
   # we also need to install the upstream dependencies of e.g. the downstream dependencies
@@ -363,11 +363,10 @@ install_deps <- function(dep_structure,
 #' check_downstream(x, verbose = 1, only_test = TRUE, check_args = c("--no-manual"))
 #' }
 check_downstream <- function(dep_structure,
-                             downstream_packages = NULL,
                              distance = NULL,
                              check_args = c("--no-multiarch", "--with-keep.source", "--install-tests"),
                              only_tests = FALSE, install_external_deps = TRUE,
-                             upgrade = "never", dry = FALSE,
+                             upgrade = "never", package_list = NULL, dry = FALSE,
                              verbose = 1, ...) {
   stopifnot(
     methods::is(dep_structure, "dependency_structure"),
@@ -383,7 +382,7 @@ check_downstream <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction = "downstream",
                            include_project = FALSE,
-                           dependency_packages = downstream_packages,
+                           package_list = package_list,
                            distance = distance)
 
 
@@ -459,7 +458,7 @@ update_with_direct_deps <- function(dep_structure) {
 #' }
 build_check_install <- function(dep_structure,
                                install_direction = "all",
-                               packages_to_process = NULL,
+                               package_list = NULL,
                                steps = c("build", "check", "install"),
                                rcmd_args = list(check = c("--no-multiarch", "--with-keep.source", "--install-tests")),
                                artifact_dir = tempfile(),
@@ -488,7 +487,7 @@ build_check_install <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction = install_direction,
                            include_project = TRUE,
-                           dependency_packages = packages_to_process)
+                           package_list = packages_to_process)
 
 
   # we also need to install the upstream dependencies of e.g. the downstream dependencies
@@ -642,7 +641,7 @@ get_all_external_dependencies <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction = install_direction,
                            include_project = TRUE,
-                           dependency_packages = packages_to_process)
+                           package_list = packages_to_process)
 
 
   # we also need to consider the upstream dependencies of e.g. the downstream dependencies

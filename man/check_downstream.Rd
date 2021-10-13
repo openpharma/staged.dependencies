@@ -6,12 +6,12 @@
 \usage{
 check_downstream(
   dep_structure,
-  downstream_packages = NULL,
   distance = NULL,
   check_args = c("--no-multiarch", "--with-keep.source", "--install-tests"),
   only_tests = FALSE,
   install_external_deps = TRUE,
   upgrade = "never",
+  package_list = NULL,
   dry = FALSE,
   verbose = 1,
   ...
@@ -22,9 +22,6 @@ check_downstream(
 \code{dependency_table}; uses \code{dep_structure$table} to infer the packages
 to apply action to and infer installation order;
 uses \code{dep_structure$deps} to infer upstream dependencies}
-
-\item{downstream_packages}{(\code{vector}) additional filter to only install
-and check packages contained in this vector (advanced use only)}
 
 \item{distance}{(\code{numeric}) additional filter to only install downstream
 packages at most this distance from the \code{dependency_structure$current_pkg}
@@ -38,6 +35,9 @@ packages at most this distance from the \code{dependency_structure$current_pkg}
 external dependencies of packages using \code{remotes::install_deps}.}
 
 \item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+
+\item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
+list will be considered and their dependencies installed if needed (advanced usage only).}
 
 \item{dry}{(\code{logical}) dry run that outputs what would happen without actually
 doing it.}
@@ -53,9 +53,10 @@ ignored unless \code{install_direction = "upstream"} (because downstream
 deps automatically install all their upstream deps)}
     \item{\code{install_direction}}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
-    \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
-list will be installed (advanced usage only)}
   }}
+
+\item{downstream_packages}{(\code{vector}) additional filter to only install
+and check packages contained in this vector (advanced use only)}
 }
 \value{
 \code{data.frame} of performed actions
