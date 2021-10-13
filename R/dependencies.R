@@ -73,6 +73,7 @@ dependency_table <- function(project = ".",
   check_verbose_arg(verbose)
   check_direction_arg(direction)
   stopifnot(project_type %in% c("local", "repo@host"))
+  stopifnot(rlang::is_scalar_character(fallback_branch))
 
   if (project_type == "repo@host" && (is.null(ref) || nchar(ref) == 0)) {
     stop("For non-local projects the (branch/tag) must be specified")
