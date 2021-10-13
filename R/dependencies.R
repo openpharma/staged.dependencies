@@ -612,7 +612,7 @@ check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) 
 get_all_external_dependencies <- function(dep_structure,
                                           available_packages = as.data.frame(utils::available.packages()),
                                           install_direction = "upstream",
-                                          packages_to_process = NULL,
+                                          package_list = NULL,
                                           from_internal_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests"),
                                           from_external_dependencies = c("Depends", "Imports", "LinkingTo")) {
   stopifnot(methods::is(dep_structure, "dependency_structure"))
@@ -637,7 +637,7 @@ get_all_external_dependencies <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction = install_direction,
                            include_project = TRUE,
-                           package_list = packages_to_process)
+                           package_list = package_list)
 
 
   # we also need to consider the upstream dependencies of e.g. the downstream dependencies
