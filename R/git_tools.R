@@ -100,7 +100,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     })
 
     if (is.null(cloned_repo)) {
-      return(list(dir = as.character(NA), branch = as.character(NA), sha = as.character(NA), accessible = FALSE))
+      return(list(dir = as.character(NA), ref = as.character(NA), sha = as.character(NA), accessible = FALSE))
     }
 
     # git automatically created local tracking branch (for master or main), checkout
