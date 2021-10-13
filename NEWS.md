@@ -3,6 +3,7 @@
 ## Breaking changes
 
 * Soft deprecated `direction = c("upstream", "downstream")`, now use `direction = "all"`.
+* `dry_install` and `dry_install_and_check` have been renamed `dry`.
 
 ## New feature and improvements
 

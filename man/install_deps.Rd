@@ -7,11 +7,11 @@
 install_deps(
   dep_structure,
   install_project = TRUE,
-  dry_install = FALSE,
   install_direction = "upstream",
   install_external_deps = TRUE,
   upgrade = "never",
   dependency_packages = NULL,
+  dry = FALSE,
   verbose = 1,
   ...
 )
@@ -27,9 +27,6 @@ package (i.e. the package named in \code{dependency_structure$current_pkg}),
 ignored unless \code{install_direction = "upstream"} (because downstream
 deps automatically install all their upstream deps)}
 
-\item{dry_install}{(\code{logical}) dry run that lists packages that would be
-installed}
-
 \item{install_direction}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
 
@@ -40,6 +37,9 @@ external dependencies of packages using \code{remotes::install_deps}.}
 
 \item{dependency_packages}{(\code{character}) An additional filter, only packages on this
 list will be installed (advanced usage only)}
+
+\item{dry}{(\code{logical}) dry run that outputs what would happen without actually
+doing it.}
 
 \item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 

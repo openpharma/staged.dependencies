@@ -8,14 +8,14 @@ build_check_install(
   dep_structure,
   install_direction = "all",
   packages_to_process = NULL,
-  dry_install = FALSE,
-  verbose = 1,
   steps = c("build", "check", "install"),
   rcmd_args = list(check = c("--no-multiarch", "--with-keep.source",
     "--install-tests")),
   artifact_dir = tempfile(),
   install_external_deps = TRUE,
   upgrade = "never",
+  dry = FALSE,
+  verbose = 1,
   ...
 )
 }
@@ -31,11 +31,6 @@ to install (according to dependency structure). By default this is only "upstrea
 \item{packages_to_process}{(\code{character}) An additional filter, only packages on
 this list will be considered (advanced usage only)}
 
-\item{dry_install}{(\code{logical}) dry run that lists packages that would be
-installed}
-
-\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
-
 \item{steps}{(\code{character} vector) subset of "build", "check", "install";
 useful to skip checking for example}
 
@@ -50,6 +45,11 @@ and logs}
 external dependencies of packages using \code{remotes::install_deps}.}
 
 \item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+
+\item{dry}{(\code{logical}) dry run that outputs what would happen without actually
+doing it.}
+
+\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}

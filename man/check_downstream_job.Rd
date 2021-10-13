@@ -28,9 +28,6 @@ and check packages contained in this vector (advanced use only)}
     \item{\code{distance}}{(\code{numeric}) additional filter to only install downstream
 packages at most this distance from the \code{dependency_structure$current_pkg}
 (advanced use only)}
-    \item{\code{dry_install_and_check}}{(\code{logical}) whether to install upstream
-dependencies and check/test downstream repos; otherwise just reports
-what would be installed}
     \item{\code{check_args}}{(\code{list}) arguments passed to \code{rcmdcheck}}
     \item{\code{only_tests}}{(\code{logical}) whether to only run tests (rather than checks)}
     \item{\code{dep_structure}}{(\code{dependency_structure}) output of function
@@ -40,6 +37,8 @@ uses \code{dep_structure$deps} to infer upstream dependencies}
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
     \item{\code{upgrade}}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+    \item{\code{dry}}{(\code{logical}) dry run that outputs what would happen without actually
+doing it.}
   }}
 }
 \description{

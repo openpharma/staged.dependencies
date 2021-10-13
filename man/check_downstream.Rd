@@ -8,12 +8,12 @@ check_downstream(
   dep_structure,
   downstream_packages = NULL,
   distance = NULL,
-  dry_install_and_check = FALSE,
   check_args = c("--no-multiarch", "--with-keep.source", "--install-tests"),
   only_tests = FALSE,
-  verbose = 1,
   install_external_deps = TRUE,
   upgrade = "never",
+  dry = FALSE,
+  verbose = 1,
   ...
 )
 }
@@ -30,20 +30,19 @@ and check packages contained in this vector (advanced use only)}
 packages at most this distance from the \code{dependency_structure$current_pkg}
 (advanced use only)}
 
-\item{dry_install_and_check}{(\code{logical}) whether to install upstream
-dependencies and check/test downstream repos; otherwise just reports
-what would be installed}
-
 \item{check_args}{(\code{list}) arguments passed to \code{rcmdcheck}}
 
 \item{only_tests}{(\code{logical}) whether to only run tests (rather than checks)}
-
-\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
 
 \item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+
+\item{dry}{(\code{logical}) dry run that outputs what would happen without actually
+doing it.}
+
+\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
@@ -52,8 +51,6 @@ external dependencies of packages using \code{remotes::install_deps}.}
 package (i.e. the package named in \code{dependency_structure$current_pkg}),
 ignored unless \code{install_direction = "upstream"} (because downstream
 deps automatically install all their upstream deps)}
-    \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
-installed}
     \item{\code{install_direction}}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
     \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this

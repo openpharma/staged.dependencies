@@ -268,8 +268,6 @@ plot.dependency_structure <- function(x, y, ...){
 #'   package (i.e. the package named in `dependency_structure$current_pkg`),
 #'   ignored unless `install_direction = "upstream"` (because downstream
 #'   deps automatically install all their upstream deps)
-#' @param dry_install (`logical`) dry run that lists packages that would be
-#'   installed
 #' @param install_direction "upstream", "downstream" or "all"; which packages
 #'   to install (according to dependency structure). By default this is only "upstream"
 #' @param install_external_deps logical to describe whether to install
@@ -277,6 +275,8 @@ plot.dependency_structure <- function(x, y, ...){
 #' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'.
 #' @param dependency_packages (`character`) An additional filter, only packages on this
 #'   list will be installed (advanced usage only)
+#' @param dry (`logical`) dry run that outputs what would happen without actually
+#'   doing it.
 #' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
 #' @param ... Additional args passed to `remotes::install_deps.
 #'
@@ -297,16 +297,16 @@ plot.dependency_structure <- function(x, y, ...){
 #' }
 install_deps <- function(dep_structure,
                          install_project = TRUE,
-                         dry_install = FALSE,
                          install_direction = "upstream",
                          install_external_deps = TRUE,
                          upgrade = "never",
                          dependency_packages = NULL,
+                         dry = FALSE,
                          verbose = 1,
                          ...) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
-  stopifnot(is.logical(install_project), is.logical(dry_install))
+  stopifnot(is.logical(install_project), is.logical(dry))
 
   install_direction <- check_direction_arg_deprecated(install_direction)
   if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
@@ -327,7 +327,7 @@ install_deps <- function(dep_structure,
 
   pkg_actions <- compute_actions(pkg_df, pkg_names, "install", upstream_pkgs)
 
-  run_package_actions(pkg_actions, dry = dry_install,
+  run_package_actions(pkg_actions, dry = dry,
                       install_external_deps = install_external_deps,
                       upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
@@ -348,9 +348,6 @@ install_deps <- function(dep_structure,
 #' @param distance (`numeric`) additional filter to only install downstream
 #'   packages at most this distance from the `dependency_structure$current_pkg`
 #'   (advanced use only)
-#' @param dry_install_and_check (`logical`) whether to install upstream
-#'   dependencies and check/test downstream repos; otherwise just reports
-#'   what would be installed
 #' @param check_args (`list`) arguments passed to `rcmdcheck`
 #' @param only_tests (`logical`) whether to only run tests (rather than checks)
 #' @inheritParams install_deps
@@ -367,14 +364,14 @@ install_deps <- function(dep_structure,
 #' }
 check_downstream <- function(dep_structure,
                              downstream_packages = NULL,
-                             distance = NULL, dry_install_and_check = FALSE,
+                             distance = NULL,
                              check_args = c("--no-multiarch", "--with-keep.source", "--install-tests"),
-                             only_tests = FALSE,
-                             verbose = 1, install_external_deps = TRUE,
-                             upgrade = "never", ...) {
+                             only_tests = FALSE, install_external_deps = TRUE,
+                             upgrade = "never", dry = FALSE,
+                             verbose = 1, ...) {
   stopifnot(
     methods::is(dep_structure, "dependency_structure"),
-    is.logical(dry_install_and_check)
+    is.logical(dry)
   )
 
   if (!dep_structure$direction %in% c("all", "downstream")) {
@@ -397,7 +394,7 @@ check_downstream <- function(dep_structure,
   actions <- if (only_tests) c("test", "install") else c("check", "install")
   pkg_actions <- compute_actions(pkg_df, pkg_names, actions, upstream_pkgs)
 
-  run_package_actions(pkg_actions, dry = dry_install_and_check,
+  run_package_actions(pkg_actions, dry = dry,
                       install_external_deps = install_external_deps,
                       upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
@@ -463,16 +460,19 @@ update_with_direct_deps <- function(dep_structure) {
 build_check_install <- function(dep_structure,
                                install_direction = "all",
                                packages_to_process = NULL,
-                               dry_install = FALSE,
-                               verbose = 1,
                                steps = c("build", "check", "install"),
                                rcmd_args = list(check = c("--no-multiarch", "--with-keep.source", "--install-tests")),
                                artifact_dir = tempfile(),
                                install_external_deps = TRUE,
-                               upgrade = "never", ...) {
+                               upgrade = "never",
+                               dry = FALSE, verbose = 1,
+                               ...) {
 
   steps <- match.arg(steps, several.ok = TRUE)
-  stopifnot(methods::is(dep_structure, "dependency_structure"))
+  stopifnot(
+    methods::is(dep_structure, "dependency_structure"),
+    is.logical(dry)
+  )
 
   install_direction <- check_direction_arg_deprecated(install_direction)
   if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
@@ -497,7 +497,7 @@ build_check_install <- function(dep_structure,
 
   pkg_actions <- compute_actions(pkg_df, pkg_names, steps, upstream_pkgs)
 
-  run_package_actions(pkg_actions, dry = dry_install,
+  run_package_actions(pkg_actions, dry = dry,
                       install_external_deps = install_external_deps,
                       upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
