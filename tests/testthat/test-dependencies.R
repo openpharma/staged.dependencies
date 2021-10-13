@@ -317,7 +317,7 @@ test_that("get_all_external_deps works", {
 
   # only take B's dependencies
   expect_equal(sort(get_all_external_dependencies(x,
-                      packages_to_process = "B",
+                      package_list = "B",
                       available_packages = available_packages)),
                c("T", "Z"))
 
