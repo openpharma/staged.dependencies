@@ -10,6 +10,7 @@ dependency_table(
   ref = NULL,
   local_repos = get_local_pkgs_from_config(),
   direction = c("upstream", "downstream"),
+  fallback_branch = "main",
   verbose = 1
 )
 }
@@ -35,6 +36,9 @@ local file system rather than cloned; columns are \verb{repo, host, directory}}
 either or both of "upstream" and "downstream".
 Note if both are chosen then the entire graph is created
 (i.e. upstream dependencies of downstream dependencies)}
+
+\item{fallback_branch}{(\code{character}) the default branch to try to use if
+no other matches found}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,

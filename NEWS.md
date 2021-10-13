@@ -7,6 +7,7 @@
 ## Other improvements
 
 * Added a `NEWS.md` file to track changes to the package.
+* Fallback branch for repositories can now be specified and is not hard-coded as `main`.
 
 ## Bugfixes
 
