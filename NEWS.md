@@ -17,3 +17,4 @@
 ## Bugfixes
 
 * `install_external_deps` argument to `install_deps_app` is now respected.
+* Fix bug when calling `check_downstream` after `install_deps` whereby incorrect error was shown saying sha has changed. 
