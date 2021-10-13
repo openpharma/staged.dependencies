@@ -7,13 +7,13 @@
 build_check_install(
   dep_structure,
   install_direction = "all",
-  package_list = NULL,
   steps = c("build", "check", "install"),
   rcmd_args = list(check = c("--no-multiarch", "--with-keep.source",
     "--install-tests")),
   artifact_dir = tempfile(),
   install_external_deps = TRUE,
   upgrade = "never",
+  package_list = NULL,
   dry = FALSE,
   verbose = 1,
   ...
@@ -27,9 +27,6 @@ uses \code{dep_structure$deps} to infer upstream dependencies}
 
 \item{install_direction}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
-
-\item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
-list will be considered and their dependencies installed if needed (advanced usage only).}
 
 \item{steps}{(\code{character} vector) subset of "build", "check", "install";
 useful to skip checking for example}
@@ -46,6 +43,9 @@ external dependencies of packages using \code{remotes::install_deps}.}
 
 \item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
 
+\item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
+list will be considered and their dependencies installed if needed (advanced usage only).}
+
 \item{dry}{(\code{logical}) dry run that outputs what would happen without actually
 doing it.}
 
@@ -59,9 +59,6 @@ package (i.e. the package named in \code{dependency_structure$current_pkg}),
 ignored unless \code{install_direction = "upstream"} (because downstream
 deps automatically install all their upstream deps)}
   }}
-
-\item{packages_to_process}{(\code{character}) An additional filter, only packages on
-this list will be considered (advanced usage only)}
 }
 \value{
 list with entries

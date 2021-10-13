@@ -343,8 +343,6 @@ install_deps <- function(dep_structure,
 #' `rcmdcheck` (`R CMD check`) on the downstream dependencies.
 #'
 #' @md
-#' @param downstream_packages (`vector`) additional filter to only install
-#'   and check packages contained in this vector (advanced use only)
 #' @param distance (`numeric`) additional filter to only install downstream
 #'   packages at most this distance from the `dependency_structure$current_pkg`
 #'   (advanced use only)
@@ -441,8 +439,6 @@ update_with_direct_deps <- function(dep_structure) {
 #' @param rcmd_args (`list`) with names `build`, `check`,
 #'   `install` which are vectors that are passed as separate arguments
 #'   to the `R CMD` commands
-#' @param packages_to_process (`character`) An additional filter, only packages on
-#'   this list will be considered (advanced usage only)
 #' @param artifact_dir (`character`) directory to place built R packages
 #'   and logs
 #' @return list with entries
@@ -458,12 +454,12 @@ update_with_direct_deps <- function(dep_structure) {
 #' }
 build_check_install <- function(dep_structure,
                                install_direction = "all",
-                               package_list = NULL,
                                steps = c("build", "check", "install"),
                                rcmd_args = list(check = c("--no-multiarch", "--with-keep.source", "--install-tests")),
                                artifact_dir = tempfile(),
                                install_external_deps = TRUE,
                                upgrade = "never",
+                               package_list = NULL,
                                dry = FALSE, verbose = 1,
                                ...) {
 
@@ -487,7 +483,7 @@ build_check_install <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction = install_direction,
                            include_project = TRUE,
-                           package_list = packages_to_process)
+                           package_list = package_list)
 
 
   # we also need to install the upstream dependencies of e.g. the downstream dependencies

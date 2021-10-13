@@ -27,9 +27,6 @@ however you need to ensure the \code{options("repos")} contains the urls of all 
 \item{install_direction}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
 
-\item{packages_to_process}{(\code{character}) An additional filter, only packages on
-this list will be considered (advanced usage only)}
-
 \item{from_internal_dependencies}{Vector chosen from \code{c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")}
 which fields of the DESCRIPTION file of the internal packages should be included. Default:
 \code{c("Depends", "Imports", "LinkingTo", "Suggests")}}

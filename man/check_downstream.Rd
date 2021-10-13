@@ -54,9 +54,6 @@ deps automatically install all their upstream deps)}
     \item{\code{install_direction}}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
   }}
-
-\item{downstream_packages}{(\code{vector}) additional filter to only install
-and check packages contained in this vector (advanced use only)}
 }
 \value{
 \code{data.frame} of performed actions
