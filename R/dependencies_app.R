@@ -4,11 +4,12 @@
 #' in the package's staged dependencies yaml files starting from `project`.
 #'
 #' @md
+#'
 #' @param project (`character`) Should be of the format `"<<repo>>@<<host>>"`, for example
 #'   `"openpharma/stageddeps.water@https://github.com"`, if `host` is not included then it
-#'   is assumed to be `"https://github.com"`.
+#'   is assumed to be `"https://github.com"`. If `NULL` this must be entered by user.
 #' @param default_ref (`character`) default ref (branch/tag), see also the parameter
-#'   `ref` of `\link{dependency_table}`
+#'   `ref` of `\link{dependency_table}`. If `NULL` this must be entered by user.
 #' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
 #' @inheritParams install_deps
@@ -16,9 +17,11 @@
 #' @return `shiny.app` or value returned by app (executed as a gadget)
 #' @examples
 #' \dontrun{
-#'   install_deps_app("openpharma/stageddeps.food@https://github.com", default_ref = "main")
+#'   install_deps_app("openpharma/stageddeps.food")
 #' }
-install_deps_app <- function(project, default_ref = NULL,
+install_deps_app <- function(default_repo = NULL,
+                             default_host = "https://github.com",
+                             default_ref = "main",
                              run_gadget = TRUE, run_as_job = TRUE,
                              verbose = 1, install_external_deps = TRUE, ...) {
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
@@ -27,9 +30,19 @@ install_deps_app <- function(project, default_ref = NULL,
     ui = function() {
       miniUI::miniPage(
         shiny::fillCol(
-          shiny::tagList(
-            shiny::textInput("ref", label = "Ref: ", value = default_ref),
-            shiny::actionButton("compute_graph", "Compute graph")
+          miniUI::miniContentPanel(
+            shiny::fillRow(
+              shiny::tagList(
+                shiny::textInput("ref", label = "Ref:", value = default_ref),
+                shiny::textInput("repo", label = "Repo:", value = default_repo)
+              ),
+              shiny::tagList(
+                shiny::br(),
+                shiny::actionButton("compute_graph", "Compute graph"),
+                shiny::br(),
+                shiny::textInput("host", label = "Host:", value = default_host)
+              )
+            )
           ),
           miniUI::miniContentPanel(
             shiny::verbatimTextOutput("error_output"),
@@ -39,7 +52,7 @@ install_deps_app <- function(project, default_ref = NULL,
             shiny::tags$p("The following packages will be installed:"),
             shiny::verbatimTextOutput("nodesToInstall")
           ),
-          flex = c(NA, 2, 1)
+          flex = c(1, 3, 1)
         ),
         miniUI::gadgetTitleBar(
           "Cmd + Click node to not install the node",
@@ -58,15 +71,20 @@ install_deps_app <- function(project, default_ref = NULL,
         error_rv(NULL)
 
         message_if_verbose("Computing dependency structure for ref ",
-                           input$ref, " starting from project ", project,
+                           input$ref, " starting from project ", paste(input$repo, input$host, sep = "@"),
                            verbose = verbose)
 
 
-        x <- tryCatch(
-          dependency_table(project, project_type = "repo@host", ref = input$ref,
-                         local_repos = NULL, verbose = 2),
+        x <- tryCatch({
+          if(is.null(input$ref) || input$ref == "" || is.null(input$repo) || input$repo == "" ||
+             is.null(input$host) || input$host == "") {
+            stop("Please enter a repo, host and ref and \nthen press 'Compute graph'")
+          }
+          dependency_table(project = paste(input$repo, input$host, sep = "@"),
+                           project_type = "repo@host", ref = input$ref,
+                           local_repos = NULL, verbose = 2)},
           error = function(cond){
-            error_rv(paste("Cannot create dependency graph: ", cond$message))
+            error_rv(paste0("Cannot create dependency graph:\n", cond$message))
             NULL
           }
         )
@@ -123,7 +141,7 @@ install_deps_app <- function(project, default_ref = NULL,
             # recreate the dep_structure object (which should be a fraction of the install time)
             # this could be changed by using the importEnv argument
             # to jobRunScript and creating an install_deps job if dep_structure already exists in env
-            install_deps_job(project = project,  project_type = "repo@host", verbose = verbose,
+            install_deps_job(project = paste(input$repo, input$host, sep = "@"),  project_type = "repo@host", verbose = verbose,
                              create_args = list(local_repos = NULL, ref = input$ref),
                              dependency_packages = dependency_packages,
                              install_external_deps = TRUE,

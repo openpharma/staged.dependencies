@@ -6,6 +6,8 @@
 
 ## New feature and improvements
 
+* `install_deps_app` allows `repo`, `host` and `ref` to be configured by users.
+
 ## Other improvements
 
 * Added a `NEWS.md` file to track changes to the package.
