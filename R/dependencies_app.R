@@ -62,10 +62,10 @@ install_deps_app <- function(default_repo = NULL,
     },
     server = function(input, output, session) {
 
-      dep_table_rv <- reactiveVal()
-      error_rv <- reactiveVal()
+      dep_table_rv <- shiny::reactiveVal()
+      error_rv <- shiny::reactiveVal()
 
-      observeEvent(input$compute_graph, {
+      shiny::observeEvent(input$compute_graph, {
 
         dep_table_rv(NULL)
         error_rv(NULL)
@@ -98,12 +98,12 @@ install_deps_app <- function(default_repo = NULL,
       ignoreNULL = FALSE)
 
       output$error_output <- shiny::renderText({
-        req(error_rv())
+        shiny::req(error_rv())
         error_rv()
       })
 
       output$network_proxy_nodes <- visNetwork::renderVisNetwork({
-        req(dep_table_rv())
+        shiny::req(dep_table_rv())
         dep_table_rv() %>%
           plot() %>%
           visNetwork::visInteraction(multiselect = TRUE)
@@ -120,7 +120,7 @@ install_deps_app <- function(default_repo = NULL,
       })
 
       output$nodesToInstall <- shiny::renderText({
-        req(dep_table_rv())
+        shiny::req(dep_table_rv())
         paste(setdiff(
           dep_table_rv()$table$package_name,
           input$network_proxy_nodes_selectedNodes
