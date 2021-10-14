@@ -15,4 +15,4 @@
 ## Bugfixes
 
 * Fix bug when calling `check_downstream` after `install_deps` whereby incorrect error was shown saying sha has changed.
-*More gracefully handles error in `install_deps_app`. 
+* More gracefully handles error in `install_deps_app`. 
