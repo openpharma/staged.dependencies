@@ -7,7 +7,6 @@
 install_deps_app(
   project,
   default_ref = NULL,
-  local_repos = get_local_pkgs_from_config(),
   run_gadget = TRUE,
   run_as_job = TRUE,
   verbose = 1,
@@ -22,9 +21,6 @@ is assumed to be \code{"https://github.com"}.}
 
 \item{default_ref}{(\code{character}) default ref (branch/tag), see also the parameter
 \code{ref} of \verb{\link{dependency_table}}}
-
-\item{local_repos}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
 
