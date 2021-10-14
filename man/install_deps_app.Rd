@@ -8,6 +8,7 @@ install_deps_app(
   project = ".",
   default_ref = NULL,
   local_repos = get_local_pkgs_from_config(),
+  fallback_branch = "main",
   run_gadget = TRUE,
   run_as_job = TRUE,
   verbose = 1,
@@ -24,6 +25,9 @@ dependency structure); must be a git repository.}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
+
+\item{fallback_branch}{(\code{character}) the default branch to try to use if
+no other matches found}
 
 \item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
 
