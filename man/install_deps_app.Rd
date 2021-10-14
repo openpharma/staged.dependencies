@@ -16,8 +16,17 @@ install_deps_app(
 )
 }
 \arguments{
+\item{default_repo}{(\code{character}) the repository name for the dependency graph to be
+created for, for example, \code{"openpharma/stageddeps.water"}.
+If \code{NULL} this must be entered by app user and can always be changed by the user.}
+
+\item{default_host}{(\code{character}) the host for the repository for the dependency graph to
+be created for by default \code{"https://github.com"}. If \code{NULL} this must be entered by app
+user and can always be changed by the user.}
+
 \item{default_ref}{(\code{character}) default ref (branch/tag), see also the parameter
-\code{ref} of \verb{\link{dependency_table}}. If \code{NULL} this must be entered by user.}
+\code{ref} of \verb{\link{dependency_table}}. If \code{NULL} this must be entered by app user
+and can always be changed by the user.}
 
 \item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
 
@@ -30,10 +39,6 @@ external dependencies of packages using \code{remotes::install_deps}.}
 
 \item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
 is set to "never" and shouldn't be passed into this function.}
-
-\item{project}{(\code{character}) Should be of the format \code{"<<repo>>@<<host>>"}, for example
-\code{"openpharma/stageddeps.water@https://github.com"}, if \code{host} is not included then it
-is assumed to be \code{"https://github.com"}. If \code{NULL} this must be entered by user.}
 }
 \value{
 \code{shiny.app} or value returned by app (executed as a gadget)

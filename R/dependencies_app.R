@@ -5,11 +5,15 @@
 #'
 #' @md
 #'
-#' @param project (`character`) Should be of the format `"<<repo>>@<<host>>"`, for example
-#'   `"openpharma/stageddeps.water@https://github.com"`, if `host` is not included then it
-#'   is assumed to be `"https://github.com"`. If `NULL` this must be entered by user.
+#' @param default_repo (`character`) the repository name for the dependency graph to be
+#'   created for, for example, `"openpharma/stageddeps.water"`.
+#'   If `NULL` this must be entered by app user and can always be changed by the user.
+#' @param default_host (`character`) the host for the repository for the dependency graph to
+#'   be created for by default `"https://github.com"`. If `NULL` this must be entered by app
+#'   user and can always be changed by the user.
 #' @param default_ref (`character`) default ref (branch/tag), see also the parameter
-#'   `ref` of `\link{dependency_table}`. If `NULL` this must be entered by user.
+#'   `ref` of `\link{dependency_table}`. If `NULL` this must be entered by app user
+#'   and can always be changed by the user.
 #' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
 #' @inheritParams install_deps
