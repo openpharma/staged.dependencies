@@ -5,7 +5,7 @@
 \title{Gadget or Shiny app to select the dependencies to install}
 \usage{
 install_deps_app(
-  project = ".",
+  project,
   default_ref = NULL,
   local_repos = get_local_pkgs_from_config(),
   run_gadget = TRUE,
@@ -16,8 +16,9 @@ install_deps_app(
 )
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to calculate the
-dependency structure); must be a git repository.}
+\item{project}{(\code{character}) Should be of the format \code{"<<repo>>@<<host>>"}, for example
+\code{"openpharma/stageddeps.water@https://github.com"}, if \code{host} is not included then it
+is assumed to be \code{"https://github.com"}.}
 
 \item{default_ref}{(\code{character}) default ref (branch/tag), see also the parameter
 \code{ref} of \verb{\link{dependency_table}}}
@@ -43,4 +44,9 @@ is set to "never" and shouldn't be passed into this function.}
 \description{
 The dependencies are obtained by traversing the upstream and downstream repositories
 in the package's staged dependencies yaml files starting from \code{project}.
+}
+\examples{
+\dontrun{
+  install_deps_app("openpharma/stageddeps.food@https://github.com", default_ref = "main")
+}
 }

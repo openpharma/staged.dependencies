@@ -2,6 +2,8 @@
 
 ## Breaking changes
 
+* Dependency shiny app now takes projects from remote rather than local directory, which allows different `ref` to be used. See example for more details.
+
 ## New feature and improvements
 
 ## Other improvements

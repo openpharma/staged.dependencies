@@ -4,8 +4,9 @@
 #' in the package's staged dependencies yaml files starting from `project`.
 #'
 #' @md
-#' @param project (`character`) directory of project (for which to calculate the
-#'   dependency structure); must be a git repository.
+#' @param project (`character`) Should be of the format `"<<repo>>@<<host>>"`, for example
+#'   `"openpharma/stageddeps.water@https://github.com"`, if `host` is not included then it
+#'   is assumed to be `"https://github.com"`.
 #' @param default_ref (`character`) default ref (branch/tag), see also the parameter
 #'   `ref` of `\link{dependency_table}`
 #' @param local_repos (`data.frame`) repositories that should be taken from
@@ -15,17 +16,15 @@
 #' @inheritParams install_deps
 #' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
-#'
-install_deps_app <- function(project = ".", default_ref = NULL,
+#' @examples
+#' \dontrun{
+#'   install_deps_app("openpharma/stageddeps.food@https://github.com", default_ref = "main")
+#' }
+install_deps_app <- function(project, default_ref = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              run_gadget = TRUE, run_as_job = TRUE,
                              verbose = 1, install_external_deps = TRUE, ...) {
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
-
-  # take local version of project (rather than remote)
-  check_dir_exists(project)
-  error_if_stageddeps_inexistent(project)
-  local_repos <- add_project_to_local_repos(project, local_repos)
 
   app <- shiny::shinyApp(
     ui = function() {
@@ -56,7 +55,7 @@ install_deps_app <- function(project = ".", default_ref = NULL,
                            input$ref, " starting from project ", project,
                            verbose = verbose)
 
-        dependency_table(project, ref = input$ref,
+        dependency_table(project, project_type = "repo@host", ref = input$ref,
                          local_repos = local_repos, verbose = 2)
       },
       # do not ignore NULL to also compute initially with the default feature when
@@ -98,7 +97,7 @@ install_deps_app <- function(project = ".", default_ref = NULL,
           # recreate the dep_structure object (which should be a fraction of the install time)
           # this could be changed by using the importEnv argument
           # to jobRunScript and creating an install_deps job if dep_structure already exists in env
-          install_deps_job(project = fs::path_abs(project), verbose = verbose,
+          install_deps_job(project = project,  project_type = "repo@host", verbose = verbose,
                            create_args = list(local_repos = local_repos, ref = input$ref),
                            dependency_packages = dependency_packages,
                            install_external_deps = TRUE,
