@@ -59,7 +59,7 @@
 dependency_table <- function(project = ".",
                              project_type = c("local", "repo@host")[1],
                              ref = NULL,
-                             local_repos = get_local_pkgs_from_config(),
+                             local_repos = if ((project_type) == "local") get_local_pkgs_from_config() else NULL,
                              direction = "all",
                              verbose = 1) {
 
