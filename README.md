@@ -195,6 +195,9 @@ has read privileges for the repositories.
 
 When you run `remotes::install_deps` for a package that was installed with this package, issues may arise because not all repositories are publicly accessible. Make sure to provide auth tokens.
 
+
+Users of Macs may need to install the `oskeyring` package.
+
 ## Troubleshooting (For Developers of This Package)
 For developing this package, we use `renv`. If you set environment variables such as `GITHUB_PAT` in your `~/.Rprofile`, they will
 not be available because the project `.Rprofile` does not source the global `~/.Rprofile`. To enable this, put 
