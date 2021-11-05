@@ -7,7 +7,9 @@
 ## Other improvements
 
 * Added a `NEWS.md` file to track changes to the package.
+* Fallback branch for repositories can now be specified and is not hard-coded as `main`.
 * `check_downstream` will not stop on first package error but will run on all expected packages and all failures are output. 
+
 
 ## Bugfixes
 

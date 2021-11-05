@@ -10,6 +10,8 @@
 #'   `ref` of `\link{dependency_table}`
 #' @param local_repos (`data.frame`) repositories that should be taken from
 #'   local rather than cloned; columns are `repo, host, directory`
+#' @param fallback_branch (`character`) the default branch to try to use if
+#'   no other matches found
 #' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
 #' @inheritParams install_deps
@@ -18,6 +20,7 @@
 #'
 install_deps_app <- function(project = ".", default_ref = NULL,
                              local_repos = get_local_pkgs_from_config(),
+                             fallback_branch = "main",
                              run_gadget = TRUE, run_as_job = TRUE,
                              verbose = 1, install_external_deps = TRUE, ...) {
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
@@ -56,7 +59,7 @@ install_deps_app <- function(project = ".", default_ref = NULL,
                            input$ref, " starting from project ", project,
                            verbose = verbose)
 
-        dependency_table(project, ref = input$ref,
+        dependency_table(project, ref = input$ref, fallback_branch = fallback_branch,
                          local_repos = local_repos, verbose = 2)
       },
       # do not ignore NULL to also compute initially with the default feature when
@@ -99,7 +102,7 @@ install_deps_app <- function(project = ".", default_ref = NULL,
           # this could be changed by using the importEnv argument
           # to jobRunScript and creating an install_deps job if dep_structure already exists in env
           install_deps_job(project = fs::path_abs(project), verbose = verbose,
-                           create_args = list(local_repos = local_repos, ref = input$ref),
+                           create_args = list(local_repos = local_repos, ref = input$ref, fallback_branch = fallback_branch),
                            dependency_packages = dependency_packages,
                            install_external_deps = TRUE,
                            install_direction = c("upstream", "downstream"),

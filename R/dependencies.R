@@ -23,6 +23,8 @@
 #'   either or both of "upstream" and "downstream".
 #'   Note if both are chosen then the entire graph is created
 #'   (i.e. upstream dependencies of downstream dependencies)
+#' @param fallback_branch (`character`) the default branch to try to use if
+#'   no other matches found
 #' @param verbose (`numeric`) verbosity level, incremental;
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
@@ -63,6 +65,7 @@ dependency_table <- function(project = ".",
                              ref = NULL,
                              local_repos = get_local_pkgs_from_config(),
                              direction = c("upstream", "downstream"),
+                             fallback_branch = "main",
                              verbose = 1) {
 
   # validate arguments
@@ -70,6 +73,7 @@ dependency_table <- function(project = ".",
   check_verbose_arg(verbose)
   check_direction_arg(direction)
   stopifnot(project_type %in% c("local", "repo@host"))
+  stopifnot(rlang::is_scalar_character(fallback_branch))
 
   if (project_type == "repo@host" && (is.null(ref) || nchar(ref) == 0)) {
     stop("For non-local projects the (branch/tag) must be specified")
@@ -81,7 +85,7 @@ dependency_table <- function(project = ".",
     if (is.null(ref) || nchar(ref) == 0) {
       ref <- infer_ref_from_branch(project)
     }
-    check_ref_consistency(ref, project)
+    check_ref_consistency(ref, project, fallback_branch)
   }
 
   if (project_type == "local") {
@@ -97,7 +101,8 @@ dependency_table <- function(project = ".",
   # a dataframe with columns repo, host, ref, sha, cache_dir
   internal_deps <- rec_checkout_internal_deps(
     repo_to_process, ref, direction = direction,
-    local_repos = local_repos, verbose = verbose
+    local_repos = local_repos, fallback_branch = fallback_branch,
+    verbose = verbose
   )
 
   internal_deps$package_name <- get_pkg_names_from_paths(internal_deps$cache_dir)
