@@ -14,6 +14,7 @@
 #' @param ref ref we want to build
 #' @param available_refs data.frame with columns `ref` the names of the available refs
 #'   and `type` (`branch` or `tag`)
+#' @param fallback_branch the default branch to try to use if no other matches found
 #' @param branch_sep separator between branches in `feature`, `/` does not
 #'   work well with `git` because it clashes with the filesystem paths
 #'
@@ -65,7 +66,7 @@
 #' ) == structure("main", type = "branch")
 #'
 #'
-determine_ref <- function(ref, available_refs, branch_sep = "@") {
+determine_ref <- function(ref, available_refs, fallback_branch = "main", branch_sep = "@") {
   stopifnot(
     is_non_empty_char(ref),
     is.data.frame(available_refs),
@@ -85,7 +86,7 @@ determine_ref <- function(ref, available_refs, branch_sep = "@") {
   els <- unlist(strsplit(ref, branch_sep, fixed = TRUE))
   branches_to_check <- union(
     rev(Reduce(function(x, y) paste0(y, branch_sep, x), rev(els), accumulate = TRUE)),
-    "main"
+    fallback_branch
   )
 
   for (branch in branches_to_check) {
@@ -106,13 +107,16 @@ infer_ref_from_branch <- function(project = ".") {
 }
 
 
-check_ref_consistency <- function(ref, project = ".") {
+check_ref_consistency <- function(ref, project = ".", fallback_branch = "main") {
   check_dir_exists(project)
   current_branch <- get_current_branch(project)
   # if in detached HEAD then we ignore the ref_consistency check (i.e. so gitlab
   # automation does not throw a warning)
   if (!is.null(current_branch)) {
-    expected_current_branch <- determine_ref(ref, available_refs = available_references(project))
+    expected_current_branch <- determine_ref(ref,
+      available_refs = available_references(project),
+      fallback_branch = fallback_branch
+    )
     if (current_branch != expected_current_branch) {
       warning("Branch ", ref, " would match ", expected_current_branch, " in project ", project,
               ", but currently checked out branch is ", current_branch)

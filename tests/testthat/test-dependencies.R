@@ -196,7 +196,7 @@ test_that("install_deps works", {
     expected_result
   )
 
-  # check install_direction = c("upstream", "downstream")
+  # check install_direction = "all"
   # in theory may fail because topological order is not unique,
   # although topological order is not unique our implementation should be deterministic
   expected_result <- data.frame(
@@ -206,9 +206,9 @@ test_that("install_deps works", {
     stringsAsFactors = FALSE
   )
   expected_result$actions <- rep(list("install"), 6)
+
   expect_equal(
-    install_deps(dep_table, dry_install = TRUE, install_direction = c("upstream", "downstream")
-    )[, c("package_name", "actions")],
+    install_deps(dep_table, dry_install = TRUE, install_direction = "all")[, c("package_name", "actions")],
     expected_result
   )
 
@@ -294,7 +294,7 @@ test_that("get_all_external_deps works", {
       current_pkg = NA,
       table = internal_deps,
       deps = deps,
-      direction = c("upstream", "downstream")
+      direction = "all"
     ),
     class = "dependency_structure"
   )
@@ -307,18 +307,18 @@ test_that("get_all_external_deps works", {
                                    LinkingTo = as.character(rep(NA, 7)))
 
 
+  # These tests rely on a deterministic topological_sort function
+  expect_equal(get_all_external_dependencies(x, available_packages = available_packages),
+               c("U", "X", "V", "Y", "T", "Z"))
 
-  expect_equal(sort(get_all_external_dependencies(x, available_packages = available_packages)),
-               c("T", "U", "V", "X", "Y", "Z"))
-
-  # test from_internal_dependencies 9remove suggests)
+  # test from_internal_dependencies remove suggests)
   results <- get_all_external_dependencies(x, available_packages = available_packages, from_internal_dependencies = c("Depends", "Imports", "LinkingTo"))
-  expect_equal(sort(results), c("T", "U", "X", "Z"))
+  expect_equal(results, c("U", "X", "T", "Z"))
 
   # only take B's dependencies
-  expect_equal(sort(get_all_external_dependencies(x,
-                      packages_to_process = "B",
-                      available_packages = available_packages)),
+  expect_equal(get_all_external_dependencies(x,
+                      package_list = "B",
+                      available_packages = available_packages),
                c("T", "Z"))
 
   # test from_external_dependencies and check get warning for missing packages
@@ -326,7 +326,17 @@ test_that("get_all_external_deps works", {
                                                           from_external_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests")),
                  "Cannot find information about package\\(s\\) Q, S check that options\\('repos'\\) contains expected repos")
 
-  expect_equal(sort(results), c("Q", "S", "T", "U", "V", "W", "X", "Y", "Z"))
+  # we just need Q before W, T before Z, U before X and U + V before Y
+  expect_equal(results, c("Q", "W", "U", "X", "V", "Y", "T", "Z", "S"))
+
+  # message and unsorted list if not all of Depends, Imports and LinkingTo are `from_external_dependencies`
+  expect_message(results <-  get_all_external_dependencies(x,
+                                package_list = "B",
+                                available_packages = available_packages,
+                                from_external_dependencies = c("Depends", "Imports")),
+                 regexp = "Packages will not be ordered as this requires")
+
+  expect_equal(sort(results), c("T", "Z"))
 
 })
 

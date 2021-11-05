@@ -8,8 +8,9 @@ starting from repos_to_process.}
 rec_checkout_internal_deps(
   repos_to_process,
   ref,
-  direction = c("upstream"),
+  direction = "upstream",
   local_repos = get_local_pkgs_from_config(),
+  fallback_branch = "main",
   verbose = 0
 )
 }
@@ -24,6 +25,9 @@ to recursively checkout upstream and/or downstream dependencies}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
 local rather than cloned; columns are \verb{repo, host, directory}}
+
+\item{fallback_branch}{(\code{character}) the default branch to try to use if
+no other matches found}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
