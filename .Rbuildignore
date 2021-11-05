@@ -5,3 +5,6 @@
 docs
 .idea
 .github
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
