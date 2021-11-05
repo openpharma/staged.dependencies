@@ -9,6 +9,7 @@ run_package_actions(
   internal_pkg_deps,
   dry = FALSE,
   install_external_deps = TRUE,
+  upgrade = "never",
   rcmd_args = NULL,
   artifact_dir = NULL,
   verbose = 0,
@@ -35,6 +36,8 @@ otherwise \verb{R CMD INSTALL} on tarball
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of package using \code{remotes::install_deps}.}
 
+\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+
 \item{rcmd_args}{list with names \code{build}, \code{check},
 \code{install} which are vectors that are passed as separate arguments
 to the \verb{R CMD} commands}
@@ -44,8 +47,7 @@ to the \verb{R CMD} commands}
 
 \item{verbose}{verbosity level, incremental - from 0 (none) to 2 (high)}
 
-\item{...}{Additional args passed to \verb{remotes::install_deps. Note }upgrade`
-is set to "never" and shouldn't be passed into this function.}
+\item{...}{Additional args passed to `remotes::install_deps.}
 }
 \description{
 Run an action on the packages

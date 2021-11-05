@@ -21,7 +21,7 @@ run_job <- function(text, tempfile_prefix = "file", jobname_prefix = "Job", ...)
 #' install_deps_job(create_args = list(ref = "6_makegraph@main"))
 #'
 #' # install all dependencies
-#' install_deps_job(create_args = list(direction = c("upstream", "downstream")))
+#' install_deps_job(create_args = list(direction = "all"))
 #' install_deps_job(dry_install = TRUE)
 #' }
 install_deps_job <- function(project = ".", project_type = "local", verbose = 1, create_args = list(), ...) {

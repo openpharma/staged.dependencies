@@ -39,14 +39,15 @@ uses \code{dep_structure$deps} to infer upstream dependencies}
 package (i.e. the package named in \code{dependency_structure$current_pkg}),
 ignored unless \code{install_direction = "upstream"} (because downstream
 deps automatically install all their upstream deps)}
-    \item{\code{dry_install}}{(\code{logical}) dry run that lists packages that would be
-installed}
-    \item{\code{install_direction}}{"upstream", "downstream" or both; which packages
+    \item{\code{install_direction}}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
     \item{\code{install_external_deps}}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
-    \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
-list will be installed (advanced usage only)}
+    \item{\code{upgrade}}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+    \item{\code{package_list}}{(\code{character}) If not NULL, an additional filter, only packages on this
+list will be considered and their dependencies installed if needed (advanced usage only).}
+    \item{\code{dry}}{(\code{logical}) dry run that outputs what would happen without actually
+doing it.}
   }}
 }
 \description{
@@ -58,7 +59,7 @@ install_deps_job()
 install_deps_job(create_args = list(ref = "6_makegraph@main"))
 
 # install all dependencies
-install_deps_job(create_args = list(direction = c("upstream", "downstream")))
+install_deps_job(create_args = list(direction = "all"))
 install_deps_job(dry_install = TRUE)
 }
 }

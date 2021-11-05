@@ -8,7 +8,7 @@ get_all_external_dependencies(
   dep_structure,
   available_packages = as.data.frame(utils::available.packages()),
   install_direction = "upstream",
-  packages_to_process = NULL,
+  package_list = NULL,
   from_internal_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests"),
   from_external_dependencies = c("Depends", "Imports", "LinkingTo")
 )
@@ -24,11 +24,11 @@ uses \code{dep_structure$deps} to infer upstream dependencies}
 however you need to ensure the \code{options("repos")} contains the urls of all expected repos
 (e.g. Bioconductor).}
 
-\item{install_direction}{"upstream", "downstream" or both; which packages
+\item{install_direction}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
 
-\item{packages_to_process}{(\code{character}) An additional filter, only packages on
-this list will be considered (advanced usage only)}
+\item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
+list will be considered and their dependencies installed if needed (advanced usage only).}
 
 \item{from_internal_dependencies}{Vector chosen from \code{c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")}
 which fields of the DESCRIPTION file of the internal packages should be included. Default:

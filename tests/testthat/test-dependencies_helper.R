@@ -11,7 +11,7 @@ test_that("get_true_deps_graph works", {
 
   # check that the up- and downstream graphs and external deps are as expected by DESCRIPTION files
   expect_equal(
-    get_true_deps_graph(pkgs_df, c("upstream", "downstream")),
+    get_true_deps_graph(pkgs_df, "all"),
     list(
       external = list(
         stageddeps.elecinfra = data.frame(type = "Suggests", package = "testthat", version = ">= 2.1.0"),

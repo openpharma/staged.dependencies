@@ -14,17 +14,18 @@
 #' @param dry logical, if `FALSE` (default) run the actions, if `TRUE` do not
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of package using `remotes::install_deps`.
+#' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'.
 #' @param rcmd_args list with names `build`, `check`,
 #'   `install` which are vectors that are passed as separate arguments
 #'   to the `R CMD` commands
 #' @param artifact_dir directory to store log files, only when actions include
 #'   `build`; action `test` only outputs to the console
 #' @param verbose verbosity level, incremental - from 0 (none) to 2 (high)
-#' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
-#'   is set to "never" and shouldn't be passed into this function.
+#' @param ... Additional args passed to `remotes::install_deps.
 run_package_actions <- function(pkg_actions, internal_pkg_deps,
                                 dry = FALSE,
                                 install_external_deps = TRUE,
+                                upgrade = "never",
                                 rcmd_args = NULL,
                                 artifact_dir = NULL,
                                 verbose = 0, ...) {
@@ -125,7 +126,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
       if ("install" %in% actions) {
         if (install_external_deps) {
           install_external_deps(cache_dir, internal_pkg_deps = internal_pkg_deps,
-                                dependencies = TRUE, upgrade = "never", ...)
+                                dependencies = TRUE, upgrade = upgrade, ...)
         }
 
         # install the tar.gz if it exists otherwise install using staged.deps
@@ -235,6 +236,7 @@ get_true_deps_graph <- function(pkgs_df,
     is.data.frame(pkgs_df),
     all(c("package_name", "cache_dir") %in% colnames(pkgs_df))
   )
+  graph_directions <- check_direction_arg_deprecated(graph_directions)
   check_direction_arg(graph_directions)
 
   # get the Imports, Suggests, Depends for each package
@@ -260,10 +262,10 @@ get_true_deps_graph <- function(pkgs_df,
 
   res <- list()
   res[["external"]] <- external
-  if ("upstream" %in% graph_directions) {
+  if (graph_directions %in% c("upstream", "all")) {
     res[["upstream_deps"]] <- upstream_deps
   }
-  if ("downstream" %in% graph_directions) {
+  if (graph_directions %in% c("downstream", "all")) {
     downstream_deps <- lapply(upstream_deps, function(x) c())
     for (x in names(upstream_deps)) {
       for (y in upstream_deps[[x]]) {
@@ -327,7 +329,7 @@ parse_remote_project <- function(project) {
 filter_pkgs <- function(pkg_df,
                         install_direction,
                         include_project = TRUE,
-                        dependency_packages = NULL,
+                        package_list = NULL,
                         distance = NULL) {
   stopifnot(
     is.data.frame(pkg_df),
@@ -337,7 +339,7 @@ filter_pkgs <- function(pkg_df,
   check_direction_arg(install_direction)
 
   # filter by install_direction
-  if (length(install_direction) == 1) {
+  if (install_direction != "all") {
     pkg_names <- pkg_df$package_name[pkg_df$type %in% c("current", install_direction)]
   } else {
     pkg_names <- pkg_df$package_name
@@ -348,8 +350,8 @@ filter_pkgs <- function(pkg_df,
   }
 
   # filter by dependency_packages: restrict actions to those packages
-  if (!is.null(dependency_packages)) {
-    pkg_names <- intersect(pkg_names, dependency_packages)
+  if (!is.null(package_list)) {
+    pkg_names <- intersect(pkg_names, package_list)
   }
 
   if (!is.null(distance)) {

@@ -30,7 +30,8 @@ install_deps_app <- function(default_repo = NULL,
                              default_ref = "main",
                              fallback_branch = "main",
                              run_gadget = TRUE, run_as_job = TRUE,
-                             verbose = 1, install_external_deps = TRUE, ...) {
+                             verbose = 1, install_external_deps = TRUE,
+                             upgrade = "never", ...) {
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
 
   app <- shiny::shinyApp(
@@ -151,15 +152,17 @@ install_deps_app <- function(default_repo = NULL,
             install_deps_job(project = paste(input$repo, input$host, sep = "@"),  project_type = "repo@host", verbose = verbose,
                              create_args = list(local_repos = NULL, ref = input$ref),
                              dependency_packages = dependency_packages, fallback_branch = fallback_branch,
-                             install_external_deps = TRUE,
-                             install_direction = c("upstream", "downstream"),
+                             install_external_deps = install_external_deps,
+                             install_direction = "all",
+                             upgrade = upgrade,
                              ...)
           } else{
             install_deps(dep_table_rv(),
                          dependency_packages = dependency_packages,
                          verbose = verbose,
-                         install_external_deps = TRUE,
-                         install_direction = c("upstream", "downstream"),
+                         install_external_deps = install_external_deps,
+                         install_direction = "all",
+                         upgrade = upgrade,
                          ...)
           }
 

@@ -8,7 +8,7 @@ starting from repos_to_process.}
 rec_checkout_internal_deps(
   repos_to_process,
   ref,
-  direction = c("upstream"),
+  direction = "upstream",
   local_repos = get_local_pkgs_from_config(),
   fallback_branch = "main",
   verbose = 0
