@@ -6,14 +6,16 @@
 \usage{
 build_check_install(
   dep_structure,
-  install_direction = c("upstream", "downstream"),
-  packages_to_process = NULL,
-  dry_install = FALSE,
-  verbose = 1,
+  install_direction = "all",
   steps = c("build", "check", "install"),
-  rcmd_args = list(check = c("--no-manual")),
+  rcmd_args = list(check = c("--no-multiarch", "--with-keep.source",
+    "--install-tests")),
   artifact_dir = tempfile(),
   install_external_deps = TRUE,
+  upgrade = "never",
+  package_list = NULL,
+  dry = FALSE,
+  verbose = 1,
   ...
 )
 }
@@ -23,16 +25,8 @@ build_check_install(
 to apply action to and infer installation order;
 uses \code{dep_structure$deps} to infer upstream dependencies}
 
-\item{install_direction}{"upstream", "downstream" or both; which packages
+\item{install_direction}{"upstream", "downstream" or "all"; which packages
 to install (according to dependency structure). By default this is only "upstream"}
-
-\item{packages_to_process}{(\code{character}) An additional filter, only packages on
-this list will be considered (advanced usage only)}
-
-\item{dry_install}{(\code{logical}) dry run that lists packages that would be
-installed}
-
-\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
 \item{steps}{(\code{character} vector) subset of "build", "check", "install";
 useful to skip checking for example}
@@ -47,6 +41,16 @@ and logs}
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
 
+\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+
+\item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
+list will be considered and their dependencies installed if needed (advanced usage only).}
+
+\item{dry}{(\code{logical}) dry run that outputs what would happen without actually
+doing it.}
+
+\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
+
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}
   \describe{
@@ -54,8 +58,6 @@ external dependencies of packages using \code{remotes::install_deps}.}
 package (i.e. the package named in \code{dependency_structure$current_pkg}),
 ignored unless \code{install_direction = "upstream"} (because downstream
 deps automatically install all their upstream deps)}
-    \item{\code{dependency_packages}}{(\code{character}) An additional filter, only packages on this
-list will be installed (advanced usage only)}
   }}
 }
 \value{

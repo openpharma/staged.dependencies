@@ -20,9 +20,9 @@
 #' @param local_repos (`data.frame`) repositories that should be taken from
 #'   local file system rather than cloned; columns are `repo, host, directory`
 #' @param direction (`character`) direction in which to discover packages
-#'   either or both of "upstream" and "downstream".
-#'   Note if both are chosen then the entire graph is created
-#'   (i.e. upstream dependencies of downstream dependencies)
+#'   either "upstream","downstream" or "all".
+#' @param fallback_branch (`character`) the default branch to try to use if
+#'   no other matches found
 #' @param verbose (`numeric`) verbosity level, incremental;
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
@@ -61,15 +61,18 @@
 dependency_table <- function(project = ".",
                              project_type = c("local", "repo@host")[1],
                              ref = NULL,
-                             local_repos = get_local_pkgs_from_config(),
-                             direction = c("upstream", "downstream"),
+                             local_repos = if ((project_type) == "local") get_local_pkgs_from_config() else NULL,
+                             direction = "all",
+                             fallback_branch = "main",
                              verbose = 1) {
 
   # validate arguments
   stopifnot(is.data.frame(local_repos) || is.null(local_repos))
   check_verbose_arg(verbose)
+  direction <- check_direction_arg_deprecated(direction)
   check_direction_arg(direction)
   stopifnot(project_type %in% c("local", "repo@host"))
+  stopifnot(rlang::is_scalar_character(fallback_branch))
 
   if (project_type == "repo@host" && (is.null(ref) || nchar(ref) == 0)) {
     stop("For non-local projects the (branch/tag) must be specified")
@@ -81,7 +84,7 @@ dependency_table <- function(project = ".",
     if (is.null(ref) || nchar(ref) == 0) {
       ref <- infer_ref_from_branch(project)
     }
-    check_ref_consistency(ref, project)
+    check_ref_consistency(ref, project, fallback_branch)
   }
 
   if (project_type == "local") {
@@ -97,7 +100,8 @@ dependency_table <- function(project = ".",
   # a dataframe with columns repo, host, ref, sha, cache_dir, accessible (logical)
   internal_deps <- rec_checkout_internal_deps(
     repo_to_process, ref, direction = direction,
-    local_repos = local_repos, verbose = verbose
+    local_repos = local_repos, fallback_branch = fallback_branch,
+    verbose = verbose
   )
 
   internal_deps$package_name[internal_deps$accessible] <-
@@ -117,8 +121,8 @@ dependency_table <- function(project = ".",
   # deps$external[["a"]] is a vector of external packages in "a"s DESCRIPTION file
   # where the elements of the lists are the package names found in internal_deps
   # deps is ordered topologically
+  deps <- get_true_deps_graph(internal_deps, graph_directions = "all")
 
-  deps <- get_true_deps_graph(internal_deps, graph_directions = c("upstream", "downstream"))
 
   current_pkg <- internal_deps$package_name[
     internal_deps$repo == repo_to_process[[1]]$repo &
@@ -304,17 +308,17 @@ plot.dependency_structure <- function(x, y, ...){
 #'   package (i.e. the package named in `dependency_structure$current_pkg`),
 #'   ignored unless `install_direction = "upstream"` (because downstream
 #'   deps automatically install all their upstream deps)
-#' @param dry_install (`logical`) dry run that lists packages that would be
-#'   installed
-#' @param install_direction "upstream", "downstream" or both; which packages
+#' @param install_direction "upstream", "downstream" or "all"; which packages
 #'   to install (according to dependency structure). By default this is only "upstream"
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of packages using `remotes::install_deps`.
-#' @param dependency_packages (`character`) An additional filter, only packages on this
-#'   list will be installed (advanced usage only)
+#' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'.
+#' @param package_list (`character`) If not NULL, an additional filter, only packages on this
+#'   list will be considered and their dependencies installed if needed (advanced usage only).
+#' @param dry (`logical`) dry run that outputs what would happen without actually
+#'   doing it.
 #' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
-#' @param ... Additional args passed to `remotes::install_deps. Note `upgrade`
-#'   is set to "never" and shouldn't be passed into this function.
+#' @param ... Additional args passed to `remotes::install_deps.
 #'
 #' @return `data.frame` of performed actions
 #'
@@ -328,22 +332,24 @@ plot.dependency_structure <- function(x, y, ...){
 #' install_deps(x)
 #'
 #' # install all dependencies
-#' install_deps(x, direction = c("upstream", "downstream"))
+#' install_deps(x, install_direction = "all")
 #'
 #' }
 install_deps <- function(dep_structure,
                          install_project = TRUE,
-                         dry_install = FALSE,
                          install_direction = "upstream",
                          install_external_deps = TRUE,
-                         dependency_packages = NULL,
+                         upgrade = "never",
+                         package_list = NULL,
+                         dry = FALSE,
                          verbose = 1,
                          ...) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
-  stopifnot(is.logical(install_project), is.logical(dry_install))
+  stopifnot(is.logical(install_project), is.logical(dry))
 
-  if (!all(install_direction %in% dep_structure$direction)) {
+  install_direction <- check_direction_arg_deprecated(install_direction)
+  if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
     stop("Invalid install_direction argument for this dependency object")
   }
 
@@ -352,7 +358,7 @@ install_deps <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction,
                            include_project = install_project,
-                           dependency_packages = dependency_packages)
+                           package_list = package_list)
 
 
   # we also need to install the upstream dependencies of e.g. the downstream dependencies
@@ -361,8 +367,9 @@ install_deps <- function(dep_structure,
 
   pkg_actions <- compute_actions(pkg_df, pkg_names, "install", upstream_pkgs)
 
-  run_package_actions(pkg_actions, dry = dry_install,
+  run_package_actions(pkg_actions, dry = dry,
                       install_external_deps = install_external_deps,
+                      upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
                       verbose = verbose, ...)
   pkg_actions
@@ -376,14 +383,9 @@ install_deps <- function(dep_structure,
 #' `rcmdcheck` (`R CMD check`) on the downstream dependencies.
 #'
 #' @md
-#' @param downstream_packages (`vector`) additional filter to only install
-#'   and check packages contained in this vector (advanced use only)
 #' @param distance (`numeric`) additional filter to only install downstream
 #'   packages at most this distance from the `dependency_structure$current_pkg`
 #'   (advanced use only)
-#' @param dry_install_and_check (`logical`) whether to install upstream
-#'   dependencies and check/test downstream repos; otherwise just reports
-#'   what would be installed
 #' @param check_args (`list`) arguments passed to `rcmdcheck`
 #' @param only_tests (`logical`) whether to only run tests (rather than checks)
 #' @inheritParams install_deps
@@ -399,17 +401,17 @@ install_deps <- function(dep_structure,
 #' check_downstream(x, verbose = 1, only_test = TRUE, check_args = c("--no-manual"))
 #' }
 check_downstream <- function(dep_structure,
-                             downstream_packages = NULL,
-                             distance = NULL, dry_install_and_check = FALSE,
-                             check_args = NULL,
-                             only_tests = FALSE,
-                             verbose = 1, install_external_deps = TRUE, ...) {
+                             distance = NULL,
+                             check_args = c("--no-multiarch", "--with-keep.source", "--install-tests"),
+                             only_tests = FALSE, install_external_deps = TRUE,
+                             upgrade = "never", package_list = NULL, dry = FALSE,
+                             verbose = 1, ...) {
   stopifnot(
     methods::is(dep_structure, "dependency_structure"),
-    is.logical(dry_install_and_check)
+    is.logical(dry)
   )
 
-  if (!"downstream" %in% dep_structure$direction) {
+  if (!dep_structure$direction %in% c("all", "downstream")) {
     stop("Invalid dependency table - downstream dependencies must be have been calculated")
   }
 
@@ -418,7 +420,7 @@ check_downstream <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction = "downstream",
                            include_project = FALSE,
-                           dependency_packages = downstream_packages,
+                           package_list = package_list,
                            distance = distance)
 
 
@@ -429,8 +431,9 @@ check_downstream <- function(dep_structure,
   actions <- if (only_tests) c("test", "install") else c("check", "install")
   pkg_actions <- compute_actions(pkg_df, pkg_names, actions, upstream_pkgs)
 
-  run_package_actions(pkg_actions, dry = dry_install_and_check,
+  run_package_actions(pkg_actions, dry = dry,
                       install_external_deps = install_external_deps,
+                      upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
                       rcmd_args = list(check = check_args),
                       verbose = verbose, ...)
@@ -476,8 +479,6 @@ update_with_direct_deps <- function(dep_structure) {
 #' @param rcmd_args (`list`) with names `build`, `check`,
 #'   `install` which are vectors that are passed as separate arguments
 #'   to the `R CMD` commands
-#' @param packages_to_process (`character`) An additional filter, only packages on
-#'   this list will be considered (advanced usage only)
 #' @param artifact_dir (`character`) directory to place built R packages
 #'   and logs
 #' @return list with entries
@@ -492,19 +493,24 @@ update_with_direct_deps <- function(dep_structure) {
 #'
 #' }
 build_check_install <- function(dep_structure,
-                               install_direction = c("upstream", "downstream"),
-                               packages_to_process = NULL,
-                               dry_install = FALSE,
-                               verbose = 1,
+                               install_direction = "all",
                                steps = c("build", "check", "install"),
-                               rcmd_args = list(check = c("--no-manual")),
+                               rcmd_args = list(check = c("--no-multiarch", "--with-keep.source", "--install-tests")),
                                artifact_dir = tempfile(),
-                               install_external_deps = TRUE, ...) {
+                               install_external_deps = TRUE,
+                               upgrade = "never",
+                               package_list = NULL,
+                               dry = FALSE, verbose = 1,
+                               ...) {
 
   steps <- match.arg(steps, several.ok = TRUE)
-  stopifnot(methods::is(dep_structure, "dependency_structure"))
+  stopifnot(
+    methods::is(dep_structure, "dependency_structure"),
+    is.logical(dry)
+  )
 
-  if (!all(install_direction %in% dep_structure$direction)) {
+  install_direction <- check_direction_arg_deprecated(install_direction)
+  if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
     stop("Invalid install_direction argument for this dependency object")
   }
 
@@ -517,7 +523,7 @@ build_check_install <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction = install_direction,
                            include_project = TRUE,
-                           dependency_packages = packages_to_process)
+                           package_list = package_list)
 
 
   # we also need to install the upstream dependencies of e.g. the downstream dependencies
@@ -526,8 +532,9 @@ build_check_install <- function(dep_structure,
 
   pkg_actions <- compute_actions(pkg_df, pkg_names, steps, upstream_pkgs)
 
-  run_package_actions(pkg_actions, dry = dry_install,
+  run_package_actions(pkg_actions, dry = dry,
                       install_external_deps = install_external_deps,
+                      upgrade = upgrade,
                       internal_pkg_deps = dep_structure$table$package_name,
                       rcmd_args = rcmd_args,
                       artifact_dir = artifact_dir,
@@ -559,7 +566,7 @@ build_check_install <- function(dep_structure,
 check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) {
 
   stopifnot(methods::is(dep_structure, "dependency_structure"))
-  stopifnot(setequal(dep_structure$direction, c("upstream", "downstream")))
+  stopifnot(dep_structure$direction == "all")
   stopifnot(rlang::is_bool(skip_if_missing_yaml))
 
   extract_package_name <- function(repo_and_host, table) {
@@ -628,7 +635,9 @@ check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) 
 #' @inheritParams build_check_install
 #' @md
 #' @return A vector of 'external' R packages required to install
-#'   the selected 'internal' packages. This can be used with `remotes::system_requirements`
+#'   the selected 'internal' packages, ordered by install order (unless `from_external_dependencies`
+#'   does not include `"Depends"`, `"Imports"` and `"LinkingTo"`). The core R packages
+#'   (e.g. `methods`, `utils`) are not included. The output can be used with `remotes::system_requirements`
 #'   to extract the system requirements needed for your packages, see example below.
 #' @examples
 #' \dontrun{
@@ -651,7 +660,7 @@ check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) 
 get_all_external_dependencies <- function(dep_structure,
                                           available_packages = as.data.frame(utils::available.packages()),
                                           install_direction = "upstream",
-                                          packages_to_process = NULL,
+                                          package_list = NULL,
                                           from_internal_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests"),
                                           from_external_dependencies = c("Depends", "Imports", "LinkingTo")) {
   stopifnot(methods::is(dep_structure, "dependency_structure"))
@@ -663,7 +672,8 @@ get_all_external_dependencies <- function(dep_structure,
   match.arg(from_external_dependencies, c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances"), several.ok = TRUE)
 
 
-  if (!all(install_direction %in% dep_structure$direction)) {
+  install_direction <- check_direction_arg_deprecated(install_direction)
+  if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
     stop("Invalid install_direction argument for this dependency object")
   }
 
@@ -675,7 +685,7 @@ get_all_external_dependencies <- function(dep_structure,
 
   pkg_names <- filter_pkgs(pkg_df, install_direction = install_direction,
                            include_project = TRUE,
-                           dependency_packages = packages_to_process)
+                           package_list = package_list)
 
 
   # we also need to consider the upstream dependencies of e.g. the downstream dependencies
@@ -718,6 +728,24 @@ get_all_external_dependencies <- function(dep_structure,
     packages_to_consider <- setdiff(new_packages_to_consider, external_packages)
   }
 
-  return(external_packages)
+  # order external dependencies by install order
+  # when ordering we use Depends, Imports and LinkingTo as they are needed for installation
+  if (!all(c("Depends", "Imports", "LinkingTo") %in% from_external_dependencies)) {
+    message("Packages will not be ordered as this requires 'Depends', 'Imports' and 'LinkingTo' to
+      included in from_external_dependencies argument.")
+  } else {
+    external_package_table <- available_packages[available_packages$Package %in% external_packages, ]
 
+    package_deps <- apply(external_package_table, 1, function(row)
+      unique(unlist(lapply(c("Depends", "Imports", "LinkingTo"), function(x) parse_deps_table(row[x]))))
+    )
+    names(package_deps) <- external_package_table$Package
+    ordered_external_packages <- topological_sort(package_deps)
+
+    # there may be packages missed in ordered_external_packages (e.g. if a package is only in suggests)
+    # so make sure they are added in
+    external_packages <- c(ordered_external_packages, setdiff(external_packages, ordered_external_packages))
+  }
+  # remove R core packages when returning the packages
+  return(external_packages[!external_packages %in% r_core_packages])
 }

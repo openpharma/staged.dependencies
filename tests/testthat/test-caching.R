@@ -34,7 +34,6 @@ test_that("clear_cache", {
 })
 
 
-
 test_that("rec_checkout_internal_deps works (with mocking checkout)", {
 
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
@@ -42,18 +41,24 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     repo_name <- basename(repo_url)
     repo_name <- substr(repo_name, 0, nchar(repo_name) - nchar(".git"))
     cat(paste0("Mocking checkout_repo for ", repo_name, "\n"))
-
     if (fs::dir_exists(repo_dir)) {
       fs::dir_delete(repo_dir)
     }
     fs::dir_copy(file.path(TESTS_GIT_REPOS, repo_name), repo_dir)
-
     available_refs <- available_references(repo_dir)
     selected_ref <- select_ref_rule(available_refs)
     # do not do actual checkout of branch
-
     return(list(dir = repo_dir, ref = selected_ref, sha = "xxx", accessible = TRUE))
   })
+
+  # check error if fallback_branch argument is incorrect
+  expect_error(
+    capture.output(rec_checkout_internal_deps(
+      list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
+      "unittest_branch1",
+      direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist", verbose = 0)),
+    regexp = "Available refs 'main' must include at least one of 'unittest_branch1, not_exist'" , fixed = TRUE
+  )
 
   output <- capture.output(res <- rec_checkout_internal_deps(
     list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
@@ -125,7 +130,7 @@ test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking
 
   res <- rec_checkout_internal_deps(
     list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
-    "main", local_repos = NULL, verbose = 0, direction = c("upstream", "downstream")
+    "main", local_repos = NULL, verbose = 0, direction = "all"
   )
 
   # we should not see garden and water should not be accessible
