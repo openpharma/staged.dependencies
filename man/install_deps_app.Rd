@@ -8,6 +8,7 @@ install_deps_app(
   default_repo = NULL,
   default_host = "https://github.com",
   default_ref = "main",
+  fallback_branch = "main",
   run_gadget = TRUE,
   run_as_job = TRUE,
   verbose = 1,
@@ -27,6 +28,9 @@ user and can always be changed by the user.}
 \item{default_ref}{(\code{character}) default ref (branch/tag), see also the parameter
 \code{ref} of \verb{\link{dependency_table}}. If \code{NULL} this must be entered by app user
 and can always be changed by the user.}
+
+\item{fallback_branch}{(\code{character}) the default branch to try to use if
+no other matches found}
 
 \item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
 

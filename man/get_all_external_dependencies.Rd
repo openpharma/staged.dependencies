@@ -40,7 +40,9 @@ which fields of the DESCRIPTION file of the internal packages should be included
 }
 \value{
 A vector of 'external' R packages required to install
-the selected 'internal' packages. This can be used with \code{remotes::system_requirements}
+the selected 'internal' packages, ordered by install order (unless \code{from_external_dependencies}
+does not include \code{"Depends"}, \code{"Imports"} and \code{"LinkingTo"}). The core R packages
+(e.g. \code{methods}, \code{utils}) are not included. The output can be used with \code{remotes::system_requirements}
 to extract the system requirements needed for your packages, see example below.
 }
 \description{

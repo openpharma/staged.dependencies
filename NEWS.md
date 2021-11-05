@@ -7,10 +7,16 @@
 ## New feature and improvements
 
 * `install_deps_app` allows `repo`, `host` and `ref` to be configured by users.
+* Create addin to install current project's dependencies alongside current project.
+* `get_all_external_dependencies` now returns the vector of external packages ordered by install order and the core R packages are not included. 
+
 
 ## Other improvements
 
 * Added a `NEWS.md` file to track changes to the package.
+* Fallback branch for repositories can now be specified and is not hard-coded as `main`.
+* `check_downstream` will not stop on first package error but will run on all expected packages and all failures are output. 
+
 
 ## Bugfixes
 

@@ -14,6 +14,8 @@
 #' @param default_ref (`character`) default ref (branch/tag), see also the parameter
 #'   `ref` of `\link{dependency_table}`. If `NULL` this must be entered by app user
 #'   and can always be changed by the user.
+#' @param fallback_branch (`character`) the default branch to try to use if
+#'   no other matches found
 #' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
 #' @inheritParams install_deps
@@ -26,6 +28,7 @@
 install_deps_app <- function(default_repo = NULL,
                              default_host = "https://github.com",
                              default_ref = "main",
+                             fallback_branch = "main",
                              run_gadget = TRUE, run_as_job = TRUE,
                              verbose = 1, install_external_deps = TRUE, ...) {
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
@@ -78,14 +81,13 @@ install_deps_app <- function(default_repo = NULL,
                            input$ref, " starting from project ", paste(input$repo, input$host, sep = "@"),
                            verbose = verbose)
 
-
         x <- tryCatch({
           if(is.null(input$ref) || input$ref == "" || is.null(input$repo) || input$repo == "" ||
              is.null(input$host) || input$host == "") {
             stop("Please enter a repo, host and ref and \nthen press 'Compute graph'")
           }
           dependency_table(project = paste(input$repo, input$host, sep = "@"),
-                           project_type = "repo@host", ref = input$ref,
+                           project_type = "repo@host", ref = input$ref, fallback_branch = fallback_branch,
                            local_repos = NULL, verbose = 2)},
           error = function(cond){
             error_rv(paste0("Cannot create dependency graph:\n", cond$message))
@@ -96,6 +98,7 @@ install_deps_app <- function(default_repo = NULL,
         if (!is.null(x)) {
           dep_table_rv(x)
         }
+
       },
       # do not ignore NULL to also compute initially with the default feature when
       # the button was not yet clicked
@@ -147,7 +150,7 @@ install_deps_app <- function(default_repo = NULL,
             # to jobRunScript and creating an install_deps job if dep_structure already exists in env
             install_deps_job(project = paste(input$repo, input$host, sep = "@"),  project_type = "repo@host", verbose = verbose,
                              create_args = list(local_repos = NULL, ref = input$ref),
-                             dependency_packages = dependency_packages,
+                             dependency_packages = dependency_packages, fallback_branch = fallback_branch,
                              install_external_deps = TRUE,
                              install_direction = c("upstream", "downstream"),
                              ...)

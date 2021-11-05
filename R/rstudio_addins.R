@@ -2,6 +2,9 @@
 NULL
 
 # Helper functions for addins since the addin functions are invoked without arguments
+install_deps_and_project_addin <- function(...) {
+  install_deps_job(project = rstudioapi::getActiveProject(), install_project = TRUE)
+}
 
 install_deps_app_addin <- function(...) {
   install_deps_app(verbose = 1)
