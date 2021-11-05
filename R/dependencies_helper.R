@@ -34,6 +34,8 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
   stopifnot(all(all_actions %in% c("test", "build", "check", "install")))
   check_verbose_arg(verbose)
 
+  rcmdcheck_outputs <- list()
+
   if (nrow(pkg_actions) == 0) {
     message_if_verbose("No packages to process!", verbose = verbose)
     return(pkg_actions)
@@ -116,7 +118,8 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
             system2("R", args = c("CMD", "check", rcmd_args$check, package_tar))
           )
         } else {
-          rcmdcheck::rcmdcheck(cache_dir, error_on = "warning", args = rcmd_args$check)
+          rcmdcheck_outputs[[pkg_actions$package_name[idx]]] <-
+            rcmdcheck::rcmdcheck(cache_dir, error_on = "never", args = rcmd_args$check)
         }
       }
 
@@ -146,6 +149,17 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
   }
 
   message_if_verbose("Processed packages in order: ", toString(pkg_actions$package_name), verbose = verbose)
+
+  # output rcmdcheck outputs
+  if (!rlang::is_empty(rcmdcheck_outputs)) {
+    lapply(names(rcmdcheck_outputs),
+      function(pkg_name) {
+        print(paste("R CMD CHECK package ", pkg_name))
+        print(rcmdcheck_outputs[[pkg_name]])
+      }
+    )
+  }
+
   pkg_actions
 }
 

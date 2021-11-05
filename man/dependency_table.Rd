@@ -10,6 +10,7 @@ dependency_table(
   ref = NULL,
   local_repos = if ((project_type) == "local") get_local_pkgs_from_config() else NULL,
   direction = "all",
+  fallback_branch = "main",
   verbose = 1
 )
 }
@@ -33,6 +34,9 @@ local file system rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{direction}{(\code{character}) direction in which to discover packages
 either "upstream","downstream" or "all".}
+
+\item{fallback_branch}{(\code{character}) the default branch to try to use if
+no other matches found}
 
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,

@@ -21,6 +21,8 @@
 #'   local file system rather than cloned; columns are `repo, host, directory`
 #' @param direction (`character`) direction in which to discover packages
 #'   either "upstream","downstream" or "all".
+#' @param fallback_branch (`character`) the default branch to try to use if
+#'   no other matches found
 #' @param verbose (`numeric`) verbosity level, incremental;
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
@@ -61,6 +63,7 @@ dependency_table <- function(project = ".",
                              ref = NULL,
                              local_repos = if ((project_type) == "local") get_local_pkgs_from_config() else NULL,
                              direction = "all",
+                             fallback_branch = "main",
                              verbose = 1) {
 
   # validate arguments
@@ -69,6 +72,7 @@ dependency_table <- function(project = ".",
   direction <- check_direction_arg_deprecated(direction)
   check_direction_arg(direction)
   stopifnot(project_type %in% c("local", "repo@host"))
+  stopifnot(rlang::is_scalar_character(fallback_branch))
 
   if (project_type == "repo@host" && (is.null(ref) || nchar(ref) == 0)) {
     stop("For non-local projects the (branch/tag) must be specified")
@@ -80,7 +84,7 @@ dependency_table <- function(project = ".",
     if (is.null(ref) || nchar(ref) == 0) {
       ref <- infer_ref_from_branch(project)
     }
-    check_ref_consistency(ref, project)
+    check_ref_consistency(ref, project, fallback_branch)
   }
 
   if (project_type == "local") {
@@ -96,7 +100,8 @@ dependency_table <- function(project = ".",
   # a dataframe with columns repo, host, ref, sha, cache_dir
   internal_deps <- rec_checkout_internal_deps(
     repo_to_process, ref, direction = direction,
-    local_repos = local_repos, verbose = verbose
+    local_repos = local_repos, fallback_branch = fallback_branch,
+    verbose = verbose
   )
 
   internal_deps$package_name <- get_pkg_names_from_paths(internal_deps$cache_dir)
@@ -589,7 +594,9 @@ check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) 
 #' @inheritParams build_check_install
 #' @md
 #' @return A vector of 'external' R packages required to install
-#'   the selected 'internal' packages. This can be used with `remotes::system_requirements`
+#'   the selected 'internal' packages, ordered by install order (unless `from_external_dependencies`
+#'   does not include `"Depends"`, `"Imports"` and `"LinkingTo"`). The core R packages
+#'   (e.g. `methods`, `utils`) are not included. The output can be used with `remotes::system_requirements`
 #'   to extract the system requirements needed for your packages, see example below.
 #' @examples
 #' \dontrun{
@@ -680,6 +687,24 @@ get_all_external_dependencies <- function(dep_structure,
     packages_to_consider <- setdiff(new_packages_to_consider, external_packages)
   }
 
-  return(external_packages)
+  # order external dependencies by install order
+  # when ordering we use Depends, Imports and LinkingTo as they are needed for installation
+  if (!all(c("Depends", "Imports", "LinkingTo") %in% from_external_dependencies)) {
+    message("Packages will not be ordered as this requires 'Depends', 'Imports' and 'LinkingTo' to
+      included in from_external_dependencies argument.")
+  } else {
+    external_package_table <- available_packages[available_packages$Package %in% external_packages, ]
 
+    package_deps <- apply(external_package_table, 1, function(row)
+      unique(unlist(lapply(c("Depends", "Imports", "LinkingTo"), function(x) parse_deps_table(row[x]))))
+    )
+    names(package_deps) <- external_package_table$Package
+    ordered_external_packages <- topological_sort(package_deps)
+
+    # there may be packages missed in ordered_external_packages (e.g. if a package is only in suggests)
+    # so make sure they are added in
+    external_packages <- c(ordered_external_packages, setdiff(external_packages, ordered_external_packages))
+  }
+  # remove R core packages when returning the packages
+  return(external_packages[!external_packages %in% r_core_packages])
 }

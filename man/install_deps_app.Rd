@@ -5,9 +5,10 @@
 \title{Gadget or Shiny app to select the dependencies to install}
 \usage{
 install_deps_app(
-  project = ".",
-  default_ref = NULL,
-  local_repos = get_local_pkgs_from_config(),
+  default_repo = NULL,
+  default_host = "https://github.com",
+  default_ref = "main",
+  fallback_branch = "main",
   run_gadget = TRUE,
   run_as_job = TRUE,
   verbose = 1,
@@ -17,14 +18,20 @@ install_deps_app(
 )
 }
 \arguments{
-\item{project}{(\code{character}) directory of project (for which to calculate the
-dependency structure); must be a git repository.}
+\item{default_repo}{(\code{character}) the repository name for the dependency graph to be
+created for, for example, \code{"openpharma/stageddeps.water"}.
+If \code{NULL} this must be entered by app user and can always be changed by the user.}
+
+\item{default_host}{(\code{character}) the host for the repository for the dependency graph to
+be created for by default \code{"https://github.com"}. If \code{NULL} this must be entered by app
+user and can always be changed by the user.}
 
 \item{default_ref}{(\code{character}) default ref (branch/tag), see also the parameter
-\code{ref} of \verb{\link{dependency_table}}}
+\code{ref} of \verb{\link{dependency_table}}. If \code{NULL} this must be entered by app user
+and can always be changed by the user.}
 
-\item{local_repos}{(\code{data.frame}) repositories that should be taken from
-local rather than cloned; columns are \verb{repo, host, directory}}
+\item{fallback_branch}{(\code{character}) the default branch to try to use if
+no other matches found}
 
 \item{run_gadget}{(\code{logical}) whether to run the app as a gadget}
 
@@ -45,4 +52,9 @@ external dependencies of packages using \code{remotes::install_deps}.}
 \description{
 The dependencies are obtained by traversing the upstream and downstream repositories
 in the package's staged dependencies yaml files starting from \code{project}.
+}
+\examples{
+\dontrun{
+  install_deps_app("openpharma/stageddeps.food")
+}
 }

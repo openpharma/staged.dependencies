@@ -139,5 +139,25 @@ test_that("determine_ref works", {
     determine_ref("feature1@release", data.frame(ref = c("master", "devel"), type = "branch")),
     regexp = "at least one of 'feature1@release, release, main'", fixed = TRUE
   )
+
+  # fallback "maaster" branch is an available branch, so use
+  expect_equal(
+    determine_ref("feature1@release", data.frame(ref = c("master", "devel"), type = "branch"), fallback_branch = "master"),
+    structure("master", type = "branch")
+  )
+
+  # different branch separator
+  expect_equal(
+    determine_ref(
+      "fix1#feature1#devel",
+      data.frame(ref = c("main", "devel", "feature1", "feature1#devel",
+                         "fix1@feature1@devel", "fix1"),
+                 type = "branch"),
+      branch_sep = "#"
+    ),
+    structure("feature1#devel", type = "branch")
+  )
+
+
 })
 
