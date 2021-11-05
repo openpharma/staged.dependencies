@@ -4,7 +4,9 @@
 
 ## New feature and improvements
 
+* Create addin to install current project's dependencies alongside current project.
 * `get_all_external_dependencies` now returns the vector of external packages ordered by install order and the core R packages are not included. 
+
 
 ## Other improvements
 

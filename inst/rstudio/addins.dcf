@@ -1,3 +1,8 @@
+Name: Install Upstream Dependencies (including current package)
+Description: Installs upstream dependencies from branches that match branch of current project
+Binding: install_deps_and_project_addin
+Interactive: false
+
 Name: Install Upstream Dependencies (not current package)
 Description: Installs upstream dependencies from branches that match branch of current project
 Binding: install_deps_addin
