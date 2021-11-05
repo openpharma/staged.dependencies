@@ -200,3 +200,23 @@ jobs:
       - name: Install R package
         run: R CMD INSTALL ${{ env.PKGBUILD }}
         shell: bash
+
+      - name: E2e package functionality
+        run: |
+          library(staged.dependencies)
+          print("Creating dependency table")
+          x <- dependency_table("openpharma/stageddeps.food", "repo@host", ref = "fixgarden@main")
+          print(x)
+          print("Checking consistent yamls")
+          check_yamls_consistent(x)
+          print("Install upstream deps")
+          install_deps(x)
+          print("Checking downstream")
+          check_downstream(x, check_args = "--no-manual")
+          print("Build, check, install")
+          build_check_install(x, packages_to_process = "stageddeps.house", rcmd_args = list(check = "--no-manual"))
+          print("Get all external dependencies")
+          deps <- get_all_external_dependencies(x)
+          print(deps)
+        shell: Rscript {0}
+
