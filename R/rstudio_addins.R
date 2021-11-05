@@ -7,7 +7,7 @@ install_deps_and_project_addin <- function(...) {
 }
 
 install_deps_app_addin <- function(...) {
-  install_deps_app(verbose = 1, project = rstudioapi::getActiveProject())
+  install_deps_app(verbose = 1)
 }
 
 check_downstream_addin <- function(...) {

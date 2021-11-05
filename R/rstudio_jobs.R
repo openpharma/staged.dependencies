@@ -24,9 +24,11 @@ run_job <- function(text, tempfile_prefix = "file", jobname_prefix = "Job", ...)
 #' install_deps_job(create_args = list(direction = c("upstream", "downstream")))
 #' install_deps_job(dry_install = TRUE)
 #' }
-install_deps_job <- function(project = ".", verbose = 1, create_args = list(), ...) {
-  project <- normalize_path(project)
-  create_args <- c(list(project = project, verbose = verbose), create_args)
+install_deps_job <- function(project = ".", project_type = "local", verbose = 1, create_args = list(), ...) {
+  if (project_type == "local") {
+    project <- normalize_path(project)
+  }
+  create_args <- c(list(project = project, project_type = project_type, verbose = verbose), create_args)
   create_args_str <- paste(deparse(create_args), collapse = "\n")
   install_args <- c(list(dep_structure = substitute(x), verbose = verbose), list(...))
   install_args_str <- paste(deparse(install_args), collapse = "\n")

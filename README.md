@@ -25,8 +25,7 @@ straightforward to:
 The package also provides:
 
 - RStudio addins to perform the above tasks with a single click.
-- Install all dependencies app: A Shiny application to un-select those 
-  dependencies that should not be installed.
+- Install all dependencies app: A Shiny application to explore internal dependency graphs and install packages from the graph.
 
 ## Usage
 
