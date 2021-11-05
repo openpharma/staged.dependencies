@@ -1,0 +1,10 @@
+url: https://openpharma.github.io/staged.dependencies/
+
+template:
+  params:
+    bootswatch: cerulean
+
+navbar:
+  right:
+    - icon: fa-github
+      href: https://github.com/openpharma/staged.dependencies

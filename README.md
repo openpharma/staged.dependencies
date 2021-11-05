@@ -127,8 +127,9 @@ This can be checked by setting `ref = fix1@feature1@main` and running `check_dow
 A PR on either `repoB` or `repoC` `feature1@main --> main` takes 
 `repoA: main, repoB:feature1@main, repoC: feature1@main`, setting `ref = feature1@main`.
 
-By setting `ref = <<tag_name>>`, `staged.dependencies` will checkout each repository at the tagged commit (or `main`)
-if tag does not exist. The check for tag name takes priority over the branch procedure described above.
+By setting `ref = <<tag_name>>`, `staged.dependencies` will checkout each repository at the tagged commit (or by default `main`
+if tag does not exist, though this can be overridden with the `fallback` argument to `dependency_table`). 
+The check for tag name takes priority over the branch procedure described above.
 
 ### Working with local packages
 
@@ -194,6 +195,9 @@ of `staged.dependencies` rather than the one loaded with `devtools::load_all()`.
 has read privileges for the repositories.
 
 When you run `remotes::install_deps` for a package that was installed with this package, issues may arise because not all repositories are publicly accessible. Make sure to provide auth tokens.
+
+
+Users of Macs may need to install the `oskeyring` package.
 
 ## Troubleshooting (For Developers of This Package)
 For developing this package, we use `renv`. If you set environment variables such as `GITHUB_PAT` in your `~/.Rprofile`, they will

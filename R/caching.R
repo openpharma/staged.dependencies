@@ -177,6 +177,8 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'   to recursively checkout upstream and/or downstream dependencies
 #' @param local_repos (`data.frame`) repositories that should be taken from
 #'   local rather than cloned; columns are `repo, host, directory`
+#' @param fallback_branch (`character`) the default branch to try to use if
+#'   no other matches found
 #' @param verbose (`numeric`) verbosity level, incremental;
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
@@ -186,6 +188,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 rec_checkout_internal_deps <- function(repos_to_process, ref,
                                       direction = c("upstream"),
                                       local_repos = get_local_pkgs_from_config(),
+                                      fallback_branch = "main",
                                       verbose = 0) {
   stopifnot(
     is.list(repos_to_process)
@@ -216,7 +219,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
       repo_info <- copy_local_repo_to_cachedir(
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
         select_ref_rule = function(available_refs) {
-          determine_ref(ref, available_refs)
+          determine_ref(ref, available_refs, fallback_branch = fallback_branch)
         },
         verbose = verbose
       )
@@ -226,7 +229,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
         get_repo_url(repo_and_host$repo, repo_and_host$host),
         token_envvar = get_authtoken_envvar(repo_and_host$host),
         select_ref_rule = function(available_refs) {
-          determine_ref(ref, available_refs)
+          determine_ref(ref, available_refs,  fallback_branch = fallback_branch)
         },
         verbose = verbose
       )
