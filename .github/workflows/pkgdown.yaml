@@ -117,7 +117,10 @@ jobs:
       - name: Publish docs
         if: github.ref == 'refs/heads/main' # Only after merge or push to master
         run: |
-          cd ${{ github.event.repository.name }}
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          Rscript -e 'source("renv/activate.R");pkgdown::deploy_to_branch(new_process = FALSE)'
+          setwd("${{ github.event.repository.name }}")
+          options(repos = c(CRAN = "https://cloud.r-project.org/"))
+          "pkgdown" %in% installed.packages() || install.packages("pkgdown", upgrade = "never")
+          "git2r" %in% installed.packages() || install.packages("git2r", upgrade = "never")
+          git2r::config(git2r::repository(.), user.name = "GitHub Actions", user.email = "actions@github.com")
+          pkgdown::deploy_to_branch(new_process = FALSE)
+        shell: Rscript {0}
