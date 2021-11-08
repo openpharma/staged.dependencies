@@ -18,7 +18,7 @@ test_that("checkout_repo with mocking works", {
     # delete other local branches
     local_branches <- git2r::branches(repo_dir, flags = "local")
     lapply(local_branches[names(local_branches) != "main"], git2r::branch_delete)
-
+    git2r::remote_set_url(repo_dir, name = "origin", url = url)
     git2r::repository(local_path)
   })
 
@@ -26,8 +26,6 @@ test_that("checkout_repo with mocking works", {
     print("Mocking git2r::fetch")
     invisible(NULL)
   })
-
-  mockery::stub(checkout_repo, 'get_remote_name', function(...) "origin")
 
   with_tmp_cachedir({
     repo_dir <- file.path(tempfile(), "stageddeps.food")

@@ -121,7 +121,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
 
   check_only_remote_branches(git_repo, remote_name = get_remote_name(git_repo, repo_url))
 
-  available_refs <- available_references(repo_dir)
+  available_refs <- available_references(repo_dir, remote_name = get_remote_name(git_repo, repo_url))
   selected_ref <- select_ref_rule(available_refs)
 
   if (attr(selected_ref, "type") == "branch") {

@@ -31,6 +31,7 @@ test_that("dependency_table works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
+  git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
   with_tmp_cachedir({
 
@@ -79,9 +80,12 @@ test_that("dependency_table wih local_pkgs works", {
   fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
   repo_dir <- file.path(copied_ecosystem, "stageddeps.house")
 
-  lapply(file.path(copied_ecosystem, local_pkgs), function(repo_dir) {
+  lapply(local_pkgs, function(local_pkg) {
+    repo_dir <- file.path(copied_ecosystem, local_pkg)
     git2r::checkout(repo_dir, "main")
-
+    git2r::remote_set_url(repo_dir, name = "origin",
+      url = paste0("https://github.com/openpharma/", local_pkg, ".git")
+    )
     #set config (needed for automation)
     git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
   })
@@ -118,6 +122,7 @@ test_that("check_yamls_consistent works", {
     # missing staged_dependencies.yaml in stageddeps.garden
     repo_dir <- file.path(copied_ecosystem, "stageddeps.food")
     git2r::checkout(repo_dir, "main")
+    git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
     expect_output(
       expect_error(
         check_yamls_consistent(
@@ -140,9 +145,9 @@ test_that("check_yamls_consistent works", {
 
 test_that("plot.dependency_structure works", {
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
-
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
+  git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
   git2r::checkout(repo_dir, "main")
 
   # check that it works by saving the plot to a file which requires the plot code to be
@@ -161,7 +166,7 @@ test_that("install_deps works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
-
+  git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent
 
@@ -218,6 +223,7 @@ test_that("check_downstream works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
+  git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent
@@ -251,6 +257,7 @@ test_that("build_check_install works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
+  git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
   mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent

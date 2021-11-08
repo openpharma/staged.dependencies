@@ -45,7 +45,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
       fs::dir_delete(repo_dir)
     }
     fs::dir_copy(file.path(TESTS_GIT_REPOS, repo_name), repo_dir)
-    available_refs <- available_references(repo_dir)
+    available_refs <- available_references(repo_dir, remote_name = "origin")
     selected_ref <- select_ref_rule(available_refs)
     # do not do actual checkout of branch
     return(list(dir = repo_dir, ref = selected_ref))
@@ -170,6 +170,8 @@ test_that("copy_local_repo_to_cachedir works", {
     git2r::add(".", "README.md")
     git2r::add(".", "inexistentFile1.md")
   })
+
+  git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
   # ckeck all files (from above) are added to the git commit in a local cache dir
   with_tmp_cachedir({

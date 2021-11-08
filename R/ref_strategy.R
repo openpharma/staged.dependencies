@@ -107,14 +107,14 @@ infer_ref_from_branch <- function(project = ".") {
 }
 
 
-check_ref_consistency <- function(ref, project = ".", fallback_branch = "main") {
+check_ref_consistency <- function(ref, project = ".", remote_name = "origin", fallback_branch = "main") {
   check_dir_exists(project)
   current_branch <- get_current_branch(project)
   # if in detached HEAD then we ignore the ref_consistency check (i.e. so gitlab
   # automation does not throw a warning)
   if (!is.null(current_branch)) {
     expected_current_branch <- determine_ref(ref,
-      available_refs = available_references(project),
+      available_refs = available_references(project, remote_name = remote_name),
       fallback_branch = fallback_branch
     )
     if (current_branch != expected_current_branch) {
@@ -126,9 +126,9 @@ check_ref_consistency <- function(ref, project = ".", fallback_branch = "main") 
 
 
 # return a dataframe with columns ref (git tag or branch name), type ("branch" or "tag")
-available_references <- function(repo = ".", branch_flag = "remote") {
+available_references <- function(repo = ".", remote_name, branch_flag = "remote") {
   branches <- names(git2r::branches(repo = repo, flags = branch_flag))
-  branches <- setdiff(gsub(paste0(git2r::remotes(repo)[1], "/"), "", branches, fixed = TRUE), "HEAD")
+  branches <- setdiff(gsub(paste0(remote_name, "/"), "", branches, fixed = TRUE), "HEAD")
   refs <- data.frame(ref = branches, type = "branch")
   tags <- names(git2r::tags(repo))
   if (length(tags) > 0) {
