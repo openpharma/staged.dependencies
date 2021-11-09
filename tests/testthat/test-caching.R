@@ -121,7 +121,7 @@ test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking
     }
     fs::dir_copy(file.path(TESTS_GIT_REPOS, repo_name), repo_dir)
 
-    available_refs <- available_references(repo_dir)
+    available_refs <- available_references(repo_dir, remote_name = "origin")
     selected_ref <- select_ref_rule(available_refs)
     # do not do actual checkout of branch
 
