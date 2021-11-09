@@ -2,7 +2,7 @@
 #'
 #' @md
 #' @param pkg_actions sorted `data.frame` with columns `cache_dir` pointing
-#' to package source, `sha` and `actions`, processed from top to bottom in order
+#' to package source, `sha`, `installable` and `actions`, processed from top to bottom in order
 #'  Each `actions` is a subset of "test", "build", "check", "install";
 #'  -  if test: run with `devtools::test`
 #'  -  if build: `R CMD build`
@@ -54,22 +54,28 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
   }
 
   message_if_verbose("Processing packages in order: ",
-                     toString(get_pkg_names_from_paths(pkg_actions$cache_dir)),
+                     toString(pkg_actions$package_name),
                      verbose = verbose)
 
   for (idx in seq_along(pkg_actions$cache_dir)) {
-    cache_dir <- pkg_actions$cache_dir[[idx]]
-    sha <- pkg_actions$sha[[idx]]
+
+    cache_dir <- pkg_actions$cache_dir[idx]
+    actions <- pkg_actions$actions[idx]
+
+    if (!pkg_actions$installable[idx]) {
+      message_if_verbose("skipping package ", pkg_actions$package_name[idx],
+        " as it (or one of its upstream dependencies) is not accessible", verbose = verbose)
+      next
+    }
+
 
     # check cached sha matches expect sha
+    sha <- pkg_actions$sha[idx]
     cached_sha <- get_short_sha(cache_dir)
     if (sha != cached_sha) {
       stop("The SHA in ", cache_dir, ": ", cached_sha,
            " does not match the sha in the dependency_structure object: ", sha)
     }
-
-
-    actions <- pkg_actions$actions[[idx]]
 
     if (!dry) {
 
@@ -243,16 +249,55 @@ get_true_deps_graph <- function(pkgs_df,
   # from the package DESCRIPTION files, filter for only
   # the internal packages
   upstream_deps <- lapply(pkgs_df$cache_dir,
-                          function(file) intersect(pkgs_df$package_name, desc::desc_get_deps(file)$package))
+    function(file) {
+      if (is.na(file)) {
+        return(character(0))
+      }
+      intersect(pkgs_df$package_name, desc::desc_get_deps(file)$package)
+    }
+  )
   names(upstream_deps) <- pkgs_df$package_name
 
+  # for inaccessible packages we need to get their upstream
+  # dependencies from yaml files of accessible repos
+  if (!all(pkgs_df$accessible)) {
+
+    # for each accessible package
+    for (idx in seq_len(nrow(pkgs_df))) {
+      if (!pkgs_df$accessible[idx]) {
+        next
+      }
+
+      current_package_name <- pkgs_df$package_name[idx]
+
+      # get the downstream deps of package_name (as specified by the yaml files)
+      downstream_deps <- get_yaml_deps_info(pkgs_df$cache_dir[idx])$downstream_repos
+
+      # check if repo and host match for any inaccessible package
+      for (downstream_dep in downstream_deps) {
+        inaccessible_deps <- dplyr::filter(pkgs_df, .data$repo == downstream_dep$repo,
+          .data$host == downstream_dep$host, !.data$accessible)
+
+        for (package_name in inaccessible_deps$package_name) {
+          upstream_deps[[package_name]] <- c(upstream_deps[[package_name]], current_package_name)
+        }
+      }
+
+    }
+  }
+
+
   external <- lapply(pkgs_df$cache_dir,
-                     function(file) {
-                       df <- desc::desc_get_deps(file)
-                       df <- df[!df$package %in% c("R",pkgs_df$package_name), ]
-                       rownames(df) <- NULL
-                       df
-                     } )
+    function(file) {
+      if (is.na(file)) {
+        return(data.frame(type = character(0), package = character(0), version = character(0)))
+      }
+      df <- desc::desc_get_deps(file)
+      df <- df[!df$package %in% c("R",pkgs_df$package_name), ]
+      rownames(df) <- NULL
+      df
+    }
+  )
   names(external) <- pkgs_df$package_name
 
   # order the dependencies
@@ -370,7 +415,7 @@ compute_actions <- function(pkg_df, pkg_names, actions, upstream_pkgs) {
   ) # outer list() to assign list elements to column
   pkg_df[pkg_df$package_name %in% upstream_pkgs, "actions"] <- "install"
   pkg_df %>% dplyr::arrange(.data$install_index) %>%
-    dplyr::select(.data$package_name, .data$cache_dir, .data$actions, .data$sha)
+    dplyr::select(.data$package_name, .data$cache_dir, .data$actions, .data$sha, .data$installable)
 }
 
 

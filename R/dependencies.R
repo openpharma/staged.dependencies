@@ -34,9 +34,9 @@
 #'   \item{current_pkg}{The R package name of code in the `project` directory}
 #'   \item{table}{`data.frame` contain one row per r package discovered, with the
 #'                following rows `package_name`, `type` (`current`, `upstream`, `downstream` or `other`),
-#'                `distance` (minimum number of steps from `current_pkg`), `ref`, `repo`, `host`, `sha`,
-#'                `cache_dir` and `install_index` (the order to install the packages).
-#'                Note `cache_dir` and `install_index` are suppressed when printing the object}
+#'                `distance` (minimum number of steps from `current_pkg`), `ref`, `repo`, `host`, `sha`
+#'                `cache_dir`, `accessible`, `installable` and `install_index` (the order to install the packages).
+#'                Note some items are are suppressed when printing the object}
 #'   \item{deps}{`list` with three elements, `upstream_deps`is the graph where edges point from a package
 #'               to its upstream dependencies. They are ordered in installation order. The
 #'               `downstream_deps` list is the graph with the edge direction flipped,
@@ -97,14 +97,17 @@ dependency_table <- function(project = ".",
   }
 
 
-  # a dataframe with columns repo, host, ref, sha, cache_dir
+  # a dataframe with columns repo, host, ref, sha, cache_dir, accessible (logical)
   internal_deps <- rec_checkout_internal_deps(
     repo_to_process, ref, direction = direction,
     local_repos = local_repos, fallback_branch = fallback_branch,
     verbose = verbose
   )
 
-  internal_deps$package_name <- get_pkg_names_from_paths(internal_deps$cache_dir)
+  internal_deps$package_name[internal_deps$accessible] <-
+    get_pkg_names_from_paths(internal_deps$cache_dir[internal_deps$accessible])
+  internal_deps$package_name[!internal_deps$accessible] <-
+    unlist(lapply(strsplit(internal_deps$repo[!internal_deps$accessible], "/"), utils::tail, 1))
 
   if (length(internal_deps$package_name) != length(unique(internal_deps$package_name))) {
     stop("Each R package must have a unique name")
@@ -119,6 +122,7 @@ dependency_table <- function(project = ".",
   # where the elements of the lists are the package names found in internal_deps
   # deps is ordered topologically
   deps <- get_true_deps_graph(internal_deps, graph_directions = "all")
+
 
   current_pkg <- internal_deps$package_name[
     internal_deps$repo == repo_to_process[[1]]$repo &
@@ -138,11 +142,26 @@ dependency_table <- function(project = ".",
   internal_deps$distance[internal_deps$package_name %in% downstream_nodes$id] <-
     downstream_nodes$distance
 
+
+  # work out if any accessible packages are not installable
+  internal_deps$installable <- internal_deps$accessible
+
+  uninstallable_packages <- unique(
+    unlist(
+      lapply(internal_deps$package_name[!internal_deps$accessible],
+        function(pkg) get_descendants_distance(deps[["downstream_deps"]], pkg)$id
+      )
+    )
+  )
+
+  internal_deps$installable[internal_deps$package_name %in% uninstallable_packages] <- FALSE
+
+
   # sort the table
   internal_deps <- internal_deps[order(internal_deps$type, internal_deps$distance),
-
                                  c("package_name", "type", "distance", "ref",
-                                   "repo", "host", "sha", "cache_dir")]
+                                   "repo", "host", "sha", "cache_dir", "accessible", "installable")]
+
   rownames(internal_deps) <- NULL
 
   # install_index: order in which to install packages
@@ -165,11 +184,23 @@ dependency_table <- function(project = ".",
 
 #' @export
 print.dependency_structure <- function(x, ...) {
-  # do not show the cache dir or install order when printing
+
   table <- x$table
+  # do not show the cache dir or install order when printing
   table$cache_dir <- NULL
   table$install_index <- NULL
+
+  if (!all(table$installable)) {
+    table$package_name <- paste0(table$package_name, ifelse(table$installable, "", "*"))
+    cat("packages denoted with '*' cannot be installed as either they or one of their internal",
+        "dependencies is not accessible\n")
+  }
+
+  table$accessible <- NULL
+  table$installable <- NULL
+
   print(table, ...)
+
 }
 
 
@@ -187,8 +218,9 @@ plot.dependency_structure <- function(x, y, ...){
     label = paste0(.data$package_name, "\n", .data$ref),
     title = paste0("<p>", .data$package_name,  "<br/>", .data$type, "<br/>", .data$ref, "</p>"),
     value = 3,
-    group = .data$type
-  ) %>% dplyr::select(c("id", "label", "title", "value", "group"))
+    group = .data$type,
+    shape = ifelse(.data$installable, "dot", "square")
+  ) %>% dplyr::select(c("id", "label", "title", "value", "group", "shape"))
 
   edges <- rbind(
     cbind_handle_empty(
@@ -233,6 +265,9 @@ plot.dependency_structure <- function(x, y, ...){
     dplyr::select(-tidyr::one_of("listed_by"))
 
   plot_title <- paste0("Dependency graph starting from ", x$current_pkg)
+  if (!all(x$table$accessible)) {
+    plot_title <- paste0(plot_title, "\n(installable packages denoted by circle nodes)")
+  }
   graph <- visNetwork::visNetwork(nodes, edges, width = "100%", main = plot_title) %>%
     # topological sort
     visNetwork::visHierarchicalLayout(sortMethod = "directed", direction = "RL") %>%
@@ -542,6 +577,12 @@ check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) 
 
   for (index in seq_len(nrow(dep_structure$table))) {
     package_name <- dep_structure$table$package_name[[index]]
+
+    if (!dep_structure$table$accessible[index]) {
+      message("Skipping package ", package_name, " as it is inaccessible")
+      next
+    }
+
     yaml_deps <- get_yaml_deps_info(unlist(dep_structure$table$cache_dir[[index]]))
 
     # if there is no yaml file then skip checks

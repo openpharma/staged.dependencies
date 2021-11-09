@@ -142,7 +142,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
   }
 
   return(list(dir = repo_dir, ref = paste0("local (", current_branch, ")"),
-              sha = get_short_sha(repo_dir)))
+              sha = get_short_sha(repo_dir), accessible = TRUE))
 }
 
 # local_repos: data.frame that maps repo and host to local directory
@@ -204,6 +204,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
   rm(repos_to_process)
 
   hashed_processed_repos <- list()
+  hashed_repos_accessible <- list()
   hashed_repos_refs <- list()
   hashed_repos_shas <- list()
 
@@ -232,20 +233,24 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
         select_ref_rule = function(available_refs) {
           determine_ref(ref, available_refs,  fallback_branch = fallback_branch)
         },
+        must_work = (length(hashed_processed_repos) == 0), # first repo must be accessible
         verbose = verbose
       )
     }
 
     hashed_new_repos <- c()
-    if (direction %in% c("upstream", "all")) {
-      hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$upstream_repos, hash_repo_and_host)
-      hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
-    }
-    if (direction %in% c("downstream", "all")) {
-      hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$downstream_repos, hash_repo_and_host)
-      hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
+    if (repo_info$accessible) {
+      if (direction %in% c("upstream", "all")) {
+        hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$upstream_repos, hash_repo_and_host)
+        hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
+      }
+      if (direction %in% c("downstream", "all")) {
+        hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$downstream_repos, hash_repo_and_host)
+        hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
+      }
     }
     hashed_processed_repos[[hashed_repo_and_host]] <- repo_info$dir
+    hashed_repos_accessible[[hashed_repo_and_host]] <- repo_info$accessible
     hashed_repos_refs[[hashed_repo_and_host]] <- repo_info$ref
     hashed_repos_shas[[hashed_repo_and_host]] <- repo_info$sha
     hashed_repos_to_process <- union(
@@ -255,6 +260,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
 
   df <- data.frame(unhash_repo_and_host(names(hashed_processed_repos)), stringsAsFactors = FALSE)
   df$cache_dir <- unlist(unname(hashed_processed_repos))
+  df$accessible <- unlist(unname(hashed_repos_accessible))
   df$ref <- unlist(unname(hashed_repos_refs))
   df$sha <- unlist(unname(hashed_repos_shas))
   return(df)

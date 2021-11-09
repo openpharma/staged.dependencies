@@ -38,7 +38,8 @@ test_that("checkout_repo works (requires Internet access)", {
     repo_dir <- tempfile()
     expect_error(
       checkout_repo(repo_dir, "https://github.com/openpharma/stageddeps.water.git",
-                    function(...) structure("inexistantBranch", type = "branch"), token_envvar = NULL),
+                    function(...) structure("inexistantBranch", type = "branch"),
+                    token_envvar = NULL, must_work = TRUE),
       regex = "ref inexistantBranch is unavailable for this repo", fixed = TRUE
     )
     # checkout existing branch
@@ -48,7 +49,7 @@ test_that("checkout_repo works (requires Internet access)", {
     x$sha <- "test"
     expect_equal(
       x,
-      list(dir = repo_dir, ref = structure("main", type = "branch"), sha = "test")
+      list(dir = repo_dir, ref = structure("main", type = "branch"), sha = "test", accessible = TRUE)
     )
     unlink(repo_dir, recursive = TRUE)
 
@@ -56,7 +57,8 @@ test_that("checkout_repo works (requires Internet access)", {
     withr::with_envvar(list(INCORRECT_TOKEN = "adfs"), {
       expect_error(
         checkout_repo(repo_dir, "https://github.com/inexistentOrg/inexistentRepo.git",
-                      function(...) structure("main", type = "branch"), token_envvar = "INCORRECT_TOKEN"),
+                      function(...) structure("main", type = "branch"),
+                      token_envvar = "INCORRECT_TOKEN", must_work = TRUE),
         regexp = "Bad credentials", fixed = TRUE
       )
     })

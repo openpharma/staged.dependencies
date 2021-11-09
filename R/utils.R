@@ -182,9 +182,7 @@ check_set_equal <- function(x, y, pre_msg = "", return_error = FALSE) {
 
 # given paths, return names of packages located at these paths
 get_pkg_names_from_paths <- function(paths) {
-  unname(vapply(
-    paths, function(path) desc::desc_get_field("Package", file = path), character(1)
-  ))
+  unname(vapply(paths, function(path) desc::desc_get_field("Package", file = path), character(1)))
 }
 
 # get upstream repos and downstream repos according to yaml file in repo directory

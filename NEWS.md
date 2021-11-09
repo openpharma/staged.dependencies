@@ -10,6 +10,7 @@
 
 ## New feature and improvements
 
+* `staged.dependencies` can handle only having access to part of the internal dependency graph.
 * `install_deps_app` allows `repo`, `host` and `ref` to be configured by users.
 * Create addin to install current project's dependencies alongside current project.
 * `get_all_external_dependencies` now returns the vector of external packages ordered by install order and the core R packages are not included. 
