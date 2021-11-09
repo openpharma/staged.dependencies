@@ -108,7 +108,10 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
   # does not incorrectly fail
   current_branch <- get_current_branch(repo_dir)
   if (!is.null(current_branch)) {
-    available_refs <- available_references(repo_dir, branch_flag = "local")
+    available_refs <- available_references(repo_dir,
+      remote_name = get_remote_name(repo_dir, get_repo_url(repo, host)),
+      branch_flag = "local"
+    )
     ref <- select_ref_rule(available_refs)
     stopifnot(ref %in% available_refs$ref)
 

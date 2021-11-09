@@ -23,9 +23,9 @@
 
 ## Bugfixes
 
+* Allow a remote other than `origin`.
 * `install_external_deps` argument to `install_deps_app` is now respected.
 * Fix bug when calling `check_downstream` after `install_deps` whereby incorrect error was shown saying sha has changed. 
 * Fallback branch for repositories can now be specified and is not hard-coded as `main`.
 * `check_downstream` will not stop on first package error but will run on all expected packages and all failures are output.
 * More gracefully handles error in `install_deps_app`. 
-

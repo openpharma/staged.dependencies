@@ -22,11 +22,11 @@ get_current_branch <- function(git_repo) {
   git2r::repository_head(git_repo)$name
 }
 
-# checks that all branches start with origin/ (or staged_dep_tag_ which is the name of a branch where
+# checks that all branches start with "<<remote_name>>/" (or staged_dep_tag_ which is the name of a branch where
 # staged_dep has previously checked out a version where ref = <<tag_name>>)
-check_only_remote_branches <- function(git_repo) {
+check_only_remote_branches <- function(git_repo, remote_name) {
   all_branches <- names(git2r::branches(git_repo))
-  stopifnot(all(vapply(all_branches, function(x) startsWith(x, "origin/") || startsWith(x, "staged_dep_tag_"), logical(1))))
+  stopifnot(all(vapply(all_branches, function(x) startsWith(x, paste0(remote_name, "/")) || startsWith(x, "staged_dep_tag_"), logical(1))))
 }
 
 # clones the repo and only keeps remote branches
@@ -124,16 +124,16 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     # prune (remove) remote branches that were deleted from remote
     git2r::config(git_repo, remote.origin.prune = "true")
     tryCatch({
-      git2r::fetch(git_repo, name = "origin", credentials = creds, verbose = verbose >= 2)
+      git2r::fetch(git_repo, name = get_remote_name(git_repo, repo_url), credentials = creds, verbose = verbose >= 2)
     }, error = function(cond) {
       warning("Unable to fetch from remote for ", repo_dir, " using state of repo found in cache.\n",
               "Error message when trying to fetch: ", cond$message)
     })
   }
 
-  check_only_remote_branches(git_repo)
+  check_only_remote_branches(git_repo, remote_name = get_remote_name(git_repo, repo_url))
 
-  available_refs <- available_references(repo_dir)
+  available_refs <- available_references(repo_dir, remote_name = get_remote_name(git_repo, repo_url))
   selected_ref <- select_ref_rule(available_refs)
 
   if (attr(selected_ref, "type") == "branch") {
@@ -141,7 +141,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
       stop("ref ", selected_ref, " is unavailable for this repo")
     }
 
-    branch <- paste0("origin/", selected_ref)
+    branch <- paste0(get_remote_name(git_repo, repo_url), "/", selected_ref)
     if (verbose >= 1) {
       message(paste("   - checkout branch", branch, "in directory", repo_dir))
     }
@@ -179,6 +179,20 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
 
   remotes::install_deps(repo_dir_external, ...)
 }
+
+
+# function to get the remote name (e.g. origin) which matches
+# the url given in the staged.deps yaml file
+get_remote_name <- function(git_repo, repo_url) {
+  remotes <- git2r::remotes(git_repo)
+  for (remote in remotes) {
+    if (repo_url == git2r::remote_url(git_repo, remote = remote)) {
+      return(remote)
+    }
+  }
+  stop("Cannot determine remote")
+}
+
 
 #' Install a git repository
 #'

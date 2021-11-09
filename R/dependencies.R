@@ -84,13 +84,19 @@ dependency_table <- function(project = ".",
     if (is.null(ref) || nchar(ref) == 0) {
       ref <- infer_ref_from_branch(project)
     }
-    check_ref_consistency(ref, project, fallback_branch)
+
   }
 
   if (project_type == "local") {
     # take local version of project (rather than remote)
     local_repos <- add_project_to_local_repos(project, local_repos)
     repo_deps_info <- get_yaml_deps_info(project)
+    check_ref_consistency(ref, project,
+      get_remote_name(project,
+        get_repo_url(repo_deps_info[["current_repo"]]$repo, repo_deps_info[["current_repo"]]$host)
+      ),
+      fallback_branch
+    )
     repo_to_process <- list(repo_deps_info$current_repo)
   } else {
     repo_to_process <- list(parse_remote_project(project))

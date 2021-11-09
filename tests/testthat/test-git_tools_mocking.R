@@ -18,7 +18,7 @@ test_that("checkout_repo with mocking works", {
     # delete other local branches
     local_branches <- git2r::branches(repo_dir, flags = "local")
     lapply(local_branches[names(local_branches) != "main"], git2r::branch_delete)
-
+    git2r::remote_set_url(repo_dir, name = "origin", url = url)
     git2r::repository(local_path)
   })
 
@@ -29,9 +29,6 @@ test_that("checkout_repo with mocking works", {
 
   with_tmp_cachedir({
     repo_dir <- file.path(tempfile(), "stageddeps.food")
-    # we use "REPLACED" to make sure it really uses the mocked function and
-    # does not try to download from the URL; ideally, we would cut the internet
-    # for this test (how?)
 
     # check that clone is called
     expect_output(
@@ -70,12 +67,12 @@ test_that("check_only_remote_branches works", {
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.elecinfra"), repo_dir)
 
   # check only remote branches exist
-  expect_silent(check_only_remote_branches(repo_dir))
+  expect_silent(check_only_remote_branches(repo_dir, "origin"))
 
   # checkout local branch, now expect an error that a local branch exists
   git2r::checkout(repo_dir, branch = "main")
   expect_error(
-    check_only_remote_branches(repo_dir),
-    regexp = "origin", fixed = TRUE
+    check_only_remote_branches(repo_dir, "origin"),
+    regexp = "remote_name", fixed = TRUE
   )
 })
