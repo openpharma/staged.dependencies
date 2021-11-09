@@ -186,7 +186,9 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
 get_remote_name <- function(git_repo, repo_url) {
   remotes <- git2r::remotes(git_repo)
   for (remote in remotes) {
-    if (repo_url == git2r::remote_url(git_repo, remote = remote)) {
+    target_url <- git2r::remote_url(git_repo, remote = remote)
+    #sometimes git2r remote_url includes .git in remote_url sometimes does not
+    if (repo_url == target_url || repo_url == paste0(target_url, ".git")) {
       return(remote)
     }
   }
