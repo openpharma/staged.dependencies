@@ -51,9 +51,9 @@ the object (absolute path if \code{project_type} is \code{local}}
 \item{current_pkg}{The R package name of code in the \code{project} directory}
 \item{table}{\code{data.frame} contain one row per r package discovered, with the
 following rows \code{package_name}, \code{type} (\code{current}, \code{upstream}, \code{downstream} or \code{other}),
-\code{distance} (minimum number of steps from \code{current_pkg}), \code{ref}, \code{repo}, \code{host}, \code{sha},
-\code{cache_dir} and \code{install_index} (the order to install the packages).
-Note \code{cache_dir} and \code{install_index} are suppressed when printing the object}
+\code{distance} (minimum number of steps from \code{current_pkg}), \code{ref}, \code{repo}, \code{host}, \code{sha}
+\code{cache_dir}, \code{accessible}, \code{installable} and \code{install_index} (the order to install the packages).
+Note some items are are suppressed when printing the object}
 \item{deps}{\code{list} with three elements, \code{upstream_deps}is the graph where edges point from a package
 to its upstream dependencies. They are ordered in installation order. The
 \code{downstream_deps} list is the graph with the edge direction flipped,

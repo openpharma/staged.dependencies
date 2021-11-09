@@ -130,7 +130,7 @@ install_deps_app <- function(default_repo = NULL,
       output$nodesToInstall <- shiny::renderText({
         shiny::req(dep_table_rv())
         paste(setdiff(
-          dep_table_rv()$table$package_name,
+          dep_table_rv()$table$package_name[dep_table_rv()$table$installable],
           input$network_proxy_nodes_selectedNodes
         ), collapse = "\n")
       })
@@ -138,8 +138,9 @@ install_deps_app <- function(default_repo = NULL,
 
         if (!is.null(dep_table_rv())) {
 
+
           dependency_packages <- setdiff(
-            dep_table_rv()$table$package_name,
+            dep_table_rv()$table$package_name[dep_table_rv()$table$installable],
             input$network_proxy_nodes_selectedNodes
           )
 

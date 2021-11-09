@@ -156,6 +156,7 @@ test_that("run_package_actions works", {
         actions = c("install", "install"),
         sha = c(get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra"))),
                 get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.electricity")))),
+        installable = c(TRUE, TRUE),
         stringsAsFactors = FALSE
       ),
       install_external_deps = FALSE
@@ -177,6 +178,7 @@ test_that("run_package_actions works", {
         cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
         actions = c("install", "install"),
         sha = c("xxx","yyy"),
+        installable = c(TRUE, TRUE),
         stringsAsFactors = FALSE
       ),
       install_external_deps = FALSE
@@ -184,12 +186,30 @@ test_that("run_package_actions works", {
 
   )
 
+  # if installable is FALSE then package is skipped
+  output <- capture.output(
+    run_package_actions(
+      data.frame(
+        cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
+        actions = c("install", "install"),
+        sha = c(get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra"))),
+                get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.electricity")))),
+        installable = c(TRUE, FALSE),
+        stringsAsFactors = FALSE
+      ),
+      install_external_deps = FALSE
+    ) %>% invisible()
+  )
 
+  expect_equal(
+    output, # not installing electricity
+    paste0("Mocking install_repo_add_sha for ", file.path(TESTS_GIT_REPOS, "stageddeps.elecinfra"))
+  )
 
 })
 
 # parse_deps_table ----
-test_that("parsae_deps_table works as expected", {
+test_that("parse_deps_table works as expected", {
 
   # empty/NA returns character(0)
   expect_length(parse_deps_table(""), 0)

@@ -34,9 +34,10 @@ check_only_remote_branches <- function(git_repo, remote_name) {
 # no longer there
 # select_ref_rule is a function that is given the available refs
 # and selects one of them
+# if must_work is TRUE then error is thrown if repo is not accessible, if FALSE then wantning is thrown
 # verbose level: 0: none, 1: print high-level git operations, 2: print git clone detailed messages etc.
-# returns: list of repo_dir and checked out branch/ref (according to ref/branch rule)
-checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NULL, verbose = 0) {
+# returns: list of repo_dir and checked out branch/ref (according to branch rule)
+checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NULL, must_work = FALSE, verbose = 0) {
   stopifnot(
     is.function(select_ref_rule),
     endsWith(repo_url, ".git")
@@ -54,7 +55,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
       message(paste("clone", repo_url, "to directory", repo_dir))
     }
 
-    tryCatch({
+    cloned_repo <- tryCatch({
       git_repo <- git2r::clone(
         url = repo_url, local_path = repo_dir,
         credentials = creds, progress = verbose >= 2
@@ -70,31 +71,37 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
         stop("Host ", host, " not reachable")
       }
 
-      if (identical("https://github.com", host) || identical("https://code.roche.com", host)) {
-        # these queries should also work for Enterprise hosts
-        if (identical("https://github.com", host)) {
-          resp <- httr::GET(
-            paste0("https://api.github.com/repos/", repo),
-            # `token` argument not working
-            httr::add_headers(c(Authorization = paste("token", Sys.getenv(token_envvar))))
+      notification_function <- if (must_work) stop else warning
+
+      resp <- get_repo_access(repo, host, token_envvar)
+      if (!is.null(resp) && httr::status_code(resp) > 200) {
+        notification_function(
+          paste0("You cannot access ", repo, " at host ", host,
+            ". If you expect to be able to access this repo then ",
+            "check that repo and token in envvar '", token_envvar,
+            "' are correct.\n",
+            "The response's content was:\n", paste(httr::content(resp), collapse = "\n"),
+            if (!must_work) " Staged dependencies will continue, ignoring this repository. Some packages may ",
+            "not be able to be installed and its package name is assumed to match repository name."
           )
-        } else if (identical("https://code.roche.com", host)) {
-          resp <- httr::GET(
-            paste0(
-              "https://code.roche.com/api/v4/projects/",
-              utils::URLencode(repo, reserved = TRUE)
-            ),
-            httr::add_headers(c(Authorization = paste("Bearer", Sys.getenv(token_envvar))))
+        )
+      } else{
+        notification_function(
+          paste0(
+            "Repo ", repo, " could ",
+            "not be cloned. The git2r::clone error is: ", e$message,
+            if (!must_work) "\nStaged dependencies will continue, ignoring this repository. Some packages may ",
+            "not be able to be installed and its package name is assumed to match repository name."
           )
-        }
-        if (!identical(resp$status, 200L)) {
-          stop(paste0("Could not access repo ", repo, " at host ", host,
-                      "'. Check that repo and token in envvar '", token_envvar,
-                      "' are correct.\n",
-                      "The response's content was:\n", paste(httr::content(resp), collapse = "\n")))
-        }
+        )
       }
+
+      return(NULL)
     })
+
+    if (is.null(cloned_repo)) {
+      return(list(dir = as.character(NA), ref = as.character(NA), sha = as.character(NA), accessible = FALSE))
+    }
 
     # git automatically created local tracking branch (for master or main), checkout
     # corresponding remote branch and delete local branch, so we only have remote
@@ -116,7 +123,12 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     git_repo <- git2r::repository(repo_dir)
     # prune (remove) remote branches that were deleted from remote
     git2r::config(git_repo, remote.origin.prune = "true")
-    git2r::fetch(git_repo, name = get_remote_name(git_repo, repo_url), credentials = creds, verbose = verbose >= 2)
+    tryCatch({
+      git2r::fetch(git_repo, name = get_remote_name(git_repo, repo_url), credentials = creds, verbose = verbose >= 2)
+    }, error = function(cond) {
+      warning("Unable to fetch from remote for ", repo_dir, " using state of repo found in cache.\n",
+              "Error message when trying to fetch: ", cond$message)
+    })
   }
 
   check_only_remote_branches(git_repo, remote_name = get_remote_name(git_repo, repo_url))
@@ -145,7 +157,7 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
   }
 
   return(list(dir = repo_dir, ref = selected_ref,
-              sha = get_short_sha(repo_dir)))
+              sha = get_short_sha(repo_dir), accessible = TRUE))
 }
 
 # Install the external deps required for a package
