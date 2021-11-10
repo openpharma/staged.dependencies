@@ -22,8 +22,3 @@ Name: Test and Install Downstream Dependencies
 Description: Execute tests of downstream dependencies to make sure that they don't break
 Binding: test_downstream_addin
 Interactive: false
-
-Name: Upgrade staged.dependencies Package
-Description: Install the latest version of the staged.dependencies package from the main branch on github.com
-Binding: upgrade_package_addin
-Interactive: false
