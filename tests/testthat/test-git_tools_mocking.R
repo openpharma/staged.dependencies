@@ -18,7 +18,6 @@ test_that("checkout_repo with mocking works", {
     # delete other local branches
     local_branches <- git2r::branches(repo_dir, flags = "local")
     lapply(local_branches[names(local_branches) != "main"], git2r::branch_delete)
-    git2r::remote_set_url(repo_dir, name = "origin", url = url)
     git2r::repository(local_path)
   })
 
@@ -26,6 +25,8 @@ test_that("checkout_repo with mocking works", {
     print("Mocking git2r::fetch")
     invisible(NULL)
   })
+
+  mockery::stub(checkout_repo, 'get_remote_name', function(...) "origin")
 
   with_tmp_cachedir({
     repo_dir <- file.path(tempfile(), "stageddeps.food")
@@ -76,3 +77,28 @@ test_that("check_only_remote_branches works", {
     regexp = "remote_name", fixed = TRUE
   )
 })
+
+
+test_that("get_remote_name provides remote name of repo",{
+
+  mockery::stub(get_remote_name, 'git2r::remote_url', function(git_repo, remote){
+    switch(remote,
+       A = "git@ssh.github.com:x/y.git",
+       B = "git@github.com:w/v.git",
+       C = "https://github.com/k/l/m",
+       D = "https://github.com/a/b.git",
+       origin = "https://github.com/xxx/c.git"
+    )
+  })
+
+
+  mockery::stub(get_remote_name, 'git2r::remotes', function(git_repo) c("origin", "A", "B", "C", "D"))
+  expect_equal(get_remote_name(".", "https://github.com/x/y.git"), "A")
+  expect_equal(get_remote_name(".", "https://github.com/w/v.git"), "B")
+  expect_equal(get_remote_name(".", "https://github.com/k/l/m.git"), "C")
+  expect_equal(get_remote_name(".", "https://github.com/a/b.git"), "D")
+  expect_equal(get_remote_name(".", "https://other.git"), "origin")
+
+
+})
+
