@@ -7,6 +7,7 @@
 * `dependency_packages`, `downstream_packages` and `packages_to_process` arguments have all been renamed `package_list`.
 * `local_repos` argument to `dependency_table` defaults to `NULL` if `project_type` is `"repo@host"`.
 * `install_deps_app` now takes projects from remote rather than local directory, which allows different `ref` to be used. See example for more details. It also does not allow `local_repos` argument.
+* Removed upgrade staged.dependencies package addin.
 
 ## New feature and improvements
 
