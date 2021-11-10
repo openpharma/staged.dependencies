@@ -197,9 +197,6 @@ get_remote_name <- function(git_repo, repo_url) {
     target_url <- git2r::remote_url(git_repo, remote = remote)
     target_url <- gsub(":", "/", target_url, fixed = TRUE)
 
-    #print(repo_url)
-    #print(target_url)
-    #print(grepl(repo_url, target_url))
     if (grepl(repo_url, target_url)) {
       return(remote)
     }
