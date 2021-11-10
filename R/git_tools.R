@@ -184,15 +184,28 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
 # function to get the remote name (e.g. origin) which matches
 # the url given in the staged.deps yaml file
 get_remote_name <- function(git_repo, repo_url) {
+
+  # remove the https:// and .git from repo_url
+  repo_url <- strsplit(repo_url, "//", fixed = TRUE)[[1]][2]
+  repo_url <- gsub(".git", "", repo_url)
+
+
   remotes <- git2r::remotes(git_repo)
+
   for (remote in remotes) {
+
     target_url <- git2r::remote_url(git_repo, remote = remote)
-    #sometimes git2r remote_url includes .git in remote_url sometimes does not
-    if (repo_url == target_url || repo_url == paste0(target_url, ".git")) {
+    target_url <- gsub(":", "/", target_url, fixed = TRUE)
+
+    #print(repo_url)
+    #print(target_url)
+    #print(grepl(repo_url, target_url))
+    if (grepl(repo_url, target_url)) {
       return(remote)
     }
   }
-  stop("Cannot determine remote")
+  # by default return origin
+  return("origin")
 }
 
 
