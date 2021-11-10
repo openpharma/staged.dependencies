@@ -186,8 +186,7 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
 get_remote_name <- function(git_repo, repo_url) {
 
   # remove the https:// and .git from repo_url
-  repo_url <- gsub("^.+://", "", repo_url, perl = TRUE)
-  repo_url <- gsub(".git$", "", repo_url)
+  repo_url <- gsub("^.+://|.git$", "", repo_url, perl = TRUE)
 
 
   remotes <- git2r::remotes(git_repo)
