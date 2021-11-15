@@ -1,3 +1,8 @@
+# staged.dependencies 0.2.4
+
+## Bugfixes
+* Fixed error where package actions (i.e. `check`, `build`) were skipped.
+
 # staged.dependencies 0.2.3
 
 ## Breaking changes
