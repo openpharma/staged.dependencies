@@ -79,7 +79,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
 
     if (!dry) {
 
-      if ("test" %in% actions) {
+      if ("test" %in% actions[[1]]) {
         # testthat::test_dir and devtools::test do not always agree
         # testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
         # stop_on_failure argument cannot be passed to devtools::test
@@ -104,7 +104,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
       }
 
       package_tar <- NULL
-      if ("build" %in% actions) {
+      if ("build" %in% actions[[1]]) {
         withr::with_dir(artifact_dir, {
           pkg_name <- desc::desc_get_field("Package", file = cache_dir)
           system2(
@@ -116,7 +116,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
         })
       }
 
-      if ("check" %in% actions) {
+      if ("check" %in% actions[[1]]) {
         # check tar.gz if it exists otherwise check the cache_dir
         if (!is.null(package_tar)) {
           withr::with_dir(
@@ -129,7 +129,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
         }
       }
 
-      if ("install" %in% actions) {
+      if ("install" %in% actions[[1]]) {
         if (install_external_deps) {
           install_external_deps(cache_dir, internal_pkg_deps = internal_pkg_deps,
                                 dependencies = TRUE, upgrade = upgrade, ...)
