@@ -97,6 +97,7 @@
 <h2 class="hasAnchor">
 <a href="#usage" class="anchor"></a>Usage</h2>
 <p>The directory <code>~/.staged.dependencies</code> as well as a dummy config file are created whenever the package is loaded and the directory does not exist and this is where checked out repositories are cached.</p>
+<p>Note staged.dependencies requires a git signature setup this can be checked with <code><a href="https://docs.ropensci.org/git2r/reference/default_signature.html">git2r::default_signature(".")</a></code>. If this is not setup it can be created using <code>git2r::config(git2r::repository("."), user.name = &lt;&lt;name&gt;&gt;, user.email = &lt;&lt;email&gt;&gt;)</code> or via the git cli using, for example <code>git config --global user.email &lt;email&gt;</code>.</p>
 <div id="setup-tokens" class="section level3">
 <h3 class="hasAnchor">
 <a href="#setup-tokens" class="anchor"></a>Setup tokens</h3>
