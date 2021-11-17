@@ -32,6 +32,10 @@ The package also provides:
 The directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and 
 the directory does not exist and this is where checked out repositories are cached.
 
+Note staged.dependencies requires a git signature setup this can be checked with `git2r::default_signature(".")`.
+If this is not setup it can be created using `git2r::config(git2r::repository("."), user.name = <<name>>, user.email = <<email>>)`
+or via the git cli using, for example `git config --global user.email <email>`.
+
 ### Setup tokens
 
 If you internal packages require [personal access tokens](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) then these must be available to staged.dependencies.
