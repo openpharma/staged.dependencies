@@ -101,10 +101,10 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
     } else {
       # we need to copy lock files for different profiles which are stored
       # within the renv folder
-      renv_directory <- directory_to_copy
+      renv_directory <- dir
       renv_sub_directories <- fs::dir_ls(renv_directory, type = "directory", all = TRUE)
       if ("profiles" %in% fs::path_file(renv_sub_directories)) {
-        renv_profiles <- fs::dir_ls(fs::path_join(c(renv_sub_directories, "profiles")),
+        renv_profiles <- fs::dir_ls(fs::path_join(c(renv_directory, "profiles")),
                                     type = "directory", all = TRUE)
         lapply(renv_profiles, function(x) {
           fs::dir_create(fs::path_join(c(repo_dir, "renv", "profiles", fs::path_file(x))), recurse = TRUE)
