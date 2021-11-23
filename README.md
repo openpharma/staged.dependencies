@@ -5,7 +5,7 @@
 The `staged.dependencies` package simplifies the development process for developing a set of
 inter-dependent R packages. In each repository of the set of R packages you are co-developing you should
 specify a `staged_dependencies.yaml` file containing *upstream* (i.e. those packages your current repo depends on) and
-*downstream* (i.e. those packages which depend on your current repo's package) 
+*downstream* (i.e. those packages which depend on your current repo's package)
 dependency packages within your development set of packages.
 
 The set of packages you are co-developing are *internal* dependencies. Other R packages they depend on
@@ -29,7 +29,7 @@ The package also provides:
 
 ## Usage
 
-The directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and 
+The directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and
 the directory does not exist and this is where checked out repositories are cached.
 
 Note staged.dependencies requires a git signature setup this can be checked with `git2r::default_signature(".")`.
@@ -40,37 +40,46 @@ or via the git cli using, for example `git config --global user.email <email>`.
 
 If you internal packages require [personal access tokens](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) then these must be available to staged.dependencies.
 
-For example:
-```
-Sys.setenv("GITHUB_PAT" = "<token>") # if using https://github.com
-Sys.setenv("GITLAB_PAT" = "<token>") # if using https://gitlab.com
-```
+There are two approaches:
 
-You can have these tokens set permanently by putting the information into the `~/.Renviron` file, e.g. by 
-calling `usethis::edit_r_environ()`:
+  1. Modify your `~/.Rprofile` file with the following:
 
-```
-GITHUB_PAT=<token>
-GITLAB_PAT=<token>
-```
-
-It is possible to specify other remotes by setting additional environment variables and 
-updating the R options (E.g. adding this into your `~/.Rprofile` by calling `usethis::edit_r_profile()`):
-
-```
-options(
-  staged.dependencies.token_mapping = c(
-    "https://github.com" = "GITHUB_PAT",
-    "https://gitlab.com" = "GITLAB_PAT",
-    <<another_remote>> = <<token env variable>>
-    ...
+  ```
+  Sys.setenv("GITHUB_PAT" = "<token>") # if using https://github.com
+  Sys.setenv("GITLAB_PAT" = "<token>") # if using https://gitlab.com
+  options(
+    staged.dependencies.token_mapping = c(
+      "https://github.com" = "GITHUB_PAT",
+      "https://gitlab.com" = "GITLAB_PAT",
+      <<another_remote>> = <<token env variable>>
+      ...
+    )
   )
-)
-```
+  ```
+
+  2. Alternatively, add your token in `~/.Renviron` file,
+
+  ```
+  GITHUB_PAT=<token>
+  GITLAB_PAT=<token>
+  ```
+
+  and add the following into your `~/.Rprofile` file:
+
+  ```R
+  options(
+    staged.dependencies.token_mapping = c(
+      "https://github.com" = "GITHUB_PAT",
+      "https://gitlab.com" = "GITLAB_PAT",
+      <<another_remote>> = <<token env variable>>
+      ...
+    )
+  )
+  ```
 
 ### RStudio Addins
 
-The easiest way to use `staged.dependencies`, once installed, 
+The easiest way to use `staged.dependencies`, once installed,
 is to checkout a repository and within the RStudio use the addins:
 ![Addins to run the main functional](man/figures/README-addins.png)
 
@@ -83,9 +92,9 @@ documentation for further details)
 ```{r}
 # create dependency_structure object from a checked out repo...
 x <- dependency_table(project = "../stageddeps.electricity", verbose = 1)
-# ... or directly from a remote 
-x <- dependency_table(project = "openpharma/stageddeps.electricity@https://github.com", 
-                      project_type = "repo@host", 
+# ... or directly from a remote
+x <- dependency_table(project = "openpharma/stageddeps.electricity@https://github.com",
+                      project_type = "repo@host",
                       ref = "main",
                       verbose = 1)
 
@@ -114,24 +123,24 @@ is described by the examples below:
 
 - Given a branch name `a@b@c@d@main`, `staged.dependencies` checks for branches in each repository in the following order:
 `a@b@c@d@main`, `b@c@d@main`, `c@d@main`, `d@main` and `main`.
-- Suppose one implements a new feature on a branch called `feature1` that involves `repoB, repoC` with the dependency 
-graph `repoA --> repoB --> repoC`, where `repoA` is an additional upstream dependency. One then notices that 
-`feature1` requires a fix in `repoB`, so one creates a new branch `fix1@feature1@main` on `repoB`. 
+- Suppose one implements a new feature on a branch called `feature1` that involves `repoB, repoC` with the dependency
+graph `repoA --> repoB --> repoC`, where `repoA` is an additional upstream dependency. One then notices that
+`feature1` requires a fix in `repoB`, so one creates a new branch `fix1@feature1@main` on `repoB`.
 The setup can be summarized as follows:
 ```
 repoA: devel
 repoB: fix1@feature1@main, feature1@main, main
 repoC: feature1@main, main
 ```
-A PR on repoB `fix1@feature1@main --> feature1@main` takes 
-`repoA: main, repoB: fix1@feature1@main, repoC: feature1@main`. 
+A PR on repoB `fix1@feature1@main --> feature1@main` takes
+`repoA: main, repoB: fix1@feature1@main, repoC: feature1@main`.
 This can be checked by setting `ref = fix1@feature1@main` and running `check_downstream` on either `repoC` or
 `check_downstream` on `repoB` (which adds `repoC` to its downstream dependencies).
-A PR on either `repoB` or `repoC` `feature1@main --> main` takes 
+A PR on either `repoB` or `repoC` `feature1@main --> main` takes
 `repoA: main, repoB:feature1@main, repoC: feature1@main`, setting `ref = feature1@main`.
 
 By setting `ref = <<tag_name>>`, `staged.dependencies` will checkout each repository at the tagged commit (or by default `main`
-if tag does not exist, though this can be overridden with the `fallback` argument to `dependency_table`). 
+if tag does not exist, though this can be overridden with the `fallback` argument to `dependency_table`).
 The check for tag name takes priority over the branch procedure described above.
 
 ### Working with local packages
@@ -144,7 +153,7 @@ For the current project, the local rather than remote version is always taken.
 ### Structure of `staged_dependencies.yaml` file
 
 Given a feature and a git repository, the package determines the branch to checkout according to the branch
-naming convention described above. 
+naming convention described above.
 To get the upstream or downstream dependencies, it inspects the `staged_dependencies.yaml` file.
 This file is of the form:
 ```
@@ -168,11 +177,11 @@ current_repo:
 It contains all the information that is required to fetch the repos. The `current_repo` lists the info to fetch the
 project itself. All three top level fields are required although `upstream_repos` and `downstream_repos` can be empty.
 
-Each package is cached in a directory whose name is based on `repo` and a hash of `repo, host`. 
-If it exists, it fetches. Otherwise, it clones. 
+Each package is cached in a directory whose name is based on `repo` and a hash of `repo, host`.
+If it exists, it fetches. Otherwise, it clones.
 The repositories only have remote branches, the default tracking branch is deleted. Otherwise,
-there would be problems if the default branch is deleted from the remote, checked out locally, so 
-`git fetch --prune` would not remove it and the local branch would be among the available 
+there would be problems if the default branch is deleted from the remote, checked out locally, so
+`git fetch --prune` would not remove it and the local branch would be among the available
 branches considered in `determine_branch`.
 
 If a repo is part of the local packages, it is not fetched, but instead copied to the cache dir. A commit is created
@@ -184,9 +193,9 @@ its local rather than remote version is installed.
 For this, the `current_repo` field must be correct, so downstream dependencies do not fetch the remote version.
 
 The `staged_dependencies.yaml` files are only used to discover upstream and downstream packages. These are called
-internal packages. Then, the true dependency graph based on the `DESCRIPTION` files is constructed. All 
+internal packages. Then, the true dependency graph based on the `DESCRIPTION` files is constructed. All
 listed upstream dependencies that are not internal are called external dependencies.
-There exists a function to check that the `staged_dependencies.yaml` files are consistent: if package `x` lists 
+There exists a function to check that the `staged_dependencies.yaml` files are consistent: if package `x` lists
 `y` as a downstream package, then `y` should list `x` as an upstream package.
 
 When testing the addins, note that they run in a separate R process, so they pick up the currently installed version
@@ -194,7 +203,7 @@ of `staged.dependencies` rather than the one loaded with `devtools::load_all()`.
 
 ## Troubleshooting
 
-`git2r::clone` may fail. Check that the git host is reachable (VPN may be needed) and that the access token 
+`git2r::clone` may fail. Check that the git host is reachable (VPN may be needed) and that the access token
 has read privileges for the repositories.
 
 When you run `remotes::install_deps` for a package that was installed with this package, issues may arise because not all repositories are publicly accessible. Make sure to provide auth tokens.
@@ -204,7 +213,7 @@ Users of Macs may need to install the `oskeyring` package.
 
 ## Troubleshooting (For Developers of This Package)
 For developing this package, we use `renv`. If you set environment variables such as `GITHUB_PAT` in your `~/.Rprofile`, they will
-not be available because the project `.Rprofile` does not source the global `~/.Rprofile`. To enable this, put 
+not be available because the project `.Rprofile` does not source the global `~/.Rprofile`. To enable this, put
 the following into `~/.Renviron`:
 ```
 RENV_CONFIG_USER_PROFILE=TRUE

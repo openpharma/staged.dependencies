@@ -1,3 +1,5 @@
+# staged.dependencies 0.2.5 (unreleased)
+
 # staged.dependencies 0.2.4
 
 ## Bugfixes
