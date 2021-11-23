@@ -16,6 +16,7 @@ Imports:
     git2r,
     glue,
     httr,
+    jsonlite,
     methods,
     rcmdcheck,
     remotes,
@@ -52,6 +53,7 @@ Collate:
     'graph_methods.R'
     'host.R'
     'ref_strategy.R'
+    'renv.R'
     'rstudio_jobs.R'
     'rstudio_addins.R'
     'utils.R'
