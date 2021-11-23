@@ -1,5 +1,7 @@
 # staged.dependencies 0.2.5 (unreleased)
 
+* Added `renv_files` element into `dependency_structure` object to capture (in JSON) the renv.lock files from internal dependencies for future processing. The `renv_profile` argument to `dependency_table` allows you to choose which renv profile to include if not using the default one.  
+
 # staged.dependencies 0.2.4
 
 ## Bugfixes
