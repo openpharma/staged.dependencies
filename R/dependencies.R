@@ -179,7 +179,7 @@ dependency_table <- function(project = ".",
                                         function(y) which(names(deps[["upstream_deps"]]) == y),
                                         FUN.VALUE = numeric(1))
 
-  renv_files <- lapply(internal_deps$cache_dir, get_renv_lock_from_repo_dir)
+  renv_files <- lapply(internal_deps$cache_dir, get_renv_lock_from_repo_dir, renv_profile = renv_profile)
   names(renv_files) <- internal_deps$package_name
 
   structure(
