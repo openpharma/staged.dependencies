@@ -13,6 +13,7 @@ install_deps_app(
   run_as_job = TRUE,
   verbose = 1,
   install_external_deps = TRUE,
+  renv_profile = NULL,
   upgrade = "never",
   ...
 )
@@ -41,6 +42,9 @@ no other matches found}
 
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of packages using \code{remotes::install_deps}.}
+
+\item{renv_profile}{(\code{character}) the name of the renv profile of the renv.lock files
+to be included from the repos. The standard renv.lock file uses the default NULL argument here.}
 
 \item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
 

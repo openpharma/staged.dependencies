@@ -4,7 +4,12 @@
 \alias{check_downstream_job}
 \title{Check & install downstream job}
 \usage{
-check_downstream_job(project = ".", verbose = 1, create_args = list(), ...)
+check_downstream_job(
+  project = ".",
+  verbose = 1,
+  create_args = list(renv_profile = Sys.getenv("RENV_PROFILE")),
+  ...
+)
 }
 \arguments{
 \item{project}{(\code{character}) If \code{project_type} is \code{local} then

@@ -8,7 +8,7 @@ install_deps_job(
   project = ".",
   project_type = "local",
   verbose = 1,
-  create_args = list(),
+  create_args = list(renv_profile = Sys.getenv("RENV_PROFILE")),
   ...
 )
 }
