@@ -39,9 +39,11 @@ to the \verb{R CMD} commands}
 and logs}
 
 \item{install_external_deps}{logical to describe whether to install
-external dependencies of packages using \code{remotes::install_deps}.}
+external dependencies of package using \code{remotes::install_deps} (or \code{renv::install} if
+inside an renv environment) .}
 
-\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'. Ignored
+if inside an \code{renv} environment.}
 
 \item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
 list will be considered and their dependencies installed if needed (advanced usage only).}

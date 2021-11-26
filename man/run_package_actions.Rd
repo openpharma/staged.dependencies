@@ -34,9 +34,11 @@ otherwise \verb{R CMD INSTALL} on tarball
 \item{dry}{logical, if \code{FALSE} (default) run the actions, if \code{TRUE} do not}
 
 \item{install_external_deps}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps}.}
+external dependencies of package using \code{remotes::install_deps} (or \code{renv::install} if
+inside an renv environment) .}
 
-\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'. Ignored
+if inside an \code{renv} environment.}
 
 \item{rcmd_args}{list with names \code{build}, \code{check},
 \code{install} which are vectors that are passed as separate arguments
@@ -47,7 +49,7 @@ to the \verb{R CMD} commands}
 
 \item{verbose}{verbosity level, incremental - from 0 (none) to 2 (high)}
 
-\item{...}{Additional args passed to `remotes::install_deps.}
+\item{...}{Additional args passed to \verb{remotes::install_deps Ignored if inside an }renv` environment.}
 }
 \description{
 Run an action on the packages

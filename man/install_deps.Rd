@@ -31,9 +31,11 @@ deps automatically install all their upstream deps)}
 to install (according to dependency structure). By default this is only "upstream"}
 
 \item{install_external_deps}{logical to describe whether to install
-external dependencies of packages using \code{remotes::install_deps}.}
+external dependencies of package using \code{remotes::install_deps} (or \code{renv::install} if
+inside an renv environment) .}
 
-\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'.}
+\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'. Ignored
+if inside an \code{renv} environment.}
 
 \item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
 list will be considered and their dependencies installed if needed (advanced usage only).}
@@ -43,7 +45,7 @@ doing it.}
 
 \item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
 
-\item{...}{Additional args passed to `remotes::install_deps.}
+\item{...}{Additional args passed to \verb{remotes::install_deps. Ignored if inside an }renv` environment.}
 }
 \value{
 \code{data.frame} of performed actions

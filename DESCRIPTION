@@ -38,6 +38,7 @@ Suggests:
     knitr,
     miniUI,
     mockery,
+    renv,
     rmarkdown,
     rstudioapi,
     shiny,
