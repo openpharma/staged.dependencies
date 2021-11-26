@@ -183,6 +183,7 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
 
   if (!is.null(Sys.getenv("RENV_PROJECT")) && Sys.getenv("RENV_PROJECT") != "" && requireNamespace("renv", quietly = TRUE)) {
     renv::install(repo_dir_external)
+    renv::remove("staged.deps.tmp.pkg")
   } else {
     remotes::install_deps(repo_dir_external, ...)
   }
