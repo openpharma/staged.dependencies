@@ -176,14 +176,11 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
   desc_obj <- desc::desc(file.path(repo_dir_external, "DESCRIPTION"))
   new_deps <- desc_obj$get_deps()[!desc_obj$get_deps()$package %in% internal_pkg_deps,]
 
-  #also change name to make it clearer for users when using renv::install
-  desc_obj$set(Package = "staged.deps.tmp.pkg")
   desc_obj$set_deps(new_deps)
   desc_obj$write()
 
   if (!is.null(Sys.getenv("RENV_PROJECT")) && Sys.getenv("RENV_PROJECT") != "" && requireNamespace("renv", quietly = TRUE)) {
     renv::install(repo_dir_external)
-    renv::remove("staged.deps.tmp.pkg")
   } else {
     remotes::install_deps(repo_dir_external, ...)
   }
