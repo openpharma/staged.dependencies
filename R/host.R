@@ -1,9 +1,9 @@
 get_repo_access <- function(repo, host, token_envvar){
 
   host_type <- NULL
-  if (host == "https://github.com") {
+  if (host == "https://github.com" || token_envvar == "GITHUB_PAT") {
     host_type <- "github"
-  } else if (host %in% c("https://gitlab.com", "https://code.roche.com")) {
+  } else if (host == "https://gitlab.com" || token_envvar == "GITLAB_PAT") {
     host_type = "gitlab"
   } else {
     return(NULL)
