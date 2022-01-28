@@ -1,4 +1,4 @@
-# Development Stages via git branch naming convention
+# Development Stages via git branch naming convention <a href='https://github.com/insightsengineering/staged.dependencies'><img src="man/figures/staged.dependencies.png" align="right" height="139" style="max-width: 100%;"/></a  >
 
 ## Purpose
 
@@ -42,40 +42,40 @@ If you internal packages require [personal access tokens](https://docs.github.co
 
 There are two approaches:
 
-  1. Modify your `~/.Rprofile` file with the following:
+1. Modify your `~/.Rprofile` file with the following:
 
-  ```
-  Sys.setenv("GITHUB_PAT" = "<token>") # if using https://github.com
-  Sys.setenv("GITLAB_PAT" = "<token>") # if using https://gitlab.com
-  options(
-    staged.dependencies.token_mapping = c(
-      "https://github.com" = "GITHUB_PAT",
-      "https://gitlab.com" = "GITLAB_PAT",
-      <<another_remote>> = <<token env variable>>
-      ...
-    )
+```r
+Sys.setenv("GITHUB_PAT" = "<token>") # if using https://github.com
+Sys.setenv("GITLAB_PAT" = "<token>") # if using https://gitlab.com
+options(
+  staged.dependencies.token_mapping = c(
+    "https://github.com" = "GITHUB_PAT",
+    "https://gitlab.com" = "GITLAB_PAT",
+    <<another_remote>> = <<token env variable>>
+    ...
   )
-  ```
+)
+```
 
-  2. Alternatively, add your token in `~/.Renviron` file,
+2. Alternatively, add your token in `~/.Renviron` file,
 
-  ```
-  GITHUB_PAT=<token>
-  GITLAB_PAT=<token>
-  ```
+```r
+GITHUB_PAT=<token>
+GITLAB_PAT=<token>
+```
 
-  and add the following into your `~/.Rprofile` file:
+and add the following into your `~/.Rprofile` file:
 
-  ```R
-  options(
-    staged.dependencies.token_mapping = c(
-      "https://github.com" = "GITHUB_PAT",
-      "https://gitlab.com" = "GITLAB_PAT",
-      <<another_remote>> = <<token env variable>>
-      ...
-    )
+```R
+options(
+  staged.dependencies.token_mapping = c(
+    "https://github.com" = "GITHUB_PAT",
+    "https://gitlab.com" = "GITLAB_PAT",
+    <<another_remote>> = <<token env variable>>
+    ...
   )
-  ```
+)
+```
 
 ### RStudio Addins
 
@@ -89,7 +89,7 @@ is to checkout a repository and within the RStudio use the addins:
 You can run the actions of the addins explicitly and change the default arguments (see function
 documentation for further details)
 
-```{r}
+```r
 # create dependency_structure object from a checked out repo...
 x <- dependency_table(project = "../stageddeps.electricity", verbose = 1)
 # ... or directly from a remote
@@ -156,7 +156,8 @@ Given a feature and a git repository, the package determines the branch to check
 naming convention described above.
 To get the upstream or downstream dependencies, it inspects the `staged_dependencies.yaml` file.
 This file is of the form:
-```
+
+```yaml
 ---
 upstream_repos:
 - repo: Roche/rtables
@@ -174,6 +175,7 @@ current_repo:
   repo: openpharma/staged.dependencies
   host: https://github.com
 ```
+
 It contains all the information that is required to fetch the repos. The `current_repo` lists the info to fetch the
 project itself. All three top level fields are required although `upstream_repos` and `downstream_repos` can be empty.
 
@@ -208,16 +210,18 @@ has read privileges for the repositories.
 
 When you run `remotes::install_deps` for a package that was installed with this package, issues may arise because not all repositories are publicly accessible. Make sure to provide auth tokens.
 
-
 Users of Macs may need to install the `oskeyring` package.
 
 ## Troubleshooting (For Developers of This Package)
+
 For developing this package, we use `renv`. If you set environment variables such as `GITHUB_PAT` in your `~/.Rprofile`, they will
 not be available because the project `.Rprofile` does not source the global `~/.Rprofile`. To enable this, put
 the following into `~/.Renviron`:
-```
+
+```r
 RENV_CONFIG_USER_PROFILE=TRUE
 ```
+
 Make sure that `~/.Rprofile` does not set lib paths as this may interfere with `renv`. Also see the [renv doc](https://rstudio.github.io/renv/reference/config.html).
 
 ## Example Setup
@@ -234,7 +238,7 @@ https://github.com/openpharma/stageddeps.water
 
 You can check that the right branches of the packages are installed with:
 
-```{r}
+```r
 stageddeps.house::get_house()
 stageddeps.water::get_water()
 stageddeps.garden::get_garden()
