@@ -72,9 +72,10 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="development-stages-via-git-branch-naming-convention" class="section level1">
+<div id="development-stages-via-git-branch-naming-convention-" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
-<a href="#development-stages-via-git-branch-naming-convention" class="anchor"></a>Development Stages via git branch naming convention</h1></div>
+<a href="#development-stages-via-git-branch-naming-convention-" class="anchor"></a>Development Stages via git branch naming convention <a href="https://github.com/insightsengineering/staged.dependencies"><img src="reference/figures/staged.dependencies.png" align="right" height="139" style="max-width: 100%;"></a>
+</h1></div>
 <div id="purpose" class="section level2">
 <h2 class="hasAnchor">
 <a href="#purpose" class="anchor"></a>Purpose</h2>
@@ -106,21 +107,21 @@
 <ol>
 <li>Modify your <code>~/.Rprofile</code> file with the following:</li>
 </ol>
-<pre><code>Sys.setenv("GITHUB_PAT" = "&lt;token&gt;") # if using https://github.com
-Sys.setenv("GITLAB_PAT" = "&lt;token&gt;") # if using https://gitlab.com
-options(
-  staged.dependencies.token_mapping = c(
-    "https://github.com" = "GITHUB_PAT",
-    "https://gitlab.com" = "GITLAB_PAT",
-    &lt;&lt;another_remote&gt;&gt; = &lt;&lt;token env variable&gt;&gt;
-    ...
-  )
-)</code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="st">"GITHUB_PAT"</span> <span class="ot">=</span> <span class="st">"&lt;token&gt;"</span>) <span class="co"># if using https://github.com</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="st">"GITLAB_PAT"</span> <span class="ot">=</span> <span class="st">"&lt;token&gt;"</span>) <span class="co"># if using https://gitlab.com</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">staged.dependencies.token_mapping =</span> <span class="fu">c</span>(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://github.com"</span> <span class="ot">=</span> <span class="st">"GITHUB_PAT"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://gitlab.com"</span> <span class="ot">=</span> <span class="st">"GITLAB_PAT"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">&lt;</span><span class="er">&lt;</span>another_remote<span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">=</span> <span class="er">&lt;&lt;</span>token env variable<span class="sc">&gt;</span><span class="er">&gt;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <ol>
 <li>Alternatively, add your token in <code>~/.Renviron</code> file,</li>
 </ol>
-<pre><code>GITHUB_PAT=&lt;token&gt;
-GITLAB_PAT=&lt;token&gt;</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>GITHUB_PAT<span class="ot">=</span><span class="er">&lt;</span>token<span class="sc">&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>GITLAB_PAT<span class="ot">=</span><span class="er">&lt;</span>token<span class="sc">&gt;</span></span></code></pre></div>
 <p>and add the following into your <code>~/.Rprofile</code> file:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">staged.dependencies.token_mapping =</span> <span class="fu">c</span>(</span>
@@ -140,23 +141,24 @@ GITLAB_PAT=&lt;token&gt;</code></pre>
 <h3 class="hasAnchor">
 <a href="#console" class="anchor"></a>Console</h3>
 <p>You can run the actions of the addins explicitly and change the default arguments (see function documentation for further details)</p>
-<pre class="{r}"><code># create dependency_structure object from a checked out repo...
-x &lt;- dependency_table(project = "../stageddeps.electricity", verbose = 1)
-# ... or directly from a remote
-x &lt;- dependency_table(project = "openpharma/stageddeps.electricity@https://github.com",
-                      project_type = "repo@host",
-                      ref = "main",
-                      verbose = 1)
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># create dependency_structure object from a checked out repo...</span>
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dependency_table.html">dependency_table</a></span><span class="op">(</span>project <span class="op">=</span> <span class="st">"../stageddeps.electricity"</span>, verbose <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
+<span class="co"># ... or directly from a remote</span>
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dependency_table.html">dependency_table</a></span><span class="op">(</span>project <span class="op">=</span> <span class="st">"openpharma/stageddeps.electricity@https://github.com"</span>,
+                      project_type <span class="op">=</span> <span class="st">"repo@host"</span>,
+                      ref <span class="op">=</span> <span class="st">"main"</span>,
+                      verbose <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
 
-# print and plot it
-print(x)
-if (require("visNetwork")) plot(x)
+<span class="co"># print and plot it</span>
+<span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st"><a href="http://datastorm-open.github.io/visNetwork/">"visNetwork"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
 
-#install upstream dependencies
-install_deps(x, verbose = 1)
+<span class="co">#install upstream dependencies</span>
+<span class="fu"><a href="reference/install_deps.html">install_deps</a></span><span class="op">(</span><span class="va">x</span>, verbose <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
 
-# check downstream packages
-check_downstream(x, verbose = 1, check_args = c("--no-manual"))</code></pre>
+<span class="co"># check downstream packages</span>
+<span class="fu"><a href="reference/check_downstream.html">check_downstream</a></span><span class="op">(</span><span class="va">x</span>, verbose <span class="op">=</span> <span class="fl">1</span>, check_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"--no-manual"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p>Remember to restart the R session after installing packages that were already loaded. There are additional functions (e.g. a shiny app to view the dependency graph and choose which packages to install) in the package. See the function documentation for more details.</p>
 </div>
 </div>
@@ -186,27 +188,27 @@ repoC: feature1@main, main</code></pre>
 <h3 class="hasAnchor">
 <a href="#structure-of-staged_dependenciesyaml-file" class="anchor"></a>Structure of <code>staged_dependencies.yaml</code> file</h3>
 <p>Given a feature and a git repository, the package determines the branch to checkout according to the branch naming convention described above. To get the upstream or downstream dependencies, it inspects the <code>staged_dependencies.yaml</code> file. This file is of the form:</p>
-<pre><code>---
-upstream_repos:
-- repo: Roche/rtables
-  host: https://github.com
-- repo: Roche/respectables
-  host: https://github.com
-
-downstream_repos:
-- repo: example1/repo1
-  host: https://github.example.com
-- repo: example1/repo2
-  host: https://code.example.com
-
-current_repo:
-  repo: openpharma/staged.dependencies
-  host: https://github.com</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">upstream_repos</span><span class="kw">:</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">repo</span><span class="kw">:</span><span class="at"> Roche/rtables</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> https://github.com</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">repo</span><span class="kw">:</span><span class="at"> Roche/respectables</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> https://github.com</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">downstream_repos</span><span class="kw">:</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">repo</span><span class="kw">:</span><span class="at"> example1/repo1</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> https://github.example.com</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">repo</span><span class="kw">:</span><span class="at"> example1/repo2</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> https://code.example.com</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="fu">current_repo</span><span class="kw">:</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">repo</span><span class="kw">:</span><span class="at"> openpharma/staged.dependencies</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> https://github.com</span></span></code></pre></div>
 <p>It contains all the information that is required to fetch the repos. The <code>current_repo</code> lists the info to fetch the project itself. All three top level fields are required although <code>upstream_repos</code> and <code>downstream_repos</code> can be empty.</p>
 <p>Each package is cached in a directory whose name is based on <code>repo</code> and a hash of <code>repo, host</code>. If it exists, it fetches. Otherwise, it clones. The repositories only have remote branches, the default tracking branch is deleted. Otherwise, there would be problems if the default branch is deleted from the remote, checked out locally, so <code>git fetch --prune</code> would not remove it and the local branch would be among the available branches considered in <code>determine_branch</code>.</p>
 <p>If a repo is part of the local packages, it is not fetched, but instead copied to the cache dir. A commit is created with all files (including staged, unstaged and untracked, but excluding git-ignored) files. Given such a cache directory, the commit hash is added to the <code>DESCRIPTION</code> file and the package is installed, unless the package is already installed with the same commit hash. When calling <code>install_deps</code> and similar functions, the current project is always added to the <code>local_repos</code> so that its local rather than remote version is installed. For this, the <code>current_repo</code> field must be correct, so downstream dependencies do not fetch the remote version.</p>
 <p>The <code>staged_dependencies.yaml</code> files are only used to discover upstream and downstream packages. These are called internal packages. Then, the true dependency graph based on the <code>DESCRIPTION</code> files is constructed. All listed upstream dependencies that are not internal are called external dependencies. There exists a function to check that the <code>staged_dependencies.yaml</code> files are consistent: if package <code>x</code> lists <code>y</code> as a downstream package, then <code>y</code> should list <code>x</code> as an upstream package.</p>
-<p>When testing the addins, note that they run in a separate R process, so they pick up the currently installed version of <code>staged.dependencies</code> rather than the one loaded with <code><a href="https://devtools.r-lib.org//reference/load_all.html">devtools::load_all()</a></code>.</p>
+<p>When testing the addins, note that they run in a separate R process, so they pick up the currently installed version of <code>staged.dependencies</code> rather than the one loaded with <code><a href="https://devtools.r-lib.org/reference/load_all.html">devtools::load_all()</a></code>.</p>
 </div>
 </div>
 <div id="troubleshooting" class="section level2">
@@ -220,7 +222,8 @@ current_repo:
 <h2 class="hasAnchor">
 <a href="#troubleshooting-for-developers-of-this-package" class="anchor"></a>Troubleshooting (For Developers of This Package)</h2>
 <p>For developing this package, we use <code>renv</code>. If you set environment variables such as <code>GITHUB_PAT</code> in your <code>~/.Rprofile</code>, they will not be available because the project <code>.Rprofile</code> does not source the global <code>~/.Rprofile</code>. To enable this, put the following into <code>~/.Renviron</code>:</p>
-<pre><code>RENV_CONFIG_USER_PROFILE=TRUE</code></pre>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">RENV_CONFIG_USER_PROFILE</span><span class="op">=</span><span class="cn">TRUE</span></code></pre></div>
 <p>Make sure that <code>~/.Rprofile</code> does not set lib paths as this may interfere with <code>renv</code>. Also see the <a href="https://rstudio.github.io/renv/reference/config.html">renv doc</a>.</p>
 </div>
 <div id="example-setup" class="section level2">
@@ -229,12 +232,13 @@ current_repo:
 <p>This package can also be tested on a more complex setup of packages available at: <a href="https://github.com/openpharma/stageddeps.elecinfra" class="uri">https://github.com/openpharma/stageddeps.elecinfra</a> <a href="https://github.com/openpharma/stageddeps.electricity" class="uri">https://github.com/openpharma/stageddeps.electricity</a> <a href="https://github.com/openpharma/stageddeps.food" class="uri">https://github.com/openpharma/stageddeps.food</a> <a href="https://github.com/openpharma/stageddeps.garden" class="uri">https://github.com/openpharma/stageddeps.garden</a> <a href="https://github.com/openpharma/stageddeps.house" class="uri">https://github.com/openpharma/stageddeps.house</a> <a href="https://github.com/openpharma/stageddeps.water" class="uri">https://github.com/openpharma/stageddeps.water</a></p>
 <p><img src="reference/figures/README-StagedDepsExample.png" alt="Dependencies. Arrow point from upstream to downstream packages"></p>
 <p>You can check that the right branches of the packages are installed with:</p>
-<pre class="{r}"><code>stageddeps.house::get_house()
-stageddeps.water::get_water()
-stageddeps.garden::get_garden()
-stageddeps.food::get_food()
-stageddeps.elecinfra::get_elecinfra()
-stageddeps.electricity::get_electricity()</code></pre>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">stageddeps.house</span><span class="fu">::</span><span class="fu">get_house</span><span class="op">(</span><span class="op">)</span>
+<span class="fu">stageddeps.water</span><span class="fu">::</span><span class="fu">get_water</span><span class="op">(</span><span class="op">)</span>
+<span class="fu">stageddeps.garden</span><span class="fu">::</span><span class="fu">get_garden</span><span class="op">(</span><span class="op">)</span>
+<span class="fu">stageddeps.food</span><span class="fu">::</span><span class="fu">get_food</span><span class="op">(</span><span class="op">)</span>
+<span class="fu">stageddeps.elecinfra</span><span class="fu">::</span><span class="fu">get_elecinfra</span><span class="op">(</span><span class="op">)</span>
+<span class="fu">stageddeps.electricity</span><span class="fu">::</span><span class="fu">get_electricity</span><span class="op">(</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
   </div>
