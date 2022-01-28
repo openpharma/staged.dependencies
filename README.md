@@ -1,4 +1,4 @@
-# Development Stages via git branch naming convention <a href='https://github.com/insightsengineering/staged.dependencies'><img src="man/figures/staged.dependencies.png" align="right" height="139" style="max-width: 100%;"/></a  >
+# Development Stages via git branch naming convention <a href='https://github.com/openpharma/staged.dependencies'><img src="man/figures/staged.dependencies.png" align="right" height="139" style="max-width: 100%;"/></a  >
 
 ## Purpose
 
