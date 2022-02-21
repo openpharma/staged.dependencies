@@ -57,7 +57,7 @@ jobs:
         run: >
           remotes::install_github(
             "${{ github.repository }}",
-            ref="${{ github.sha }}",
+            ref = "${{ github.sha }}",
             auth_token = "${{ github.token }}"
           )
         shell: Rscript {0}
