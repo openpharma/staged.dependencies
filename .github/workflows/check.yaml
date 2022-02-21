@@ -42,3 +42,40 @@ jobs:
     name: Version Check 🏁
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: insightsengineering/r.pkg.template/.github/workflows/version.yaml@main
+  e2e-test:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.config.image }}:${{ matrix.config.tag }}
+    name: E2E Test on ${{ matrix.config.image }}:${{ matrix.config.tag }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {image: ghcr.io/insightsengineering/rstudio_4.1.2_bioc_3.14, tag: latest}
+    steps:
+      - name: Install package
+        run: >
+          remotes::install_github(
+            "${{ github.repository }}",
+            ref="${{ github.sha }}",
+            auth_token = "${{ github.token }}"
+          )
+        shell: Rscript {0}
+      - name: Execute E2E Test
+        run: |
+          library(staged.dependencies)
+          print("Creating dependency table")
+          x <- dependency_table("openpharma/stageddeps.food", "repo@host", ref = "fixgarden@main")
+          print(x)
+          print("Checking consistent yamls")
+          check_yamls_consistent(x)
+          print("Install upstream deps")
+          install_deps(x)
+          print("Checking downstream")
+          check_downstream(x, check_args = "--no-manual")
+          print("Build, check, install")
+          build_check_install(x, packages_to_process = "stageddeps.house", rcmd_args = list(check = "--no-manual"))
+          print("Get all external dependencies")
+          deps <- get_all_external_dependencies(x)
+          print(deps)
+        shell: Rscript {0}
