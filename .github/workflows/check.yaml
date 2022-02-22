@@ -1,0 +1,81 @@
+---
+name: Check 🛠
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  audit:
+    name: Audit Dependencies 🕵️‍♂️
+    uses: insightsengineering/r.pkg.template/.github/workflows/audit.yaml@main
+  r-cmd:
+    name: R CMD Check 🧬
+    uses: insightsengineering/r.pkg.template/.github/workflows/build-check-install.yaml@main
+    secrets:
+      REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      enable-staged-dependencies-check: false
+  coverage:
+    if: github.event_name == 'pull_request'
+    name: Coverage 📔 
+    uses: insightsengineering/r.pkg.template/.github/workflows/test-coverage.yaml@main
+    secrets:
+      REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  roxygen:
+    name: Roxygen 🅾
+    uses: insightsengineering/r.pkg.template/.github/workflows/roxygen.yaml@main
+    secrets:
+      REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  gitleaks:
+    name: gitleaks 💧
+    uses: insightsengineering/r.pkg.template/.github/workflows/gitleaks.yaml@main
+  links:
+    if: github.event_name == 'pull_request'
+    name: Check URLs 🌐
+    uses: insightsengineering/r.pkg.template/.github/workflows/links.yaml@main
+  version:
+    name: Version Check 🏁
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: insightsengineering/r.pkg.template/.github/workflows/version.yaml@main
+  e2e-test:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.config.image }}:${{ matrix.config.tag }}
+    name: E2E Test on ${{ matrix.config.image }}:${{ matrix.config.tag }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {image: ghcr.io/insightsengineering/rstudio_4.1.2_bioc_3.14, tag: latest}
+    steps:
+      - name: Install package
+        run: >
+          remotes::install_github(
+            "${{ github.repository }}",
+            ref = "${{ github.sha }}",
+            auth_token = "${{ github.token }}"
+          )
+        shell: Rscript {0}
+      - name: Execute E2E Test
+        run: |
+          library(staged.dependencies)
+          print("Creating dependency table")
+          x <- dependency_table("openpharma/stageddeps.food", "repo@host", ref = "fixgarden@main")
+          print(x)
+          print("Checking consistent yamls")
+          check_yamls_consistent(x)
+          print("Install upstream deps")
+          install_deps(x)
+          print("Checking downstream")
+          check_downstream(x, check_args = "--no-manual")
+          print("Build, check, install")
+          build_check_install(x, packages_to_process = "stageddeps.house", rcmd_args = list(check = "--no-manual"))
+          print("Get all external dependencies")
+          deps <- get_all_external_dependencies(x)
+          print(deps)
+        shell: Rscript {0}
