@@ -40,7 +40,6 @@ jobs:
     uses: insightsengineering/r.pkg.template/.github/workflows/links.yaml@main
   version:
     name: Version Check 🏁
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: insightsengineering/r.pkg.template/.github/workflows/version.yaml@main
   e2e-test:
     runs-on: ubuntu-latest
