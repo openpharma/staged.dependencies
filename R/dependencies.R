@@ -24,7 +24,7 @@
 #' @param fallback_branch (`character`) the default branch to try to use if
 #'   no other matches found
 #' @param renv_profile (`character`) the name of the renv profile of the `renv.lock` files
-#'   to be included from the repos. The standard renv.lock file uses the default NULL argument here.
+#'   to be included from the repos. The standard `renv.lock` file uses the default `NULL` argument here.
 #' @param verbose (`numeric`) verbosity level, incremental;
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
