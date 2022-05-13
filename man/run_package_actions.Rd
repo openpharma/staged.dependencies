@@ -49,7 +49,8 @@ to the \verb{R CMD} commands}
 
 \item{verbose}{verbosity level, incremental - from 0 (none) to 2 (high)}
 
-\item{...}{Additional args passed to \verb{remotes::install_deps Ignored if inside an }renv` environment.}
+\item{...}{Additional args passed to \code{\link[remotes:install_deps]{remotes::install_deps()}} Ignored
+if inside an \code{renv} environment.}
 }
 \description{
 Run an action on the packages

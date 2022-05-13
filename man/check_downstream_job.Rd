@@ -23,7 +23,7 @@ is assumed.}
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 
-\item{create_args}{\code{named list} - additional arguments passed to `dependency_table` function}
+\item{create_args}{\code{named list} - additional arguments passed to \code{dependency_table} function}
 
 \item{...}{
   Arguments passed on to \code{\link[=check_downstream]{check_downstream}}
@@ -38,9 +38,9 @@ packages at most this distance from the \code{dependency_structure$current_pkg}
 to apply action to and infer installation order;
 uses \code{dep_structure$deps} to infer upstream dependencies}
     \item{\code{install_external_deps}}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps} (or \code{renv::install} if
+external dependencies of package using \code{\link[remotes:install_deps]{remotes::install_deps()}} (or \code{\link[renv:install]{renv::install()}} if
 inside an renv environment) .}
-    \item{\code{upgrade}}{argument passed to \code{remotes::install_deps}, defaults to 'never'. Ignored
+    \item{\code{upgrade}}{argument passed to \code{\link[remotes:install_deps]{remotes::install_deps()}}, defaults to \code{'never'}. Ignored
 if inside an \code{renv} environment.}
     \item{\code{package_list}}{(\code{character}) If not NULL, an additional filter, only packages on this
 list will be considered and their dependencies installed if needed (advanced usage only).}

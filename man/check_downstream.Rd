@@ -32,10 +32,10 @@ packages at most this distance from the \code{dependency_structure$current_pkg}
 \item{only_tests}{(\code{logical}) whether to only run tests (rather than checks)}
 
 \item{install_external_deps}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps} (or \code{renv::install} if
+external dependencies of package using \code{\link[remotes:install_deps]{remotes::install_deps()}} (or \code{\link[renv:install]{renv::install()}} if
 inside an renv environment) .}
 
-\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'. Ignored
+\item{upgrade}{argument passed to \code{\link[remotes:install_deps]{remotes::install_deps()}}, defaults to \code{'never'}. Ignored
 if inside an \code{renv} environment.}
 
 \item{package_list}{(\code{character}) If not NULL, an additional filter, only packages on this
