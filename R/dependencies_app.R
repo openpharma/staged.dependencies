@@ -14,7 +14,7 @@
 #' @param default_ref (`character`) default ref (branch/tag), see also the parameter
 #'   `ref` of `\link{dependency_table}`. If `NULL` this must be entered by app user
 #'   and can always be changed by the user.
-#' @param renv_profile (`character`) the name of the renv profile of the renv.lock files
+#' @param renv_profile (`character`) the name of the `renv` profile of the `renv.lock` files
 #'   to be included from the repos. The standard renv.lock file uses the default NULL argument here.
 #' @param fallback_branch (`character`) the default branch to try to use if
 #'   no other matches found
