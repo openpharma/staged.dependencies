@@ -34,10 +34,10 @@ otherwise \verb{R CMD INSTALL} on tarball
 \item{dry}{logical, if \code{FALSE} (default) run the actions, if \code{TRUE} do not}
 
 \item{install_external_deps}{logical to describe whether to install
-external dependencies of package using \code{remotes::install_deps} (or \code{renv::install} if
-inside an renv environment) .}
+external dependencies of package using \code{\link[remotes:install_deps]{remotes::install_deps()}} (or \code{\link[renv:install]{renv::install()}} if
+inside an \code{renv} environment) .}
 
-\item{upgrade}{argument passed to \code{remotes::install_deps}, defaults to 'never'. Ignored
+\item{upgrade}{argument passed to \code{\link[remotes:install_deps]{remotes::install_deps()}}, defaults to \code{'never'}. Ignored
 if inside an \code{renv} environment.}
 
 \item{rcmd_args}{list with names \code{build}, \code{check},
