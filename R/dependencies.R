@@ -326,7 +326,7 @@ plot.dependency_structure <- function(x, y, ...){
 #' @param install_direction "upstream", "downstream" or "all"; which packages
 #'   to install (according to dependency structure). By default this is only "upstream"
 #' @param install_external_deps logical to describe whether to install
-#'   external dependencies of package using `remotes::install_deps` (or `renv::install` if
+#'   external dependencies of package using [remotes::install_deps()] (or [renv::install()] if
 #'   inside an renv environment) .
 #' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'. Ignored
 #'   if inside an `renv` environment.
