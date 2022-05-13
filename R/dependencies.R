@@ -328,7 +328,7 @@ plot.dependency_structure <- function(x, y, ...){
 #' @param install_external_deps logical to describe whether to install
 #'   external dependencies of package using [remotes::install_deps()] (or [renv::install()] if
 #'   inside an renv environment) .
-#' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'. Ignored
+#' @param upgrade argument passed to [remotes::install_deps()], defaults to `'never'`. Ignored
 #'   if inside an `renv` environment.
 #' @param package_list (`character`) If not NULL, an additional filter, only packages on this
 #'   list will be considered and their dependencies installed if needed (advanced usage only).
