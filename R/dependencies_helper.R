@@ -13,9 +13,9 @@
 #' @param internal_pkg_deps packages to not install (when `install_external_deps = TRUE`)
 #' @param dry logical, if `FALSE` (default) run the actions, if `TRUE` do not
 #' @param install_external_deps logical to describe whether to install
-#'   external dependencies of package using `remotes::install_deps` (or `renv::install` if
-#'   inside an renv environment) .
-#' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'. Ignored
+#'   external dependencies of package using [remotes::install_deps()] (or [renv::install()] if
+#'   inside an `renv` environment) .
+#' @param upgrade argument passed to [remotes::install_deps()], defaults to `'never'`. Ignored
 #'   if inside an `renv` environment.
 #' @param rcmd_args list with names `build`, `check`,
 #'   `install` which are vectors that are passed as separate arguments
