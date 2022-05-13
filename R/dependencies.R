@@ -47,7 +47,7 @@
 #'               of the form returned by `desc::desc_get_deps`}
 #'   \item{direction}{`direction` argument used to create object}
 #'   \item{renv_files}{`named list` containing the json of the renv.lock files for the chosen profile for
-#'                     each repo. An entry to the list is NULL if a repos does not have the required lock file}
+#'                     each repo. An entry to the list is `NULL` if a repos does not have the required lock file}
 #' }
 #' @md
 #' @export
