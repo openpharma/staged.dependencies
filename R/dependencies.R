@@ -335,7 +335,7 @@ plot.dependency_structure <- function(x, y, ...){
 #' @param dry (`logical`) dry run that outputs what would happen without actually
 #'   doing it.
 #' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
-#' @param ... Additional args passed to `remotes::install_deps. Ignored
+#' @param ... Additional args passed to [remotes::install_deps()]. Ignored
 #'   if inside an `renv` environment.
 #'
 #' @return `data.frame` of performed actions
