@@ -163,8 +163,9 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
 # Install the external deps required for a package
 # does not install dependencies that appear in `internal_pkg_deps`
 install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
-  # `remotes::install_deps` only makes use of the package DESCRIPTION file via
-  # `remotes:::load_pkg_description`
+
+  # `remotes::install_deps` (and renv::install)
+  #  only makes use of the package DESCRIPTION file
   # So we create a temp directory containing this file and then call this function
   repo_dir_external <- tempfile(paste0(basename(repo_dir), "_externalDeps"))
   fs::dir_create(repo_dir_external)
@@ -174,10 +175,15 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
   # remove internal_pkg_deps from DESCRIPTION file
   desc_obj <- desc::desc(file.path(repo_dir_external, "DESCRIPTION"))
   new_deps <- desc_obj$get_deps()[!desc_obj$get_deps()$package %in% internal_pkg_deps,]
+
   desc_obj$set_deps(new_deps)
   desc_obj$write()
 
-  remotes::install_deps(repo_dir_external, ...)
+  if (!is.null(Sys.getenv("RENV_PROJECT")) && Sys.getenv("RENV_PROJECT") != "" && requireNamespace("renv", quietly = TRUE)) {
+    renv::install(repo_dir_external)
+  } else {
+    remotes::install_deps(repo_dir_external, ...)
+  }
 }
 
 

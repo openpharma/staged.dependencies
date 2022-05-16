@@ -13,15 +13,18 @@
 #' @param internal_pkg_deps packages to not install (when `install_external_deps = TRUE`)
 #' @param dry logical, if `FALSE` (default) run the actions, if `TRUE` do not
 #' @param install_external_deps logical to describe whether to install
-#'   external dependencies of package using `remotes::install_deps`.
-#' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'.
+#'   external dependencies of package using [remotes::install_deps()] (or [renv::install()] if
+#'   inside an `renv` environment) .
+#' @param upgrade argument passed to [remotes::install_deps()], defaults to `'never'`. Ignored
+#'   if inside an `renv` environment.
 #' @param rcmd_args list with names `build`, `check`,
 #'   `install` which are vectors that are passed as separate arguments
 #'   to the `R CMD` commands
 #' @param artifact_dir directory to store log files, only when actions include
 #'   `build`; action `test` only outputs to the console
 #' @param verbose verbosity level, incremental - from 0 (none) to 2 (high)
-#' @param ... Additional args passed to `remotes::install_deps.
+#' @param ... Additional args passed to [remotes::install_deps()] Ignored
+#'   if inside an `renv` environment.
 run_package_actions <- function(pkg_actions, internal_pkg_deps,
                                 dry = FALSE,
                                 install_external_deps = TRUE,

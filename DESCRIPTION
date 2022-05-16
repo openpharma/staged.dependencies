@@ -1,7 +1,7 @@
 Package: staged.dependencies
 Type: Package
 Title: Install R packages from Particular Git Branches
-Version: 0.2.4
+Version: 0.2.5
 Authors@R: c(
   person("Adrian", "Waddell", email = "adrian.waddell@roche.com", role = c("aut", "cre")),
   person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = "aut"),
@@ -16,6 +16,7 @@ Imports:
     git2r,
     glue,
     httr,
+    jsonlite,
     methods,
     rcmdcheck,
     remotes,
@@ -32,11 +33,13 @@ Description: When developing multiple dependent packages, it is often useful to 
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
+Roxygen: list(markdown = TRUE)
 Suggests: 
     knitr,
     miniUI,
     mockery,
+    renv,
     rmarkdown,
     rstudioapi,
     shiny,
@@ -52,6 +55,7 @@ Collate:
     'graph_methods.R'
     'host.R'
     'ref_strategy.R'
+    'renv.R'
     'rstudio_jobs.R'
     'rstudio_addins.R'
     'utils.R'

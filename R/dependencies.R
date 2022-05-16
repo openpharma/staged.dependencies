@@ -23,6 +23,8 @@
 #'   either "upstream","downstream" or "all".
 #' @param fallback_branch (`character`) the default branch to try to use if
 #'   no other matches found
+#' @param renv_profile (`character`) the name of the renv profile of the `renv.lock` files
+#'   to be included from the repos. The standard `renv.lock` file uses the default `NULL` argument here.
 #' @param verbose (`numeric`) verbosity level, incremental;
 #'   (0: None, 1: packages that get installed + high-level git operations,
 #'   2: includes git checkout infos)
@@ -44,6 +46,8 @@
 #'               R packages found in the description files of the internal packages. It is a dataframe
 #'               of the form returned by `desc::desc_get_deps`}
 #'   \item{direction}{`direction` argument used to create object}
+#'   \item{renv_files}{`named list` containing the json of the renv.lock files for the chosen profile for
+#'                     each repo. An entry to the list is `NULL` if a repos does not have the required lock file}
 #' }
 #' @md
 #' @export
@@ -64,6 +68,7 @@ dependency_table <- function(project = ".",
                              local_repos = if ((project_type) == "local") get_local_pkgs_from_config() else NULL,
                              direction = "all",
                              fallback_branch = "main",
+                             renv_profile = NULL,
                              verbose = 1) {
 
   # validate arguments
@@ -129,7 +134,6 @@ dependency_table <- function(project = ".",
   # deps is ordered topologically
   deps <- get_true_deps_graph(internal_deps, graph_directions = "all")
 
-
   current_pkg <- internal_deps$package_name[
     internal_deps$repo == repo_to_process[[1]]$repo &
       internal_deps$host == repo_to_process[[1]]$host
@@ -174,6 +178,10 @@ dependency_table <- function(project = ".",
   internal_deps$install_index <- vapply(internal_deps$package_name,
                                         function(y) which(names(deps[["upstream_deps"]]) == y),
                                         FUN.VALUE = numeric(1))
+
+  renv_files <- lapply(internal_deps$cache_dir, get_renv_lock_from_repo_dir, renv_profile = renv_profile)
+  names(renv_files) <- internal_deps$package_name
+
   structure(
     list(
       project = if (project_type == "local") fs::path_abs(project) else project,
@@ -181,7 +189,8 @@ dependency_table <- function(project = ".",
       current_pkg = current_pkg,
       table = internal_deps,
       deps = deps,
-      direction = direction
+      direction = direction,
+      renv_files = renv_files
     ),
     class = "dependency_structure"
   )
@@ -317,14 +326,17 @@ plot.dependency_structure <- function(x, y, ...){
 #' @param install_direction "upstream", "downstream" or "all"; which packages
 #'   to install (according to dependency structure). By default this is only "upstream"
 #' @param install_external_deps logical to describe whether to install
-#'   external dependencies of packages using `remotes::install_deps`.
-#' @param upgrade argument passed to `remotes::install_deps`, defaults to 'never'.
+#'   external dependencies of package using [remotes::install_deps()] (or [renv::install()] if
+#'   inside an renv environment) .
+#' @param upgrade argument passed to [remotes::install_deps()], defaults to `'never'`. Ignored
+#'   if inside an `renv` environment.
 #' @param package_list (`character`) If not NULL, an additional filter, only packages on this
 #'   list will be considered and their dependencies installed if needed (advanced usage only).
 #' @param dry (`logical`) dry run that outputs what would happen without actually
 #'   doing it.
 #' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
-#' @param ... Additional args passed to `remotes::install_deps.
+#' @param ... Additional args passed to [remotes::install_deps()]. Ignored
+#'   if inside an `renv` environment.
 #'
 #' @return `data.frame` of performed actions
 #'
