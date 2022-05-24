@@ -16,18 +16,11 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - inst/templates/**
-      - _pkgdown.yml
-      - DESCRIPTION
-      - '**.md'
-      - man/**
-      - LICENSE.*
-      - NAMESPACE
+
 
 jobs:
   docs:
-    name: Pkgdown Docs 📚 
-    uses: insightsengineering/r.pkg.template/.github/workflows/pkgdown.yaml@main
+    name: Pkgdown Docs 📚
+    uses: insightsengineering/r.pkg.template/.github/workflows/pkgdown.yaml@handle-renv-for-docs
     secrets:
       REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
