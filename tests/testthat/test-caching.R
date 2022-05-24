@@ -204,3 +204,36 @@ test_that("copy_local_repo_to_cachedir works", {
 
   unlink(repo_dir, recursive = TRUE)
 })
+
+test_that("copy_renv_profiles only copies /profiles/<<x>>/renv.lock files", {
+  withr::with_tempdir({
+    # setup structure
+    fs::dir_create(fs::path_join(c("from", "profiles", "example")))
+    fs::dir_create(fs::path_join(c("from", "profiles", "test")))
+    fs::dir_create(fs::path_join(c("from", "library", "x")))
+    write("x", file = fs::path_join(c("from", "profiles", "example", "renv.lock")))
+    write("x", file = fs::path_join(c("from", "profiles", "test", "renv.lock")))
+    write("x", file = fs::path_join(c("from", "profiles", "example", "other.file")))
+    write("x", file = fs::path_join(c("from", "library", "x", "other.file")))
+
+    fs::dir_create("to")
+    copy_renv_profiles("from", "to")
+    expect_equal(
+      as.character(fs::dir_ls("to", recurse = 3)),
+      c("to/renv", "to/renv/profiles", "to/renv/profiles/example",
+        "to/renv/profiles/example/renv.lock", "to/renv/profiles/test", "to/renv/profiles/test/renv.lock")
+    )
+  })
+})
+
+test_that("copy_renv_profiles does not copy any files if no /profiles folder", {
+  withr::with_tempdir({
+    # setup structure
+    fs::dir_create(fs::path_join(c("from", "library", "x")))
+    write("x", file = fs::path_join(c("from", "library", "x", "other.file")))
+
+    fs::dir_create("to")
+    copy_renv_profiles("from", "to")
+    expect_length(fs::dir_ls("to"), 0)
+  })
+})

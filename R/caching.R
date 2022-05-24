@@ -96,8 +96,10 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
 
   lapply(fs::dir_ls(local_dir, type = "directory", all = TRUE), function(dir) {
     directory_to_copy <- utils::tail(strsplit(dir, .Platform$file.sep)[[1]], 1)
-    if(directory_to_copy != "renv") {
+    if (directory_to_copy != "renv") {
       fs::dir_copy(dir, repo_dir)
+    } else {
+      copy_renv_profiles(dir, repo_dir)
     }
   })
 
@@ -147,6 +149,26 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
 
   return(list(dir = repo_dir, ref = paste0("local (", current_branch, ")"),
               sha = get_short_sha(repo_dir), accessible = TRUE))
+}
+
+
+# we need to copy lock files for different profiles which are stored
+# within the renv folder but not copy all the libraries
+copy_renv_profiles <- function(renv_directory, repo_dir) {
+  renv_sub_directories <- fs::dir_ls(renv_directory, type = "directory", all = TRUE)
+  if ("profiles" %in% fs::path_file(renv_sub_directories)) {
+    renv_profiles <- fs::dir_ls(fs::path_join(c(renv_directory, "profiles")),
+                                type = "directory", all = TRUE)
+    lapply(renv_profiles, function(x) {
+      fs::dir_create(fs::path_join(c(repo_dir, "renv", "profiles", fs::path_file(x))), recurse = TRUE)
+      if (fs::file_exists(fs::path_join(c(x, "renv.lock")))) {
+        fs::file_copy(
+          path = fs::path_join(c(x, "renv.lock")),
+          new_path = fs::path_join(c(repo_dir, "renv", "profiles", fs::path_file(x), "renv.lock"))
+        )
+      }
+    })
+  }
 }
 
 # local_repos: data.frame that maps repo and host to local directory

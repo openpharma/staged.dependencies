@@ -11,6 +11,7 @@ dependency_table(
   local_repos = if ((project_type) == "local") get_local_pkgs_from_config() else NULL,
   direction = "all",
   fallback_branch = "main",
+  renv_profile = NULL,
   verbose = 1
 )
 }
@@ -38,6 +39,9 @@ either "upstream","downstream" or "all".}
 \item{fallback_branch}{(\code{character}) the default branch to try to use if
 no other matches found}
 
+\item{renv_profile}{(\code{character}) the name of the renv profile of the \code{renv.lock} files
+to be included from the repos. The standard \code{renv.lock} file uses the default \code{NULL} argument here.}
+
 \item{verbose}{(\code{numeric}) verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
@@ -61,6 +65,8 @@ and is ordered in reverse installation order. \code{external} contains the exter
 R packages found in the description files of the internal packages. It is a dataframe
 of the form returned by \code{desc::desc_get_deps}}
 \item{direction}{\code{direction} argument used to create object}
+\item{renv_files}{\verb{named list} containing the json of the renv.lock files for the chosen profile for
+each repo. An entry to the list is \code{NULL} if a repos does not have the required lock file}
 }
 }
 \description{

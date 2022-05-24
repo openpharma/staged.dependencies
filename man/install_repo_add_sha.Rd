@@ -9,7 +9,7 @@ install_repo_add_sha(repo_dir, ...)
 \arguments{
 \item{repo_dir}{directory of repo}
 
-\item{...}{Additional args passed to `remotes::install_deps`. Note `upgrade`
+\item{...}{Additional args passed to \code{remotes::install_deps}. Note \code{upgrade}
 is set to "never" and shouldn't be passed into this function.}
 }
 \description{

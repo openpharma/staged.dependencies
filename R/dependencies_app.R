@@ -14,6 +14,8 @@
 #' @param default_ref (`character`) default ref (branch/tag), see also the parameter
 #'   `ref` of `\link{dependency_table}`. If `NULL` this must be entered by app user
 #'   and can always be changed by the user.
+#' @param renv_profile (`character`) the name of the `renv` profile of the `renv.lock` files
+#'   to be included from the repos. The standard `renv.lock` file uses the default `NULL` argument here.
 #' @param fallback_branch (`character`) the default branch to try to use if
 #'   no other matches found
 #' @param run_gadget (`logical`) whether to run the app as a gadget
@@ -31,6 +33,7 @@ install_deps_app <- function(default_repo = NULL,
                              fallback_branch = "main",
                              run_gadget = TRUE, run_as_job = TRUE,
                              verbose = 1, install_external_deps = TRUE,
+                             renv_profile = NULL,
                              upgrade = "never", ...) {
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
 
@@ -89,7 +92,7 @@ install_deps_app <- function(default_repo = NULL,
           }
           dependency_table(project = paste(input$repo, input$host, sep = "@"),
                            project_type = "repo@host", ref = input$ref, fallback_branch = fallback_branch,
-                           local_repos = NULL, verbose = 2)},
+                           local_repos = NULL, renv_profile = renv_profile, verbose = 2)},
           error = function(cond){
             error_rv(paste0("Cannot create dependency graph:\n", cond$message))
             NULL
@@ -151,7 +154,7 @@ install_deps_app <- function(default_repo = NULL,
             # this could be changed by using the importEnv argument
             # to jobRunScript and creating an install_deps job if dep_structure already exists in env
             install_deps_job(project = paste(input$repo, input$host, sep = "@"),  project_type = "repo@host", verbose = verbose,
-                             create_args = list(local_repos = NULL, ref = input$ref),
+                             create_args = list(local_repos = NULL, ref = input$ref, renv_profile = renv_profile),
                              dependency_packages = dependency_packages, fallback_branch = fallback_branch,
                              install_external_deps = install_external_deps,
                              install_direction = "all",

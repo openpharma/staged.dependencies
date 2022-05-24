@@ -24,7 +24,8 @@ run_job <- function(text, tempfile_prefix = "file", jobname_prefix = "Job", ...)
 #' install_deps_job(create_args = list(direction = "all"))
 #' install_deps_job(dry_install = TRUE)
 #' }
-install_deps_job <- function(project = ".", project_type = "local", verbose = 1, create_args = list(), ...) {
+install_deps_job <- function(project = ".", project_type = "local", verbose = 1,
+                             create_args = list(renv_profile = Sys.getenv("RENV_PROFILE")), ...) {
   if (project_type == "local") {
     project <- normalize_path(project)
   }
@@ -58,7 +59,8 @@ install_deps_job <- function(project = ".", project_type = "local", verbose = 1,
 #'                      list(create_arg = list(ref = "6_makegraph@main")))
 #' check_downstream_job(only_tests = TRUE)
 #' }
-check_downstream_job <- function(project = ".", verbose = 1, create_args = list(), ...) {
+check_downstream_job <- function(project = ".", verbose = 1,
+                                 create_args = list(renv_profile = Sys.getenv("RENV_PROFILE")), ...) {
   project <- normalize_path(project)
   create_args <- c(list(project = project, verbose = verbose), create_args)
   create_args_str <- paste(deparse(create_args), collapse = "\n")

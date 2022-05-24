@@ -7,7 +7,7 @@
 topological_sort(graph)
 }
 \arguments{
-\item{graph}{(named `list`) list with node vector elements mapping from
+\item{graph}{(named \code{list}) list with node vector elements mapping from
 child to its parents (upstream dependencies)}
 }
 \value{
