@@ -29,7 +29,7 @@ jobs:
   coverage:
     if: github.event_name == 'pull_request'
     name: Coverage 📔 
-    uses: insightsengineering/r.pkg.template/.github/workflows/test-coverage.yaml@handle-renv-for-docs
+    uses: insightsengineering/r.pkg.template/.github/workflows/test-coverage.yaml@main
     secrets:
       REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   roxygen:
