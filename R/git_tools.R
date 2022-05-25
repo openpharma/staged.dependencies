@@ -175,13 +175,20 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
   # remove internal_pkg_deps from DESCRIPTION file
   desc_obj <- desc::desc(file.path(repo_dir_external, "DESCRIPTION"))
   new_deps <- desc_obj$get_deps()[!desc_obj$get_deps()$package %in% internal_pkg_deps,]
-
   desc_obj$set_deps(new_deps)
-  desc_obj$write()
+
 
   if (!is.null(Sys.getenv("RENV_PROJECT")) && Sys.getenv("RENV_PROJECT") != "" && requireNamespace("renv", quietly = TRUE)) {
+    # renv::install installs the package not just the dependencies
+    # in this case we do not want the package to be installed (as it overwrites
+    # the sha which is needed to make sure the internal dependencies have not changed)
+    temp_package_name <- paste0(desc_obj$get("Package"), ".dependencies")
+    desc_obj$set("Package", paste(temp_package_name))
+    desc_obj$write()
     renv::install(repo_dir_external)
+    suppressMessages(utils::remove.packages(temp_package_name))
   } else {
+    desc_obj$write()
     remotes::install_deps(repo_dir_external, ...)
   }
 }
