@@ -22,6 +22,14 @@ on:
       - ready_for_review
     branches:
       - main
+    paths:
+      - inst/templates/**
+      - _pkgdown.yml
+      - DESCRIPTION
+      - '**.md'
+      - man/**
+      - LICENSE.*
+      - NAMESPACE
 
 jobs:
   docs:
