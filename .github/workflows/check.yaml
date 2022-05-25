@@ -2,7 +2,13 @@
 name: Check 🛠
 
 on:
+  workflow_dispatch:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
       - main
   push:
@@ -40,13 +46,15 @@ jobs:
     uses: insightsengineering/r.pkg.template/.github/workflows/links.yaml@main
   version:
     name: Version Check 🏁
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: insightsengineering/r.pkg.template/.github/workflows/version.yaml@main
   e2e-test:
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.config.image }}:${{ matrix.config.tag }}
     name: E2E Test on ${{ matrix.config.image }}:${{ matrix.config.tag }}
+    if: >
+      !contains(github.event.commits[0].message, '[skip e2e tests]')
+        && github.event.pull_request.draft == false
     strategy:
       fail-fast: false
       matrix:

@@ -2,6 +2,7 @@
 name: Docs 📚
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -14,6 +15,11 @@ on:
       - LICENSE.*
       - NAMESPACE
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
       - main
     paths:
@@ -27,7 +33,7 @@ on:
 
 jobs:
   docs:
-    name: Pkgdown Docs 📚 
+    name: Pkgdown Docs 📚
     uses: insightsengineering/r.pkg.template/.github/workflows/pkgdown.yaml@main
     secrets:
       REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
