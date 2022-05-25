@@ -2,13 +2,18 @@
 name: Check 🛠
 
 on:
+  workflow_dispatch:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
       - main
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   audit:
@@ -47,6 +52,9 @@ jobs:
     container:
       image: ${{ matrix.config.image }}:${{ matrix.config.tag }}
     name: E2E Test on ${{ matrix.config.image }}:${{ matrix.config.tag }}
+    if: >
+      !contains(github.event.commits[0].message, '[skip e2e tests]')
+        && github.event.pull_request.draft == false
     strategy:
       fail-fast: false
       matrix:
