@@ -1,7 +1,7 @@
 Package: staged.dependencies
 Type: Package
 Title: Install R packages from Particular Git Branches
-Version: 0.2.5
+Version: 0.2.6
 Authors@R: c(
   person("Adrian", "Waddell", email = "adrian.waddell@roche.com", role = c("aut", "cre")),
   person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = "aut"),
