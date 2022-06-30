@@ -289,7 +289,11 @@ install_repo_add_sha <- function(repo_dir,
   # once we have installed or failed to install the package we reset the repo
   # so that further operations on the repo do not fail by the above
   # "the git directory contains changes" check
-  on.exit(git2r::reset(git2r::commits(repo_dir)[[1]], reset_type = "hard"))
+  on.exit({
+    git2r::reset(git2r::commits(repo_dir)[[1]], reset_type = "hard")
+    # git clean
+    try(unlink(file.path(repo_dir, rlang::flatten_chr(git2r::status(repo_dir)$untracked)), recursive = TRUE))
+  })
 
   desc <- utils::modifyList(desc, metadata)
   write_dcf(source_desc, desc)
