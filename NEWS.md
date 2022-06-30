@@ -1,7 +1,6 @@
 # staged.dependencies 0.2.7
 
-* Fixed a bug whereby the cache file for packages with compiled code was not reset after installation thereby `dependency_table`
-failed on a 2nd run.
+* Fixed a bug whereby the cache file for packages with compiled code was not reset after installation thereby `dependency_table` failed on a 2nd run.
 
 # staged.dependencies 0.2.6
 
