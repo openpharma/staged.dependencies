@@ -292,7 +292,7 @@ install_repo_add_sha <- function(repo_dir,
   on.exit({
     git2r::reset(git2r::commits(repo_dir)[[1]], reset_type = "hard")
     # git clean
-    try(unlink(rlang::flatten_chr(git2r::status(repo_dir)$untracked), recursive = TRUE))
+    try(unlink(file.path(repo_dir, rlang::flatten_chr(git2r::status(repo_dir)$untracked)), recursive = TRUE))
   })
 
   desc <- utils::modifyList(desc, metadata)
