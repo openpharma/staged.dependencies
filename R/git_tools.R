@@ -185,13 +185,6 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
     temp_package_name <- paste0(desc_obj$get("Package"), ".dependencies")
     desc_obj$set("Package", paste(temp_package_name))
 
-    # We have to move the suggests packages into imports as renv::install
-    # does not install suggests
-    if ( ) {
-      new_deps <- desc_obj$get_deps()
-
-    }
-
     desc_obj$write()
     renv::install(repo_dir_external)
     suppressMessages(utils::remove.packages(temp_package_name))
