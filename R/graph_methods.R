@@ -10,12 +10,12 @@
 #'   child to its parents (upstream dependencies)
 #' @return vector listing parents before children
 #' @examples
-#'   staged.dependencies:::topological_sort(list(A = c(), B = c("A"), C = c("B"), D = c("A")))
-#'   staged.dependencies:::topological_sort(list(D = c("A"), A = c(), B = c("A"), C = c("B")))
-#'   staged.dependencies:::topological_sort(list(D = c("A"), B = c("A"), C = c("B"), A = c()))
+#' staged.dependencies:::topological_sort(list(A = c(), B = c("A"), C = c("B"), D = c("A")))
+#' staged.dependencies:::topological_sort(list(D = c("A"), A = c(), B = c("A"), C = c("B")))
+#' staged.dependencies:::topological_sort(list(D = c("A"), B = c("A"), C = c("B"), A = c()))
 #' \dontrun{
-#'   # cycle
-#'   topological_sort(list(A = c("B"), B = c("C", "A"), C = c()))
+#' # cycle
+#' topological_sort(list(A = c("B"), B = c("C", "A"), C = c()))
 #' }
 topological_sort <- function(graph) {
   # compute in-degrees
@@ -55,8 +55,10 @@ topological_sort <- function(graph) {
   }
 
   if (visited != length(in_degrees)) {
-    stop("Dependency graph is not a directed acyclic graph. Cycles involving: ",
-         paste0(setdiff(names(in_degrees), sorted), collapse = " "))
+    stop(
+      "Dependency graph is not a directed acyclic graph. Cycles involving: ",
+      paste0(setdiff(names(in_degrees), sorted), collapse = " ")
+    )
   } else {
     return(unlist(sorted))
   }

@@ -7,7 +7,7 @@ test_that("checkout_repo with mocking works", {
   # mock git clone
 
   # delete mock function with rm(list = c("checkout_repo"))
-  mockery::stub(checkout_repo, 'git2r::clone', function(url, local_path, ...) {
+  mockery::stub(checkout_repo, "git2r::clone", function(url, local_path, ...) {
     print("Mocking git2r::clone")
     existing_repo_dir <- file.path(TESTS_GIT_REPOS, basename(local_path))
     stopifnot(dir.exists(existing_repo_dir))
@@ -21,12 +21,12 @@ test_that("checkout_repo with mocking works", {
     git2r::repository(local_path)
   })
 
-  mockery::stub(checkout_repo, 'git2r::fetch', function(url, local_path, ...) {
+  mockery::stub(checkout_repo, "git2r::fetch", function(url, local_path, ...) {
     print("Mocking git2r::fetch")
     invisible(NULL)
   })
 
-  mockery::stub(checkout_repo, 'get_remote_name', function(...) "origin")
+  mockery::stub(checkout_repo, "get_remote_name", function(...) "origin")
 
   with_tmp_cachedir({
     repo_dir <- file.path(tempfile(), "stageddeps.food")
@@ -34,8 +34,10 @@ test_that("checkout_repo with mocking works", {
     # check that clone is called
     expect_output(
       checkout_repo(repo_dir,
-                    "REPLACED/stageddeps.food.git",
-                    function(...) structure("unittest_branch1", type = "branch"), token_envvar = NULL),
+        "REPLACED/stageddeps.food.git",
+        function(...) structure("unittest_branch1", type = "branch"),
+        token_envvar = NULL
+      ),
       regexp = "Mocking git2r::clone", fixed = TRUE
     )
 
@@ -43,8 +45,10 @@ test_that("checkout_repo with mocking works", {
     expect_output(
       expect_error(
         checkout_repo(repo_dir,
-                      "REPLACED/stageddeps.food.git",
-                      function(...) structure("inexistantBranch", type = "branch"), token_envvar = NULL),
+          "REPLACED/stageddeps.food.git",
+          function(...) structure("inexistantBranch", type = "branch"),
+          token_envvar = NULL
+        ),
         regexp = "ref inexistantBranch is unavailable for this repo", fixed = TRUE
       ),
       regexp = "Mocking git2r::fetch", fixed = TRUE
@@ -52,14 +56,15 @@ test_that("checkout_repo with mocking works", {
     # checkout an existing branch (after fetching)
     expect_output(
       checkout_repo(repo_dir,
-                    "REPLACED/stageddeps.food.git",
-                    function(...) structure("unittest_branch2", type = "branch"), token_envvar = NULL),
+        "REPLACED/stageddeps.food.git",
+        function(...) structure("unittest_branch2", type = "branch"),
+        token_envvar = NULL
+      ),
       regexp = "Mocking git2r::fetch", fixed = TRUE
     )
 
     unlink(repo_dir, recursive = TRUE)
   })
-
 })
 
 # ---- check_only_remote_branches ----
@@ -79,26 +84,22 @@ test_that("check_only_remote_branches works", {
 })
 
 
-test_that("get_remote_name provides remote name of repo",{
-
-  mockery::stub(get_remote_name, 'git2r::remote_url', function(git_repo, remote){
+test_that("get_remote_name provides remote name of repo", {
+  mockery::stub(get_remote_name, "git2r::remote_url", function(git_repo, remote) {
     switch(remote,
-       A = "git@ssh.github.com:x/y.git",
-       B = "git@github.com:w/v.git",
-       C = "https://github.com/k/l/m",
-       D = "https://github.com/a/b.git",
-       origin = "https://github.com/xxx/c.git"
+      A = "git@ssh.github.com:x/y.git",
+      B = "git@github.com:w/v.git",
+      C = "https://github.com/k/l/m",
+      D = "https://github.com/a/b.git",
+      origin = "https://github.com/xxx/c.git"
     )
   })
 
 
-  mockery::stub(get_remote_name, 'git2r::remotes', function(git_repo) c("origin", "A", "B", "C", "D"))
+  mockery::stub(get_remote_name, "git2r::remotes", function(git_repo) c("origin", "A", "B", "C", "D"))
   expect_equal(get_remote_name(".", "https://github.com/x/y.git"), "A")
   expect_equal(get_remote_name(".", "https://github.com/w/v.git"), "B")
   expect_equal(get_remote_name(".", "https://github.com/k/l/m.git"), "C")
   expect_equal(get_remote_name(".", "https://github.com/a/b.git"), "D")
   expect_equal(get_remote_name(".", "https://other.git"), "origin")
-
-
 })
-

@@ -55,49 +55,53 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
       message(paste("clone", repo_url, "to directory", repo_dir))
     }
 
-    cloned_repo <- tryCatch({
-      git_repo <- git2r::clone(
-        url = repo_url, local_path = repo_dir,
-        credentials = creds, progress = verbose >= 2
-      )
-    }, error = function(e) {
-      # catch some common errors
-      # only do this when cloning because the API calls introduce quite some time overhead
-      host <- paste(utils::head(strsplit(repo_url, "/", fixed = TRUE)[[1]], -2), collapse = "/")
-      repo <- paste(utils::tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
-      repo <- substr(repo, start = 0, stop = nchar(repo) - nchar(".git"))
-
-      if (!identical(httr::status_code(httr::HEAD(host)), 200L)) {
-        stop("Host ", host, " not reachable")
-      }
-
-      notification_function <- if (must_work) stop else warning
-
-      resp <- get_repo_access(repo, host, token_envvar)
-      if (!is.null(resp) && httr::status_code(resp) > 200) {
-        notification_function(
-          paste0("You cannot access ", repo, " at host ", host,
-            ". If you expect to be able to access this repo then ",
-            "check that repo and token in envvar '", token_envvar,
-            "' are correct.\n",
-            "The response's content was:\n", paste(httr::content(resp), collapse = "\n"),
-            if (!must_work) " Staged dependencies will continue, ignoring this repository. Some packages may ",
-            "not be able to be installed and its package name is assumed to match repository name."
-          )
+    cloned_repo <- tryCatch(
+      {
+        git_repo <- git2r::clone(
+          url = repo_url, local_path = repo_dir,
+          credentials = creds, progress = verbose >= 2
         )
-      } else{
-        notification_function(
-          paste0(
-            "Repo ", repo, " could ",
-            "not be cloned. The git2r::clone error is: ", e$message,
-            if (!must_work) "\nStaged dependencies will continue, ignoring this repository. Some packages may ",
-            "not be able to be installed and its package name is assumed to match repository name."
-          )
-        )
-      }
+      },
+      error = function(e) {
+        # catch some common errors
+        # only do this when cloning because the API calls introduce quite some time overhead
+        host <- paste(utils::head(strsplit(repo_url, "/", fixed = TRUE)[[1]], -2), collapse = "/")
+        repo <- paste(utils::tail(strsplit(repo_url, "/", fixed = TRUE)[[1]], 2), collapse = "/")
+        repo <- substr(repo, start = 0, stop = nchar(repo) - nchar(".git"))
 
-      return(NULL)
-    })
+        if (!identical(httr::status_code(httr::HEAD(host)), 200L)) {
+          stop("Host ", host, " not reachable")
+        }
+
+        notification_function <- if (must_work) stop else warning
+
+        resp <- get_repo_access(repo, host, token_envvar)
+        if (!is.null(resp) && httr::status_code(resp) > 200) {
+          notification_function(
+            paste0(
+              "You cannot access ", repo, " at host ", host,
+              ". If you expect to be able to access this repo then ",
+              "check that repo and token in envvar '", token_envvar,
+              "' are correct.\n",
+              "The response's content was:\n", paste(httr::content(resp), collapse = "\n"),
+              if (!must_work) " Staged dependencies will continue, ignoring this repository. Some packages may ",
+              "not be able to be installed and its package name is assumed to match repository name."
+            )
+          )
+        } else {
+          notification_function(
+            paste0(
+              "Repo ", repo, " could ",
+              "not be cloned. The git2r::clone error is: ", e$message,
+              if (!must_work) "\nStaged dependencies will continue, ignoring this repository. Some packages may ",
+              "not be able to be installed and its package name is assumed to match repository name."
+            )
+          )
+        }
+
+        return(NULL)
+      }
+    )
 
     if (is.null(cloned_repo)) {
       return(list(dir = as.character(NA), ref = as.character(NA), sha = as.character(NA), accessible = FALSE))
@@ -123,12 +127,17 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     git_repo <- git2r::repository(repo_dir)
     # prune (remove) remote branches that were deleted from remote
     git2r::config(git_repo, remote.origin.prune = "true")
-    tryCatch({
-      git2r::fetch(git_repo, name = get_remote_name(git_repo, repo_url), credentials = creds, verbose = verbose >= 2)
-    }, error = function(cond) {
-      warning("Unable to fetch from remote for ", repo_dir, " using state of repo found in cache.\n",
-              "Error message when trying to fetch: ", cond$message)
-    })
+    tryCatch(
+      {
+        git2r::fetch(git_repo, name = get_remote_name(git_repo, repo_url), credentials = creds, verbose = verbose >= 2)
+      },
+      error = function(cond) {
+        warning(
+          "Unable to fetch from remote for ", repo_dir, " using state of repo found in cache.\n",
+          "Error message when trying to fetch: ", cond$message
+        )
+      }
+    )
   }
 
   check_only_remote_branches(git_repo, remote_name = get_remote_name(git_repo, repo_url))
@@ -150,14 +159,16 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     if (verbose >= 1) {
       message(paste("   - checkout tag", selected_ref, "in directory", repo_dir))
       git2r::branch_create(commit = git2r::commits(repo = repo_dir, ref = selected_ref, n = 1)[[1]], force = TRUE, name = paste0("staged_dep_tag_", selected_ref))
-      git2r::checkout(git_repo, branch =  paste0("staged_dep_tag_", selected_ref), force = TRUE)
+      git2r::checkout(git_repo, branch = paste0("staged_dep_tag_", selected_ref), force = TRUE)
     }
-  } else{
+  } else {
     stop("The selected reference should have a type attribute as 'branch' or 'tag'")
   }
 
-  return(list(dir = repo_dir, ref = selected_ref,
-              sha = get_short_sha(repo_dir), accessible = TRUE))
+  return(list(
+    dir = repo_dir, ref = selected_ref,
+    sha = get_short_sha(repo_dir), accessible = TRUE
+  ))
 }
 
 # Install the external deps required for a package
@@ -169,12 +180,14 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
   # So we create a temp directory containing this file and then call this function
   repo_dir_external <- tempfile(paste0(basename(repo_dir), "_externalDeps"))
   fs::dir_create(repo_dir_external)
-  fs::file_copy(file.path(repo_dir, "DESCRIPTION"),
-                file.path(repo_dir_external, "DESCRIPTION"))
+  fs::file_copy(
+    file.path(repo_dir, "DESCRIPTION"),
+    file.path(repo_dir_external, "DESCRIPTION")
+  )
 
   # remove internal_pkg_deps from DESCRIPTION file
   desc_obj <- desc::desc(file.path(repo_dir_external, "DESCRIPTION"))
-  new_deps <- desc_obj$get_deps()[!desc_obj$get_deps()$package %in% internal_pkg_deps,]
+  new_deps <- desc_obj$get_deps()[!desc_obj$get_deps()$package %in% internal_pkg_deps, ]
   desc_obj$set_deps(new_deps)
 
 
@@ -205,7 +218,6 @@ get_remote_name <- function(git_repo, repo_url) {
   remotes <- git2r::remotes(git_repo)
 
   for (remote in remotes) {
-
     target_url <- git2r::remote_url(git_repo, remote = remote)
     target_url <- gsub("^(https://|git@ssh.|git@)|\\.git$", "", target_url)
     target_url <- gsub(":", "/", target_url, fixed = TRUE)
@@ -251,7 +263,8 @@ install_repo_add_sha <- function(repo_dir,
   get_local_sha <- function(pkg_name) {
     # see remotes:::package2remote
     pkg_desc <- tryCatch(utils::packageDescription(pkg_name),
-                         error = function(e) NA, warning = function(e) NA)
+      error = function(e) NA, warning = function(e) NA
+    )
     if (identical(pkg_desc, NA)) {
       return(NULL)
     }
@@ -262,7 +275,7 @@ install_repo_add_sha <- function(repo_dir,
   commit_sha <- git2r::sha(git2r::repository_head(repo_dir))
   git_status <- git2r::status(repo_dir)
   if ((length(git_status$staged) > 0) || (length(git_status$unstaged) > 0) ||
-      (length(git_status$untracked) > 0)) {
+    (length(git_status$untracked) > 0)) {
     # check that there are no changes (so that sha is correct), there should be no
     # untracked files (because the user might work on a local repo on a new file that is
     # still untracked)
@@ -281,8 +294,8 @@ install_repo_add_sha <- function(repo_dir,
   metadata <- list(
     RemoteType = "git2r",
     RemoteUrl = git2r::remote_url(repo_dir),
-    #RemoteSubdir = NULL,
-    #RemoteRef = x$ref,
+    # RemoteSubdir = NULL,
+    # RemoteRef = x$ref,
     RemoteSha = commit_sha
   )
 

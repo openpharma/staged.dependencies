@@ -1,6 +1,5 @@
 # topological sort ----
 test_that("topological sort throws error if circular relationship", {
-
   expect_error(topological_sort(
     list(n1 = "n3", n2 = "n2", n3 = c(""))
   ))
@@ -12,7 +11,6 @@ test_that("topological sort throws error if circular relationship", {
   expect_error(topological_sort(
     list(n1 = "n2", n2 = "n3", n3 = c("n4", "n1"), n4 = c())
   ))
-
 })
 
 test_that("topological sort correctly sorts graph with no branching", {

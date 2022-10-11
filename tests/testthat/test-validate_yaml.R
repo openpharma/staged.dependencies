@@ -1,6 +1,5 @@
 #---- Valid yaml ----
 test_that("staged dep yaml without dependencies is valid ", {
-
   text <- "---
   downstream_repos:
 
@@ -14,7 +13,6 @@ test_that("staged dep yaml without dependencies is valid ", {
 })
 
 test_that("staged dep yaml allows additional fields beyond those required", {
-
   text <- "---
   downstream_repos:
     - repo: test2/test
@@ -38,7 +36,6 @@ test_that("staged dep yaml allows additional fields beyond those required", {
 #---- Invalid yaml ----
 
 test_that("empty staged dep yaml file throws error", {
-
   text <- "---
   "
   expect_error(
@@ -55,7 +52,6 @@ test_that("empty staged dep yaml file throws error", {
 })
 
 test_that("staged dep yaml file missing expected fields throws error", {
-
   text <- "---
   hello
   "
@@ -77,7 +73,6 @@ test_that("staged dep yaml file missing expected fields throws error", {
 })
 
 test_that("staged dep yaml file without current_repo content throws error", {
-
   text <- "---
   downstream_repos:
     - repo: test2/test
@@ -94,7 +89,6 @@ test_that("staged dep yaml file without current_repo content throws error", {
 })
 
 test_that("staged dep yaml file with current_repo as array throws error", {
-
   text <- "---
   upstream_repos:
   downstream_repos:
@@ -109,7 +103,6 @@ test_that("staged dep yaml file with current_repo as array throws error", {
 })
 
 test_that("staged dep yaml file cannot contain non-character values", {
-
   text <- "---
   upstream_repos:
   downstream_repos:
@@ -168,7 +161,6 @@ test_that("staged dep yaml file cannot contain non-character values", {
 })
 
 test_that("staged dep yaml file missing repo or host throws error", {
-
   text <- "---
   upstream_repos:
   downstream_repos:
@@ -201,7 +193,6 @@ test_that("staged dep yaml file missing repo or host throws error", {
 })
 
 test_that("staged dep yaml with nesting/naming inside repo or host throws an error", {
-
   text <- "---
   downstream_repos:
 
@@ -271,5 +262,4 @@ test_that("staged dep yaml with nesting/naming inside repo or host throws an err
     validate_staged_deps_yaml(yaml::read_yaml(text = text)),
     regexp = "File  invalid, field downstream_repos must have non-array character values repo, host"
   )
-
 })

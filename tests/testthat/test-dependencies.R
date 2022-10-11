@@ -5,30 +5,31 @@ local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.fo
 
 # assumes that repo stageddeps.food is local
 # copies repos from TESTS_GIT_REPOS to appropriate locations in cache_dir
-mock_rec_checkout_internal_deps <- function(source_dir) function(repos_to_process, ...) {
-  cat(paste0("Mocking rec_checkout_internal_deps", "\n"))
-  expect_equal(repos_to_process, list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")))
+mock_rec_checkout_internal_deps <- function(source_dir) {
+  function(repos_to_process, ...) {
+    cat(paste0("Mocking rec_checkout_internal_deps", "\n"))
+    expect_equal(repos_to_process, list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")))
 
-  # stageddeps.food is local
-  internal_deps <- data.frame(
-    pkg = local_pkgs,
-    repo = paste0("openpharma/", local_pkgs),
-    host = rep("https://github.com", 6),
-    ref = c("main", "main", "local (main)", "main", "main", "main"),
-    sha = rep("test", 6),
-    accessible = rep(TRUE, 6),
-    installable = rep(TRUE, 6),
-    stringsAsFactors = FALSE
-  ) %>% dplyr::mutate(cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", ref))))
-  # fs::dir_copy does not seem to be vectorized (although stated in the doc) -> use Map
-  clear_cache()
-  Map(fs::dir_copy, file.path(source_dir, internal_deps$pkg), internal_deps$cache_dir)
-  return(internal_deps %>% dplyr::select(repo, host, cache_dir, ref, sha, accessible, installable))
+    # stageddeps.food is local
+    internal_deps <- data.frame(
+      pkg = local_pkgs,
+      repo = paste0("openpharma/", local_pkgs),
+      host = rep("https://github.com", 6),
+      ref = c("main", "main", "local (main)", "main", "main", "main"),
+      sha = rep("test", 6),
+      accessible = rep(TRUE, 6),
+      installable = rep(TRUE, 6),
+      stringsAsFactors = FALSE
+    ) %>% dplyr::mutate(cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", ref))))
+    # fs::dir_copy does not seem to be vectorized (although stated in the doc) -> use Map
+    clear_cache()
+    Map(fs::dir_copy, file.path(source_dir, internal_deps$pkg), internal_deps$cache_dir)
+    return(internal_deps %>% dplyr::select(dplyr::all_of(c(repo, host, cache_dir, ref, sha, accessible, installable))))
+  }
 }
 
 test_that("dependency_table works", {
-
-  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
+  mockery::stub(dependency_table, "rec_checkout_internal_deps", mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
 
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
@@ -36,7 +37,6 @@ test_that("dependency_table works", {
   git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
   with_tmp_cachedir({
-
     expect_output(
       dep_table <- dependency_table(repo_dir, ref = "main"),
       regexp = "Mocking rec_checkout_internal_deps", fixed = TRUE
@@ -49,11 +49,14 @@ test_that("dependency_table works", {
     expect_equal(
       dep_table$table,
       data.frame(
-        package_name = c("stageddeps.food", "stageddeps.elecinfra",
-                         "stageddeps.electricity", "stageddeps.house", "stageddeps.garden",
-                         "stageddeps.water"),
+        package_name = c(
+          "stageddeps.food", "stageddeps.elecinfra",
+          "stageddeps.electricity", "stageddeps.house", "stageddeps.garden",
+          "stageddeps.water"
+        ),
         type = factor(c("current", "upstream", "upstream", "downstream", "other", "other"),
-                      levels = c("current", "upstream", "downstream", "other")),
+          levels = c("current", "upstream", "downstream", "other")
+        ),
         distance = c(0, 1, 2, 1, NA, NA),
         ref = c("local (main)", "main", "main", "main", "main", "main"),
         install_index = c(3, 1, 2, 5, 6, 4),
@@ -62,11 +65,13 @@ test_that("dependency_table works", {
         repo = paste0("openpharma/", package_name),
         host = rep("https://github.com", 6),
         cache_dir = unlist(Map(get_repo_cache_dir, repo, host, local = grepl("^local ", ref))),
-        sha =  rep("test", 6),
+        sha = rep("test", 6),
         accessible = rep(TRUE, 6),
         installable = rep(TRUE, 6)
-      ) %>% dplyr::select(package_name, type, distance, ref, repo, host, sha, cache_dir, accessible, installable, install_index)
-
+      ) %>%
+        dplyr::select(dplyr::all_of(
+          c(package_name, type, distance, ref, repo, host, sha, cache_dir, accessible, installable, install_index)
+        ))
     )
 
     expect_output(
@@ -76,7 +81,6 @@ test_that("dependency_table works", {
     # check direction upstream only, should not matter since yamls agree with DESCRIPTION files
     expect_equal(dep_table[names(dep_table) != "direction"], dep_table2[names(dep_table2) != "direction"])
   })
-
 })
 
 test_that("dependency_table wih local_pkgs works", {
@@ -87,10 +91,11 @@ test_that("dependency_table wih local_pkgs works", {
   lapply(local_pkgs, function(local_pkg) {
     repo_dir <- file.path(copied_ecosystem, local_pkg)
     git2r::checkout(repo_dir, "main")
-    git2r::remote_set_url(repo_dir, name = "origin",
+    git2r::remote_set_url(repo_dir,
+      name = "origin",
       url = paste0("https://github.com/openpharma/", local_pkg, ".git")
     )
-    #set config (needed for automation)
+    # set config (needed for automation)
     git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
   })
 
@@ -120,7 +125,7 @@ test_that("check_yamls_consistent works", {
   copied_ecosystem <- tempfile("copied_ecosystem")
   fs::dir_copy(TESTS_GIT_REPOS, copied_ecosystem)
 
-  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(copied_ecosystem))
+  mockery::stub(dependency_table, "rec_checkout_internal_deps", mock_rec_checkout_internal_deps(copied_ecosystem))
 
   with_tmp_cachedir({
     # missing staged_dependencies.yaml in stageddeps.garden
@@ -148,7 +153,7 @@ test_that("check_yamls_consistent works", {
 })
 
 test_that("plot.dependency_structure works", {
-  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
+  mockery::stub(dependency_table, "rec_checkout_internal_deps", mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
@@ -171,17 +176,19 @@ test_that("install_deps works", {
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
   git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
-  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
+  mockery::stub(dependency_table, "rec_checkout_internal_deps", mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent
 
-  mockery::stub(install_deps, 'run_package_actions', function(pkg_actions, ...) {
+  mockery::stub(install_deps, "run_package_actions", function(pkg_actions, ...) {
     pkg_actions
   })
 
   # check install_direction = "upstream"
   expected_result <- data.frame(
-    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
-                     "stageddeps.food"),
+    package_name = c(
+      "stageddeps.elecinfra", "stageddeps.electricity",
+      "stageddeps.food"
+    ),
     stringsAsFactors = FALSE
   )
   expected_result$actions <- rep(list("install"), 3)
@@ -194,8 +201,10 @@ test_that("install_deps works", {
   # in theory may fail because topological order is not unique,
   # although topological order is not unique our implementation should be deterministic
   expected_result <- data.frame(
-    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
-                     "stageddeps.food", "stageddeps.water", "stageddeps.house"),
+    package_name = c(
+      "stageddeps.elecinfra", "stageddeps.electricity",
+      "stageddeps.food", "stageddeps.water", "stageddeps.house"
+    ),
     stringsAsFactors = FALSE
   )
   expected_result$actions <- rep(list("install"), 5)
@@ -209,9 +218,11 @@ test_that("install_deps works", {
   # in theory may fail because topological order is not unique,
   # although topological order is not unique our implementation should be deterministic
   expected_result <- data.frame(
-    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
-                     "stageddeps.food", "stageddeps.water", "stageddeps.house",
-                     "stageddeps.garden"),
+    package_name = c(
+      "stageddeps.elecinfra", "stageddeps.electricity",
+      "stageddeps.food", "stageddeps.water", "stageddeps.house",
+      "stageddeps.garden"
+    ),
     stringsAsFactors = FALSE
   )
   expected_result$actions <- rep(list("install"), 6)
@@ -220,7 +231,6 @@ test_that("install_deps works", {
     install_deps(dep_table, dry_install = TRUE, install_direction = "all")[, c("package_name", "actions")],
     expected_result
   )
-
 })
 
 test_that("check_downstream works", {
@@ -229,16 +239,18 @@ test_that("check_downstream works", {
   git2r::checkout(repo_dir, "main")
   git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
-  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
+  mockery::stub(dependency_table, "rec_checkout_internal_deps", mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent
 
-  mockery::stub(check_downstream, 'run_package_actions', function(pkg_actions, ...) {
+  mockery::stub(check_downstream, "run_package_actions", function(pkg_actions, ...) {
     pkg_actions
   })
 
   expected_res <- data.frame(
-    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
-                     "stageddeps.food", "stageddeps.water", "stageddeps.house"),
+    package_name = c(
+      "stageddeps.elecinfra", "stageddeps.electricity",
+      "stageddeps.food", "stageddeps.water", "stageddeps.house"
+    ),
     stringsAsFactors = FALSE
   )
   # workaround because adding it directly into data.frame(...) does not work
@@ -257,22 +269,23 @@ test_that("check_downstream works", {
 })
 
 test_that("build_check_install works", {
-
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
   git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
-  mockery::stub(dependency_table, 'rec_checkout_internal_deps', mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
+  mockery::stub(dependency_table, "rec_checkout_internal_deps", mock_rec_checkout_internal_deps(TESTS_GIT_REPOS))
   capture.output(dep_table <- dependency_table(repo_dir, ref = "fixgarden@main")) # capture.output to make silent
 
-  mockery::stub(build_check_install, 'run_package_actions', function(pkg_actions, ...) {
+  mockery::stub(build_check_install, "run_package_actions", function(pkg_actions, ...) {
     pkg_actions
   })
 
   expected_res <- data.frame(
-    package_name = c("stageddeps.elecinfra", "stageddeps.electricity",
-                     "stageddeps.food", "stageddeps.water", "stageddeps.house", "stageddeps.garden"),
+    package_name = c(
+      "stageddeps.elecinfra", "stageddeps.electricity",
+      "stageddeps.food", "stageddeps.water", "stageddeps.house", "stageddeps.garden"
+    ),
     stringsAsFactors = FALSE
   )
   # workaround because adding it directly into data.frame(...) does not work
@@ -281,7 +294,6 @@ test_that("build_check_install works", {
     build_check_install(dep_table)$pkg_actions[, c("package_name", "actions")],
     expected_res
   )
-
 })
 
 
@@ -290,8 +302,10 @@ test_that("get_all_external_deps works", {
   # dummy dependency_structure object
 
   deps <- list(
-    external = list(A = data.frame(type = c("Imports", "Suggests"), package = c("X", "Y")),
-                    B = data.frame(type = c("Depends"), package = "Z")),
+    external = list(
+      A = data.frame(type = c("Imports", "Suggests"), package = c("X", "Y")),
+      B = data.frame(type = c("Depends"), package = "Z")
+    ),
     upstream_deps = list(A = "B", B = character(0)),
     downstream_deps = list(B = "A", character(0))
   )
@@ -311,43 +325,54 @@ test_that("get_all_external_deps works", {
   )
 
 
-  available_packages <- data.frame(Package = c("T", "U", "V", "W", "X", "Y", "Z"),
-                                   Depends = c(NA, NA, NA, "Q", "U", NA, "T"),
-                                   Imports = c(NA, NA, NA, NA, NA, "U,V", NA),
-                                   Suggests = c(NA, NA, NA, "S", NA, NA, "W"),
-                                   LinkingTo = as.character(rep(NA, 7)))
+  available_packages <- data.frame(
+    Package = c("T", "U", "V", "W", "X", "Y", "Z"),
+    Depends = c(NA, NA, NA, "Q", "U", NA, "T"),
+    Imports = c(NA, NA, NA, NA, NA, "U,V", NA),
+    Suggests = c(NA, NA, NA, "S", NA, NA, "W"),
+    LinkingTo = as.character(rep(NA, 7))
+  )
 
 
   # These tests rely on a deterministic topological_sort function
-  expect_equal(get_all_external_dependencies(x, available_packages = available_packages),
-               c("U", "X", "V", "Y", "T", "Z"))
+  expect_equal(
+    get_all_external_dependencies(x, available_packages = available_packages),
+    c("U", "X", "V", "Y", "T", "Z")
+  )
 
   # test from_internal_dependencies remove suggests)
   results <- get_all_external_dependencies(x, available_packages = available_packages, from_internal_dependencies = c("Depends", "Imports", "LinkingTo"))
   expect_equal(results, c("U", "X", "T", "Z"))
 
   # only take B's dependencies
-  expect_equal(get_all_external_dependencies(x,
-                      package_list = "B",
-                      available_packages = available_packages),
-               c("T", "Z"))
+  expect_equal(
+    get_all_external_dependencies(x,
+      package_list = "B",
+      available_packages = available_packages
+    ),
+    c("T", "Z")
+  )
 
   # test from_external_dependencies and check get warning for missing packages
-  expect_warning(results <- get_all_external_dependencies(x, available_packages = available_packages,
-                                                          from_external_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests")),
-                 "Cannot find information about package\\(s\\) Q, S check that options\\('repos'\\) contains expected repos")
+  expect_warning(
+    results <- get_all_external_dependencies(x,
+      available_packages = available_packages,
+      from_external_dependencies = c("Depends", "Imports", "LinkingTo", "Suggests")
+    ),
+    "Cannot find information about package\\(s\\) Q, S check that options\\('repos'\\) contains expected repos"
+  )
 
   # we just need Q before W, T before Z, U before X and U + V before Y
   expect_equal(results, c("Q", "W", "U", "X", "V", "Y", "T", "Z", "S"))
 
   # message and unsorted list if not all of Depends, Imports and LinkingTo are `from_external_dependencies`
-  expect_message(results <-  get_all_external_dependencies(x,
-                                package_list = "B",
-                                available_packages = available_packages,
-                                from_external_dependencies = c("Depends", "Imports")),
-                 regexp = "Packages will not be ordered as this requires")
+  expect_message(results <- get_all_external_dependencies(x,
+    package_list = "B",
+    available_packages = available_packages,
+    from_external_dependencies = c("Depends", "Imports")
+  ),
+  regexp = "Packages will not be ordered as this requires"
+  )
 
   expect_equal(sort(results), c("T", "Z"))
-
 })
-

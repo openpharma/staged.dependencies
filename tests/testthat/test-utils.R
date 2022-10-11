@@ -2,17 +2,23 @@ test_that("cbind_handle_empty works", {
   # when second df is empty
   expect_equal(
     cbind_handle_empty(data.frame(col1 = character(0), col2 = character(0), stringsAsFactors = FALSE),
-                       col3 = "hello3", col4 = "hello4"),
-    data.frame(col1 = character(0), col2 = character(0), col3 = character(0), col4 = character(0),
-               stringsAsFactors = FALSE)
+      col3 = "hello3", col4 = "hello4"
+    ),
+    data.frame(
+      col1 = character(0), col2 = character(0), col3 = character(0), col4 = character(0),
+      stringsAsFactors = FALSE
+    )
   )
 
   # when second df is non-empty
   expect_equal(
     cbind_handle_empty(data.frame(col1 = c("h1", "h11"), col2 = c("h2", "h22"), stringsAsFactors = FALSE),
-                       col3 = "hello3", col4 = "hello4"),
-    data.frame(col1 = c("h1", "h11"), col2 = c("h2", "h22"), col3 = c("hello3", "hello3"), col4 = c("hello4", "hello4"),
-               stringsAsFactors = FALSE)
+      col3 = "hello3", col4 = "hello4"
+    ),
+    data.frame(
+      col1 = c("h1", "h11"), col2 = c("h2", "h22"), col3 = c("hello3", "hello3"), col4 = c("hello4", "hello4"),
+      stringsAsFactors = FALSE
+    )
   )
 })
 

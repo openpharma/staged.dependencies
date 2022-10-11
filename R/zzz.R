@@ -36,5 +36,3 @@ get_storage_dir <- function() {
   if (any(toset)) options(op.package[toset])
   setup_storage_dir(path.expand("~/.staged.dependencies"))
 }
-
-
