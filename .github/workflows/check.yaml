@@ -11,6 +11,7 @@ on:
       - ready_for_review
     branches:
       - main
+      - tidy_select@main
   push:
     branches:
       - main
@@ -21,7 +22,7 @@ jobs:
     uses: insightsengineering/r.pkg.template/.github/workflows/audit.yaml@main
   r-cmd:
     name: R CMD Check 🧬
-    uses: insightsengineering/r.pkg.template/.github/workflows/build-check-install.yaml@main
+    uses: insightsengineering/r.pkg.template/.github/workflows/build-check-install.yaml@handle-renv
     secrets:
       REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     with:
@@ -34,7 +35,7 @@ jobs:
       REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   roxygen:
     name: Roxygen 🅾
-    uses: insightsengineering/r.pkg.template/.github/workflows/roxygen.yaml@main
+    uses: insightsengineering/r.pkg.template/.github/workflows/roxygen.yaml@handle-renv
     secrets:
       REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   gitleaks:
