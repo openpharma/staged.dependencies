@@ -24,7 +24,7 @@ mock_rec_checkout_internal_deps <- function(source_dir) {
     # fs::dir_copy does not seem to be vectorized (although stated in the doc) -> use Map
     clear_cache()
     Map(fs::dir_copy, file.path(source_dir, internal_deps$pkg), internal_deps$cache_dir)
-    return(internal_deps %>% dplyr::select(repo, host, cache_dir, ref, sha, accessible, installable))
+    return(internal_deps %>% dplyr::select("repo", "host", "cache_dir", "ref", "sha", "accessible", "installable"))
   }
 }
 
@@ -70,7 +70,8 @@ test_that("dependency_table works", {
         installable = rep(TRUE, 6)
       ) %>%
         dplyr::select(
-          c(package_name, type, distance, ref, repo, host, sha, cache_dir, accessible, installable, install_index)
+          "package_name", "type", "distance", "ref", "repo", "host",
+          "sha", "cache_dir", "accessible", "installable", "install_index"
         )
     )
 
