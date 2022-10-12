@@ -257,7 +257,7 @@ plot.dependency_structure <- function(x, y, ...) {
       arrows = "to", listed_by = "from"
     ),
     cbind_handle_empty(
-      adj_list_to_edge_df(x$deps[["downstream_deps"]]) %>% dplyr::rename(to = .data$from, from = .data$to),
+      adj_list_to_edge_df(x$deps[["downstream_deps"]]) %>% dplyr::rename(to = "from", from = "to"),
       arrows = "to", listed_by = "to"
     )
   )
