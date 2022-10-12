@@ -50,19 +50,21 @@ List the external R packages required to be installed
 }
 \examples{
 \dontrun{
-  x <- dependency_table("openpharma/stageddeps.electricity",
-    project_type = "repo@host", feature = "main")
+x <- dependency_table("openpharma/stageddeps.electricity",
+  project_type = "repo@host", feature = "main"
+)
 
-  # get external package dependencies
-  ex_deps <- get_all_external_dependencies(x)
-  print(ex_deps)
+# get external package dependencies
+ex_deps <- get_all_external_dependencies(x)
+print(ex_deps)
 
-  # get system dependencies (in this case there are none)
-  unique(unlist(lapply(ex_deps,
-    function(pkg, ...)
-      remotes::system_requirements(package = pkg, ...),
-    os = "ubuntu",
-    os_release = "20.04")
- ))
+# get system dependencies (in this case there are none)
+unique(unlist(lapply(ex_deps,
+  function(pkg, ...) {
+    remotes::system_requirements(package = pkg, ...)
+  },
+  os = "ubuntu",
+  os_release = "20.04"
+)))
 }
 }

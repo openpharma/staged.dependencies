@@ -21,11 +21,11 @@ in the returned list, parents appear before their children.
 Implementation of Kahn algorithm with a modification to maintain the order of input elements.
 }
 \examples{
-  staged.dependencies:::topological_sort(list(A = c(), B = c("A"), C = c("B"), D = c("A")))
-  staged.dependencies:::topological_sort(list(D = c("A"), A = c(), B = c("A"), C = c("B")))
-  staged.dependencies:::topological_sort(list(D = c("A"), B = c("A"), C = c("B"), A = c()))
+staged.dependencies:::topological_sort(list(A = c(), B = c("A"), C = c("B"), D = c("A")))
+staged.dependencies:::topological_sort(list(D = c("A"), A = c(), B = c("A"), C = c("B")))
+staged.dependencies:::topological_sort(list(D = c("A"), B = c("A"), C = c("B"), A = c()))
 \dontrun{
-  # cycle
-  topological_sort(list(A = c("B"), B = c("C", "A"), C = c()))
+# cycle
+topological_sort(list(A = c("B"), B = c("C", "A"), C = c()))
 }
 }

@@ -62,7 +62,6 @@ install_deps(x)
 
 # install all dependencies
 install_deps(x, install_direction = "all")
-
 }
 }
 \seealso{
