@@ -32,7 +32,6 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
                                 rcmd_args = NULL,
                                 artifact_dir = NULL,
                                 verbose = 0, ...) {
-
   all_actions <- unique(unlist(pkg_actions$actions))
   stopifnot(all(all_actions %in% c("test", "build", "check", "install")))
   check_verbose_arg(verbose)
@@ -44,12 +43,12 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
     return(pkg_actions)
   }
 
-  if ("build" %in% all_actions && is.null( artifact_dir)) {
+  if ("build" %in% all_actions && is.null(artifact_dir)) {
     stop("when building a package an artifact_dir must be specified")
   }
 
   if (!is.null(artifact_dir)) {
-    #TODO empty directories if exist?
+    # TODO empty directories if exist?
     lapply(
       intersect(all_actions, c("build", "install")),
       function(action) fs::dir_create(file.path(artifact_dir, paste0(action, "_logs")))
@@ -57,17 +56,19 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
   }
 
   message_if_verbose("Processing packages in order: ",
-                     toString(pkg_actions$package_name),
-                     verbose = verbose)
+    toString(pkg_actions$package_name),
+    verbose = verbose
+  )
 
   for (idx in seq_along(pkg_actions$cache_dir)) {
-
     cache_dir <- pkg_actions$cache_dir[idx]
     actions <- pkg_actions$actions[idx]
 
     if (!pkg_actions$installable[idx]) {
       message_if_verbose("skipping package ", pkg_actions$package_name[idx],
-        " as it (or one of its upstream dependencies) is not accessible", verbose = verbose)
+        " as it (or one of its upstream dependencies) is not accessible",
+        verbose = verbose
+      )
       next
     }
 
@@ -76,12 +77,13 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
     sha <- pkg_actions$sha[idx]
     cached_sha <- get_short_sha(cache_dir)
     if (sha != cached_sha) {
-      stop("The SHA in ", cache_dir, ": ", cached_sha,
-           " does not match the sha in the dependency_structure object: ", sha)
+      stop(
+        "The SHA in ", cache_dir, ": ", cached_sha,
+        " does not match the sha in the dependency_structure object: ", sha
+      )
     }
 
     if (!dry) {
-
       if ("test" %in% actions[[1]]) {
         # testthat::test_dir and devtools::test do not always agree
         # testthat::test_dir(file.path(repo_dir, "tests"), stop_on_failure = TRUE, stop_on_warning = TRUE)
@@ -111,7 +113,8 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
         withr::with_dir(artifact_dir, {
           pkg_name <- desc::desc_get_field("Package", file = cache_dir)
           system2(
-            "R", args = c("CMD", "build", rcmd_args$build, cache_dir),
+            "R",
+            args = c("CMD", "build", rcmd_args$build, cache_dir),
             stdout = file.path("build_logs", paste0(pkg_name, "_stdout.txt")),
             stderr = file.path("build_logs", paste0(pkg_name, "_stderr.txt"))
           )
@@ -134,34 +137,37 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
 
       if ("install" %in% actions[[1]]) {
         if (install_external_deps) {
-          install_external_deps(cache_dir, internal_pkg_deps = internal_pkg_deps,
-                                dependencies = TRUE, upgrade = upgrade, ...)
+          install_external_deps(cache_dir,
+            internal_pkg_deps = internal_pkg_deps,
+            dependencies = TRUE, upgrade = upgrade, ...
+          )
         }
 
         # install the tar.gz if it exists otherwise install using staged.deps
         if (!is.null(package_tar)) {
           withr::with_dir(
             artifact_dir,
-            system2("R", args = c("CMD", "INSTALL", rcmd_args$install, package_tar),
-                    stdout = file.path("install_logs", paste0(pkg_name, "_stdout.txt")),
-                    stderr = file.path("install_logs", paste0(pkg_name, "_stderr.txt")))
+            system2("R",
+              args = c("CMD", "INSTALL", rcmd_args$install, package_tar),
+              stdout = file.path("install_logs", paste0(pkg_name, "_stdout.txt")),
+              stderr = file.path("install_logs", paste0(pkg_name, "_stderr.txt"))
+            )
           )
         } else {
           install_repo_add_sha(cache_dir, ...)
         }
       }
-
     } else { # dry run
       message_if_verbose(cat_nl("(Dry run) Skipping", toString(actions), "of", cache_dir), verbose = verbose)
     }
-
   }
 
   message_if_verbose("Processed packages in order: ", toString(pkg_actions$package_name), verbose = verbose)
 
   # output rcmdcheck outputs
   if (!rlang::is_empty(rcmdcheck_outputs)) {
-    lapply(names(rcmdcheck_outputs),
+    lapply(
+      names(rcmdcheck_outputs),
       function(pkg_name) {
         print(paste("R CMD CHECK package ", pkg_name))
         print(rcmdcheck_outputs[[pkg_name]])
@@ -207,8 +213,9 @@ get_local_pkgs_from_config <- function() {
   if (file.exists(filename)) {
     content <- yaml::read_yaml(filename)
     local_pkgs <- content[["local_packages"]]
-    df <- do.call(rbind,
-                  lapply(local_pkgs, function(x) data.frame(x, stringsAsFactors = FALSE))
+    df <- do.call(
+      rbind,
+      lapply(local_pkgs, function(x) data.frame(x, stringsAsFactors = FALSE))
     )
     if (is.null(df)) {
       return(NULL)
@@ -240,7 +247,6 @@ get_local_pkgs_from_config <- function() {
 # idocument where the names are the dependency type (e.g. Imports, Suggests,...)
 get_true_deps_graph <- function(pkgs_df,
                                 graph_directions = "upstream") {
-
   stopifnot(
     is.data.frame(pkgs_df),
     all(c("package_name", "cache_dir") %in% colnames(pkgs_df))
@@ -251,7 +257,8 @@ get_true_deps_graph <- function(pkgs_df,
   # get the Imports, Suggests, Depends for each package
   # from the package DESCRIPTION files, filter for only
   # the internal packages
-  upstream_deps <- lapply(pkgs_df$cache_dir,
+  upstream_deps <- lapply(
+    pkgs_df$cache_dir,
     function(file) {
       if (is.na(file)) {
         return(character(0))
@@ -278,25 +285,27 @@ get_true_deps_graph <- function(pkgs_df,
 
       # check if repo and host match for any inaccessible package
       for (downstream_dep in downstream_deps) {
-        inaccessible_deps <- dplyr::filter(pkgs_df, .data$repo == downstream_dep$repo,
-          .data$host == downstream_dep$host, !.data$accessible)
+        inaccessible_deps <- dplyr::filter(
+          pkgs_df, .data$repo == downstream_dep$repo,
+          .data$host == downstream_dep$host, !.data$accessible
+        )
 
         for (package_name in inaccessible_deps$package_name) {
           upstream_deps[[package_name]] <- c(upstream_deps[[package_name]], current_package_name)
         }
       }
-
     }
   }
 
 
-  external <- lapply(pkgs_df$cache_dir,
+  external <- lapply(
+    pkgs_df$cache_dir,
     function(file) {
       if (is.na(file)) {
         return(data.frame(type = character(0), package = character(0), version = character(0)))
       }
       df <- desc::desc_get_deps(file)
-      df <- df[!df$package %in% c("R",pkgs_df$package_name), ]
+      df <- df[!df$package %in% c("R", pkgs_df$package_name), ]
       rownames(df) <- NULL
       df
     }
@@ -325,7 +334,6 @@ get_true_deps_graph <- function(pkgs_df,
   }
 
   res
-
 }
 
 # dep_table: dependency table as returned by `dependency_table`
@@ -336,8 +344,8 @@ yaml_from_dep_table <- function(dep_table) {
   downstream_repos <- dep_table[dep_table$type == "downstream" & dep_table$distance == 1, c("repo", "host")]
   list(
     current_repo = list(
-      repo = dep_table[dep_table$type == "current",]$repo,
-      host = dep_table[dep_table$type == "current",]$host
+      repo = dep_table[dep_table$type == "current", ]$repo,
+      host = dep_table[dep_table$type == "current", ]$host
     ),
     upstream_repos = Map(
       function(repo, host) list(repo = repo, host = host),
@@ -356,7 +364,7 @@ yaml_from_dep_table <- function(dep_table) {
 # host = "https://github.com"
 parse_remote_project <- function(project) {
   error_message <- "Invalid project argument, should be 'repo@host'"
-  if(nchar(trimws(project)) == 0) {
+  if (nchar(trimws(project)) == 0) {
     stop(error_message)
   }
   split_string <- strsplit(project, "@")[[1]]
@@ -417,8 +425,9 @@ compute_actions <- function(pkg_df, pkg_names, actions, upstream_pkgs) {
     rep(list(actions), times = sum(pkg_df$package_name %in% pkg_names))
   ) # outer list() to assign list elements to column
   pkg_df[pkg_df$package_name %in% upstream_pkgs, "actions"] <- "install"
-  pkg_df %>% dplyr::arrange(.data$install_index) %>%
-    dplyr::select(.data$package_name, .data$cache_dir, .data$actions, .data$sha, .data$installable)
+  pkg_df %>%
+    dplyr::arrange(.data$install_index) %>%
+    dplyr::select("package_name", "cache_dir", "actions", "sha", "installable")
 }
 
 
@@ -430,8 +439,8 @@ parse_deps_table <- function(str) {
   }
   # remove whitespace
   str <- gsub("\\s", "", str)
-  #split by "," and remove version info within brackets
-  deps <-  gsub("\\s*\\([^\\)]+\\)","",strsplit(str, ",")[[1]])
+  # split by "," and remove version info within brackets
+  deps <- gsub("\\s*\\([^\\)]+\\)", "", strsplit(str, ",")[[1]])
   # remove R
   deps <- deps[deps != "R"]
   return(deps)

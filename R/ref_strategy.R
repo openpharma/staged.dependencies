@@ -24,26 +24,33 @@
 #' @export
 #'
 #' @examples
-#' determine_ref("feature1",
+#' determine_ref(
+#'   "feature1",
 #'   data.frame(ref = c("main", "feature1"), type = "branch")
 #' ) == structure("feature1", type = "branch")
 #'
-#' determine_ref("feature1@devel",
+#' determine_ref(
+#'   "feature1@devel",
 #'   data.frame(ref = c("main", "devel", "feature1"), type = "branch")
 #' ) == structure("devel", type = "branch")
 #'
 #' determine_ref(
 #'   ref = "fix1@feature1@devel",
 #'   available_refs = data.frame(
-#'     ref = c("main", "devel", "feature1", "feature1@devel",
-#'     "fix1@feature1@devel", "fix1"),
-#'     type = "branch")
+#'     ref = c(
+#'       "main", "devel", "feature1", "feature1@devel",
+#'       "fix1@feature1@devel", "fix1"
+#'     ),
+#'     type = "branch"
+#'   )
 #' ) == structure("fix1@feature1@devel", type = "branch")
 #'
 #' determine_ref(
 #'   "fix1@feature1@devel",
-#'   data.frame(ref = c("main", "devel", "feature1", "feature1@devel", "fix1"),
-#'              type = "branch")
+#'   data.frame(
+#'     ref = c("main", "devel", "feature1", "feature1@devel", "fix1"),
+#'     type = "branch"
+#'   )
 #' ) == structure("feature1@devel", type = "branch")
 #'
 #' determine_ref(
@@ -57,14 +64,15 @@
 #' # determine_ref("feature1@release", data.frame(ref = c("master", "devel"), type = "branch"))
 #'
 #' # tag examples
-#' determine_ref("v0.1",
+#' determine_ref(
+#'   "v0.1",
 #'   data.frame(ref = c("main", "devel", "feature1", "v0.1"), type = c(rep("branch", 3), "tag"))
 #' ) == structure("v0.1", type = "tag")
 #'
-#' determine_ref("v0.2",
+#' determine_ref(
+#'   "v0.2",
 #'   data.frame(ref = c("main", "devel", "feature1", "v0.1"), type = c(rep("branch", 3), "tag"))
 #' ) == structure("main", type = "branch")
-#'
 #'
 determine_ref <- function(ref, available_refs, fallback_branch = "main", branch_sep = "@") {
   stopifnot(
@@ -75,7 +83,7 @@ determine_ref <- function(ref, available_refs, fallback_branch = "main", branch_
   )
 
   # check for tag
-  if (ref %in% available_refs$ref[available_refs$type == "tag"]){
+  if (ref %in% available_refs$ref[available_refs$type == "tag"]) {
     attr(ref, "type") <- "tag"
     return(ref)
   }
@@ -96,8 +104,10 @@ determine_ref <- function(ref, available_refs, fallback_branch = "main", branch_
     }
   }
 
-  stop("Available refs '", toString(available_refs$ref), "' must include at least one of '",
-       toString(branches_to_check), "'")
+  stop(
+    "Available refs '", toString(available_refs$ref), "' must include at least one of '",
+    toString(branches_to_check), "'"
+  )
 }
 
 # infer the ref if it is null
@@ -118,8 +128,10 @@ check_ref_consistency <- function(ref, project = ".", remote_name = "origin", fa
       fallback_branch = fallback_branch
     )
     if (current_branch != expected_current_branch) {
-      warning("Branch ", ref, " would match ", expected_current_branch, " in project ", project,
-              ", but currently checked out branch is ", current_branch)
+      warning(
+        "Branch ", ref, " would match ", expected_current_branch, " in project ", project,
+        ", but currently checked out branch is ", current_branch
+      )
     }
   }
 }

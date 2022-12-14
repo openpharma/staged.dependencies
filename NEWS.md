@@ -1,3 +1,7 @@
+# staged.dependecies 0.2.8
+
+* Updated code for changes in `tidyselect 1.2.0`.
+
 # staged.dependencies 0.2.7
 
 * Fixed a bug whereby the cache file for packages with compiled code was not reset after installation thereby `dependency_table` failed on a 2nd run.

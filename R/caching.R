@@ -121,24 +121,30 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
     if (ref != get_current_branch(repo_dir)) {
       # if ref is a branch and you are on the wrong branch throw error
       if (attr(ref, "type") == "branch") {
-        stop("You must check out branch ", ref, " for repository in directory ", repo_dir,
-             ", currently ", get_current_branch(repo_dir), " is checked out.")
+        stop(
+          "You must check out branch ", ref, " for repository in directory ", repo_dir,
+          ", currently ", get_current_branch(repo_dir), " is checked out."
+        )
       }
       # if ref is a tag, just throw warning as may want to work from elsewhere here
       else {
-        warning("You should check out a branch from tag ", ref, " for repository in directory ", repo_dir,
-                ", currently branch ", get_current_branch(repo_dir), " is checked out.")
+        warning(
+          "You should check out a branch from tag ", ref, " for repository in directory ", repo_dir,
+          ", currently branch ", get_current_branch(repo_dir), " is checked out."
+        )
       }
     }
   }
 
   if ((length(git2r::status(repo_dir)$staged) > 0) ||
-      (length(git2r::status(repo_dir)$unstaged) > 0) ||
-      (length(git2r::status(repo_dir)$untracked) > 0)) {
+    (length(git2r::status(repo_dir)$unstaged) > 0) ||
+    (length(git2r::status(repo_dir)$untracked) > 0)) {
     # add all files, including untracked (all argument of git2r::commit does not do this)
     if (verbose >= 2) {
-      message("Adding all of the following files: \n",
-              paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n"))
+      message(
+        "Adding all of the following files: \n",
+        paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n")
+      )
     }
     git2r::add(repo_dir, ".")
     git2r::commit(
@@ -147,8 +153,10 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
     )
   }
 
-  return(list(dir = repo_dir, ref = paste0("local (", current_branch, ")"),
-              sha = get_short_sha(repo_dir), accessible = TRUE))
+  return(list(
+    dir = repo_dir, ref = paste0("local (", current_branch, ")"),
+    sha = get_short_sha(repo_dir), accessible = TRUE
+  ))
 }
 
 
@@ -158,7 +166,8 @@ copy_renv_profiles <- function(renv_directory, repo_dir) {
   renv_sub_directories <- fs::dir_ls(renv_directory, type = "directory", all = TRUE)
   if ("profiles" %in% fs::path_file(renv_sub_directories)) {
     renv_profiles <- fs::dir_ls(fs::path_join(c(renv_directory, "profiles")),
-                                type = "directory", all = TRUE)
+      type = "directory", all = TRUE
+    )
     lapply(renv_profiles, function(x) {
       fs::dir_create(fs::path_join(c(repo_dir, "renv", "profiles", fs::path_file(x))), recurse = TRUE)
       if (fs::file_exists(fs::path_join(c(x, "renv.lock")))) {
@@ -212,10 +221,10 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #' @return A data frame, one row per checked out repository with columns
 #' repo, host and cache_dir
 rec_checkout_internal_deps <- function(repos_to_process, ref,
-                                      direction = "upstream",
-                                      local_repos = get_local_pkgs_from_config(),
-                                      fallback_branch = "main",
-                                      verbose = 0) {
+                                       direction = "upstream",
+                                       local_repos = get_local_pkgs_from_config(),
+                                       fallback_branch = "main",
+                                       verbose = 0) {
   stopifnot(
     is.list(repos_to_process)
   )
@@ -257,7 +266,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
         get_repo_url(repo_and_host$repo, repo_and_host$host),
         token_envvar = get_authtoken_envvar(repo_and_host$host),
         select_ref_rule = function(available_refs) {
-          determine_ref(ref, available_refs,  fallback_branch = fallback_branch)
+          determine_ref(ref, available_refs, fallback_branch = fallback_branch)
         },
         must_work = (length(hashed_processed_repos) == 0), # first repo must be accessible
         verbose = verbose

@@ -74,13 +74,17 @@ Create dependency structure of your package collection
 }
 \examples{
 \dontrun{
-  dependency_table(verbose = 1)
-  dependency_table(project = "openpharma/stageddeps.food@https://github.com",
-                   project_type = "repo@host",
-                   ref = "main")
-  x <- dependency_table(project = "path/to/project",
-                        direction = c("upstream"))
-  print(x)
-  plot(x)
+dependency_table(verbose = 1)
+dependency_table(
+  project = "openpharma/stageddeps.food@https://github.com",
+  project_type = "repo@host",
+  ref = "main"
+)
+x <- dependency_table(
+  project = "path/to/project",
+  direction = c("upstream")
+)
+print(x)
+plot(x)
 }
 }

@@ -33,26 +33,33 @@ among the available branches, it searches in the order
 \code{name1@name2@...@nameN}, \code{name2@name3@...@nameN}, \code{name3@name4@...@nameN}, ..., \code{nameN}
 }
 \examples{
-determine_ref("feature1",
+determine_ref(
+  "feature1",
   data.frame(ref = c("main", "feature1"), type = "branch")
 ) == structure("feature1", type = "branch")
 
-determine_ref("feature1@devel",
+determine_ref(
+  "feature1@devel",
   data.frame(ref = c("main", "devel", "feature1"), type = "branch")
 ) == structure("devel", type = "branch")
 
 determine_ref(
   ref = "fix1@feature1@devel",
   available_refs = data.frame(
-    ref = c("main", "devel", "feature1", "feature1@devel",
-    "fix1@feature1@devel", "fix1"),
-    type = "branch")
+    ref = c(
+      "main", "devel", "feature1", "feature1@devel",
+      "fix1@feature1@devel", "fix1"
+    ),
+    type = "branch"
+  )
 ) == structure("fix1@feature1@devel", type = "branch")
 
 determine_ref(
   "fix1@feature1@devel",
-  data.frame(ref = c("main", "devel", "feature1", "feature1@devel", "fix1"),
-             type = "branch")
+  data.frame(
+    ref = c("main", "devel", "feature1", "feature1@devel", "fix1"),
+    type = "branch"
+  )
 ) == structure("feature1@devel", type = "branch")
 
 determine_ref(
@@ -66,13 +73,14 @@ determine_ref("feature1@release", data.frame(ref = c("main", "devel"), type = "b
 # determine_ref("feature1@release", data.frame(ref = c("master", "devel"), type = "branch"))
 
 # tag examples
-determine_ref("v0.1",
+determine_ref(
+  "v0.1",
   data.frame(ref = c("main", "devel", "feature1", "v0.1"), type = c(rep("branch", 3), "tag"))
 ) == structure("v0.1", type = "tag")
 
-determine_ref("v0.2",
+determine_ref(
+  "v0.2",
   data.frame(ref = c("main", "devel", "feature1", "v0.1"), type = c(rep("branch", 3), "tag"))
 ) == structure("main", type = "branch")
-
 
 }

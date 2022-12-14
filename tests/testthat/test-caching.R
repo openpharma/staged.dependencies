@@ -1,7 +1,6 @@
 # does not require internet access, mocks git remote operations
 
 test_that("clear_cache", {
-
   create_cache <- function(path) {
     fs::dir_create(file.path(path, "A"))
     fs::dir_create(file.path(path, "A", "AA"))
@@ -30,14 +29,13 @@ test_that("clear_cache", {
     expect_message(clear_cache(pattern = "[Aa]"), "Directories remaining in cache:\nB\n")
     expect_length(fs::dir_ls(get_packages_cache_dir(), recurse = TRUE), 2)
   })
-
 })
 
 
 test_that("rec_checkout_internal_deps works (with mocking checkout)", {
 
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
-  mockery::stub(rec_checkout_internal_deps, 'checkout_repo', function(repo_dir, repo_url, select_ref_rule, ...) {
+  mockery::stub(rec_checkout_internal_deps, "checkout_repo", function(repo_dir, repo_url, select_ref_rule, ...) {
     repo_name <- basename(repo_url)
     repo_name <- substr(repo_name, 0, nchar(repo_name) - nchar(".git"))
     cat(paste0("Mocking checkout_repo for ", repo_name, "\n"))
@@ -56,8 +54,9 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     capture.output(rec_checkout_internal_deps(
       list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
       "unittest_branch1",
-      direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist", verbose = 0)),
-    regexp = "Available refs 'main' must include at least one of 'unittest_branch1, not_exist'" , fixed = TRUE
+      direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist", verbose = 0
+    )),
+    regexp = "Available refs 'main' must include at least one of 'unittest_branch1, not_exist'", fixed = TRUE
   )
 
   output <- capture.output(res <- rec_checkout_internal_deps(
@@ -70,9 +69,11 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
   # dput(output)
   expect_equal(
     output,
-    c("Mocking checkout_repo for stageddeps.food",
+    c(
+      "Mocking checkout_repo for stageddeps.food",
       "Mocking checkout_repo for stageddeps.electricity",
-      "Mocking checkout_repo for stageddeps.elecinfra")
+      "Mocking checkout_repo for stageddeps.elecinfra"
+    )
   )
 
   # check result by comparing to ground-truth
@@ -80,9 +81,11 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
 
   expect_setequal(
     res$repo,
-    c("openpharma/stageddeps.food",
+    c(
+      "openpharma/stageddeps.food",
       "openpharma/stageddeps.electricity",
-      "openpharma/stageddeps.elecinfra")
+      "openpharma/stageddeps.elecinfra"
+    )
   )
   expect_setequal(
     res$host,
@@ -93,8 +96,8 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     file.path(get_packages_cache_dir(), c(
       "openpharma_stageddeps.food_c04cb0c69b298637f12bb39ac4f17f95",
       "openpharma_stageddeps.electricity_d99d4ffe828b509002243d240b2f4859",
-      "openpharma_stageddeps.elecinfra_7300aa2e17982fff37d603654479c06d")
-    )
+      "openpharma_stageddeps.elecinfra_7300aa2e17982fff37d603654479c06d"
+    ))
   )
   expect_setequal(
     res$ref,
@@ -108,7 +111,7 @@ test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking
 
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
   # but stageddeps.water is not accessible
-  mockery::stub(rec_checkout_internal_deps, 'checkout_repo', function(repo_dir, repo_url, select_ref_rule, ...) {
+  mockery::stub(rec_checkout_internal_deps, "checkout_repo", function(repo_dir, repo_url, select_ref_rule, ...) {
     if (repo_url == "https://github.com/openpharma/stageddeps.water.git") {
       return(list(dir = as.character(NA), ref = as.character(NA), sha = as.character(NA), accessible = FALSE))
     }
@@ -130,7 +133,8 @@ test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking
 
   res <- rec_checkout_internal_deps(
     list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
-    "main", local_repos = NULL, verbose = 0, direction = "all"
+    "main",
+    local_repos = NULL, verbose = 0, direction = "all"
   )
 
   # we should not see garden and water should not be accessible
@@ -140,7 +144,6 @@ test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking
 
   expect_equal(res$accessible, c(TRUE, TRUE, TRUE, TRUE, FALSE))
   expect_equal(res$ref, c("main", "main", "main", "main", NA))
-
 })
 
 test_that("get_hashed_repo_to_dir_mapping works", {
@@ -168,7 +171,7 @@ test_that("copy_local_repo_to_cachedir works", {
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
 
-  #set config (needed for automation)
+  # set config (needed for automation)
   git2r::config(git2r::repository(repo_dir), user.name = "github.action", user.email = "gh@action.com")
 
   # add some staged, unstaged and untracked files
@@ -220,8 +223,10 @@ test_that("copy_renv_profiles only copies /profiles/<<x>>/renv.lock files", {
     copy_renv_profiles("from", "to")
     expect_equal(
       as.character(fs::dir_ls("to", recurse = 3)),
-      c("to/renv", "to/renv/profiles", "to/renv/profiles/example",
-        "to/renv/profiles/example/renv.lock", "to/renv/profiles/test", "to/renv/profiles/test/renv.lock")
+      c(
+        "to/renv", "to/renv/profiles", "to/renv/profiles/example",
+        "to/renv/profiles/example/renv.lock", "to/renv/profiles/test", "to/renv/profiles/test/renv.lock"
+      )
     )
   })
 })

@@ -62,6 +62,6 @@ in the package's staged dependencies yaml files starting from \code{project}.
 }
 \examples{
 \dontrun{
-  install_deps_app("openpharma/stageddeps.food")
+install_deps_app("openpharma/stageddeps.food")
 }
 }

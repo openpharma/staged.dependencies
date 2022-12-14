@@ -3,13 +3,14 @@
 # ---- get_authtoken_envvar ----
 test_that("get_authtoken_envvar works", {
   withr::with_options(list(
-    staged.dependencies.token_mapping = list("https://github.com" = "GITHUB_PAT")), {
-      expect_error(
-        get_authtoken_envvar("github.com"),
-        regexp = "unknown host", fixed = TRUE
-      )
-      expect_equal(get_authtoken_envvar("https://github.com"), "GITHUB_PAT")
-    })
+    staged.dependencies.token_mapping = list("https://github.com" = "GITHUB_PAT")
+  ), {
+    expect_error(
+      get_authtoken_envvar("github.com"),
+      regexp = "unknown host", fixed = TRUE
+    )
+    expect_equal(get_authtoken_envvar("https://github.com"), "GITHUB_PAT")
+  })
 })
 
 # ---- get_repo_url ----
@@ -22,14 +23,15 @@ test_that("get_repo_url works", {
 
 # ---- checkout_repo ----
 test_that("checkout_repo works (requires Internet access)", {
-
   expect_silent({
     # check error when dir is not a git repo
     existing_dir <- tempfile()
     dir.create(existing_dir)
     expect_error(
       checkout_repo(existing_dir, "https://github.com/openpharma/stageddeps.water.git",
-                    function(...) structure("main", type = "branch"), token_envvar = NULL),
+        function(...) structure("main", type = "branch"),
+        token_envvar = NULL
+      ),
       regex = "not in a git repository", fixed = TRUE
     )
     unlink(existing_dir, recursive = TRUE)
@@ -38,13 +40,16 @@ test_that("checkout_repo works (requires Internet access)", {
     repo_dir <- tempfile()
     expect_error(
       checkout_repo(repo_dir, "https://github.com/openpharma/stageddeps.water.git",
-                    function(...) structure("inexistantBranch", type = "branch"),
-                    token_envvar = NULL, must_work = TRUE),
+        function(...) structure("inexistantBranch", type = "branch"),
+        token_envvar = NULL, must_work = TRUE
+      ),
       regex = "ref inexistantBranch is unavailable for this repo", fixed = TRUE
     )
     # checkout existing branch
     x <- checkout_repo(repo_dir, "https://github.com/openpharma/stageddeps.water.git",
-                       function(...) structure("main", type = "branch"), token_envvar = NULL)
+      function(...) structure("main", type = "branch"),
+      token_envvar = NULL
+    )
     # do not test SHA equality, just that it is there
     x$sha <- "test"
     expect_equal(
@@ -57,11 +62,11 @@ test_that("checkout_repo works (requires Internet access)", {
     withr::with_envvar(list(INCORRECT_TOKEN = "adfs"), {
       expect_error(
         checkout_repo(repo_dir, "https://github.com/inexistentOrg/inexistentRepo.git",
-                      function(...) structure("main", type = "branch"),
-                      token_envvar = "INCORRECT_TOKEN", must_work = TRUE),
+          function(...) structure("main", type = "branch"),
+          token_envvar = "INCORRECT_TOKEN", must_work = TRUE
+        ),
         regexp = "Bad credentials", fixed = TRUE
       )
     })
   })
-
 })

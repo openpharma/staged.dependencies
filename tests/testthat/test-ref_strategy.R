@@ -19,8 +19,7 @@ test_that("infer_ref_from_branch works", {
   unlink(repo_dir, recursive = TRUE)
 })
 
-test_that("check_ref_consistency works" , {
-
+test_that("check_ref_consistency works", {
   repo_dir <- tempfile("stageddeps.food")
   fs::dir_copy(file.path(TESTS_GIT_REPOS, "stageddeps.food"), repo_dir)
   git2r::checkout(repo_dir, "main")
@@ -65,9 +64,13 @@ test_that("determine_ref works", {
   expect_equal(
     determine_ref(
       "fix1@feature1@devel",
-      data.frame(ref = c("main", "devel", "feature1", "feature1@devel",
-                             "fix1@feature1@devel", "fix1"),
-                 type = "branch")
+      data.frame(
+        ref = c(
+          "main", "devel", "feature1", "feature1@devel",
+          "fix1@feature1@devel", "fix1"
+        ),
+        type = "branch"
+      )
     ),
     structure("fix1@feature1@devel", type = "branch")
   )
@@ -150,14 +153,15 @@ test_that("determine_ref works", {
   expect_equal(
     determine_ref(
       "fix1#feature1#devel",
-      data.frame(ref = c("main", "devel", "feature1", "feature1#devel",
-                         "fix1@feature1@devel", "fix1"),
-                 type = "branch"),
+      data.frame(
+        ref = c(
+          "main", "devel", "feature1", "feature1#devel",
+          "fix1@feature1@devel", "fix1"
+        ),
+        type = "branch"
+      ),
       branch_sep = "#"
     ),
     structure("feature1#devel", type = "branch")
   )
-
-
 })
-

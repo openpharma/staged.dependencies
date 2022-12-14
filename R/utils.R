@@ -3,7 +3,7 @@ cat_nl <- function(...) cat(paste0(paste(...), "\n"))
 # cat_nl("fff", "gg")
 
 # output message if verbose argument is at least required_verbose
-message_if_verbose <- function(..., verbose, required_verbose = 1){
+message_if_verbose <- function(..., verbose, required_verbose = 1) {
   if (verbose >= required_verbose) {
     message(...)
   }
@@ -114,14 +114,16 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
   check_single_entry <- function(content, expected_fields, field_name) {
     # check the required contents exist
     if (!(all(expected_fields %in% names(content)))) {
-      stop("File ", file_name , " invalid, field ", field_name,
+      stop(
+        "File ", file_name, " invalid, field ", field_name,
         " cannot be an array and must have entries ", toString(expected_fields)
       )
     }
     # and are unnamed and character scalars
-    lapply(expected_fields, function(x){
+    lapply(expected_fields, function(x) {
       if (!rlang::is_scalar_character(content[[x]]) || rlang::is_named(content[[x]])) {
-        stop("File ", file_name , " invalid, field ", field_name,
+        stop(
+          "File ", file_name, " invalid, field ", field_name,
           " must have non-array character values ", toString(expected_fields)
         )
       }
@@ -132,28 +134,27 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
   # first check the required fields exist
   required_fields <- lapply(required_schema, "[[", "name")
   if (!all(required_fields %in% names(content))) {
-    stop("File ", file_name , " invalid, it must contain fields ", toString(required_fields))
+    stop("File ", file_name, " invalid, it must contain fields ", toString(required_fields))
   }
 
   # next check the contents of the fields is as expected
-  lapply(required_schema, function(field){
+  lapply(required_schema, function(field) {
 
     # extract the contents for this field
     sub_content <- content[[field$name]]
 
     # check not NULL if required and exit if NULL and that's OK
     if (!field$nullable && is.null(sub_content)) {
-      stop("File ", file_name , " invalid, field ", field$name, " cannot be empty")
+      stop("File ", file_name, " invalid, field ", field$name, " cannot be empty")
     }
-    if (is.null(sub_content)){
+    if (is.null(sub_content)) {
       return(invisible(NULL))
     }
 
     # if field is not array type check content is expected
     if (!field$array) {
       check_single_entry(sub_content, field$subfields, field$name)
-    }
-    else { # if field is array type - for each element of array check content is expected
+    } else { # if field is array type - for each element of array check content is expected
       lapply(sub_content, check_single_entry, field$subfields, field$name)
     }
   })
@@ -163,9 +164,10 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
 # check that two sets agree and throw an error message detailing difference otherwise
 check_set_equal <- function(x, y, pre_msg = "", return_error = FALSE) {
   if (!setequal(x, y)) {
-    err_msg <- paste0(pre_msg, "Sets do not agree, ",
-         "setdiff x \\ y is '", toString(setdiff(x, y)), "'",
-         ", setdiff y \\ x is '", toString(setdiff(y, x)), "'"
+    err_msg <- paste0(
+      pre_msg, "Sets do not agree, ",
+      "setdiff x \\ y is '", toString(setdiff(x, y)), "'",
+      ", setdiff y \\ x is '", toString(setdiff(y, x)), "'"
     )
     if (return_error) {
       return(err_msg)
@@ -196,9 +198,11 @@ get_yaml_deps_info <- function(repo_dir) {
     validate_staged_deps_yaml(content, file_name = yaml_file)
     content
   } else {
-    list(upstream_repos = list(), downstream_repos = list(),
-         # function() so it does not error immediately
-         current_repo = function() stop("Directory ", repo_dir, " has no ", STAGEDDEPS_FILENAME))
+    list(
+      upstream_repos = list(), downstream_repos = list(),
+      # function() so it does not error immediately
+      current_repo = function() stop("Directory ", repo_dir, " has no ", STAGEDDEPS_FILENAME)
+    )
   }
 }
 

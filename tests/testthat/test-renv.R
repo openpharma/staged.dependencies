@@ -60,7 +60,7 @@ test_that("get_renv_lock_from_repo_dir returns json lockfile from non NULL profi
   })
 })
 
-test_that("get_renv_lock_from_repo_dir returns NULL if no lockfile" , {
+test_that("get_renv_lock_from_repo_dir returns NULL if no lockfile", {
   withr::with_tempdir({
     expect_null(get_renv_lock_from_repo_dir("."))
     expect_null(get_renv_lock_from_repo_dir(".", renv_profile = "test"))

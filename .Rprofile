@@ -1,3 +1,3 @@
 # source("~/.Rprofile")
-#todo: uncomment
+# todo: uncomment
 source("renv/activate.R")

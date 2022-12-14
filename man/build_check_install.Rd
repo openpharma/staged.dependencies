@@ -8,8 +8,7 @@ build_check_install(
   dep_structure,
   install_direction = "all",
   steps = c("build", "check", "install"),
-  rcmd_args = list(check = c("--no-multiarch", "--with-keep.source",
-    "--install-tests")),
+  rcmd_args = list(check = c("--no-multiarch", "--with-keep.source", "--install-tests")),
   artifact_dir = tempfile(),
   install_external_deps = TRUE,
   upgrade = "never",
@@ -74,9 +73,8 @@ Build, check and install internal dependencies
 }
 \examples{
 \dontrun{
-  x <- dependency_table(project = ".", verbose = 1)
-  build_check_install(x, steps = c("build", "check"), verbose = 1)
-  build_check_install(x, artifact_dir = "../output")
-
+x <- dependency_table(project = ".", verbose = 1)
+build_check_install(x, steps = c("build", "check"), verbose = 1)
+build_check_install(x, artifact_dir = "../output")
 }
 }

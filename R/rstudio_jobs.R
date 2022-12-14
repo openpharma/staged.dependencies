@@ -33,9 +33,9 @@ install_deps_job <- function(project = ".", project_type = "local", verbose = 1,
   create_args_str <- paste(deparse(create_args), collapse = "\n")
   install_args <- c(list(dep_structure = substitute(x), verbose = verbose), list(...))
   install_args_str <- paste(deparse(install_args), collapse = "\n")
-  script <- glue::glue('x <- do.call(staged.dependencies::dependency_table, {create_args_str})
+  script <- glue::glue("x <- do.call(staged.dependencies::dependency_table, {create_args_str})
                        print(x)
-                       do.call(staged.dependencies::install_deps, {install_args_str})')
+                       do.call(staged.dependencies::install_deps, {install_args_str})")
   dot_args <- list(...)
 
   if (!is.null(dot_args[["install_project"]]) && !dot_args[["install_project"]]) {
@@ -55,8 +55,10 @@ install_deps_job <- function(project = ".", project_type = "local", verbose = 1,
 #' @examples
 #' \dontrun{
 #' check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"))
-#' check_downstream_job(check_args = Sys.getenv("RCMDCHECK_ARGS"),
-#'                      list(create_arg = list(ref = "6_makegraph@main")))
+#' check_downstream_job(
+#'   check_args = Sys.getenv("RCMDCHECK_ARGS"),
+#'   list(create_arg = list(ref = "6_makegraph@main"))
+#' )
 #' check_downstream_job(only_tests = TRUE)
 #' }
 check_downstream_job <- function(project = ".", verbose = 1,
@@ -66,8 +68,8 @@ check_downstream_job <- function(project = ".", verbose = 1,
   create_args_str <- paste(deparse(create_args), collapse = "\n")
   check_downstream_args <- c(list(dep_structure = substitute(x), verbose = verbose), list(...))
   check_downstream_args_str <- paste(deparse(check_downstream_args), collapse = "\n")
-  script <- glue::glue('x <- do.call(staged.dependencies::dependency_table, {create_args_str})
+  script <- glue::glue("x <- do.call(staged.dependencies::dependency_table, {create_args_str})
                        print(x)
-                       do.call(staged.dependencies::check_downstream, {check_downstream_args_str})')
+                       do.call(staged.dependencies::check_downstream, {check_downstream_args_str})")
   run_job(script, "check_downstream", paste0("Check downstream of ", basename(project)))
 }

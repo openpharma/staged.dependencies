@@ -3,8 +3,10 @@ test_that("get_true_deps_graph works", {
   # take out "stageddeps.water", so it will be treated like an external
   # dependency (i.e. not appear in the dep graph)
   pkgs_df <- data.frame(
-    package_name = c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food",
-                     "stageddeps.house", "stageddeps.garden"),
+    package_name = c(
+      "stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.food",
+      "stageddeps.house", "stageddeps.garden"
+    ),
     dummy_col = 11:15,
     stringsAsFactors = FALSE
   ) %>% dplyr::mutate(cache_dir = file.path(TESTS_GIT_REPOS, package_name))
@@ -16,15 +18,21 @@ test_that("get_true_deps_graph works", {
       external = list(
         stageddeps.elecinfra = data.frame(type = "Suggests", package = "testthat", version = ">= 2.1.0"),
         stageddeps.electricity = data.frame(type = "Suggests", package = "testthat", version = ">= 2.1.0"),
-        stageddeps.food = data.frame(type = c("Imports", "Imports", "Suggests"),
-                                     package = c("desc", "SummarizedExperiment", "testthat"),
-                                     version = c("*", "*", ">= 2.1.0")),
-        stageddeps.house = data.frame(type = c("Imports", "Suggests"),
-                                      package = c("stageddeps.water", "testthat"), # water treated as external, see above
-                                      version = c("*", ">= 2.1.0")),
-        stageddeps.garden = data.frame(type = c("Imports", "Suggests"),
-                                       package = c("stageddeps.water", "testthat"),
-                                       version = c("*", ">= 2.1.0"))
+        stageddeps.food = data.frame(
+          type = c("Imports", "Imports", "Suggests"),
+          package = c("desc", "SummarizedExperiment", "testthat"),
+          version = c("*", "*", ">= 2.1.0")
+        ),
+        stageddeps.house = data.frame(
+          type = c("Imports", "Suggests"),
+          package = c("stageddeps.water", "testthat"), # water treated as external, see above
+          version = c("*", ">= 2.1.0")
+        ),
+        stageddeps.garden = data.frame(
+          type = c("Imports", "Suggests"),
+          package = c("stageddeps.water", "testthat"),
+          version = c("*", ">= 2.1.0")
+        )
       ),
       upstream_deps = list(
         stageddeps.elecinfra = character(0),
@@ -42,7 +50,6 @@ test_that("get_true_deps_graph works", {
       )
     )
   )
-
 })
 
 # get_local_pkgs_from_config ----
@@ -75,24 +82,30 @@ test_that("add_project_to_local_repos works", {
   project <- file.path(TESTS_GIT_REPOS, "stageddeps.food")
   expect_equal(
     add_project_to_local_repos(project, local_repos = NULL),
-    data.frame(repo = "openpharma/stageddeps.food", host = "https://github.com",
-               directory = normalize_path(project),
-               stringsAsFactors = FALSE)
+    data.frame(
+      repo = "openpharma/stageddeps.food", host = "https://github.com",
+      directory = normalize_path(project),
+      stringsAsFactors = FALSE
+    )
   )
 
   expect_equal(
     add_project_to_local_repos(
       project,
-      local_repos = data.frame(repo = "openpharma/stageddeps.electricity", host = "https://github.com",
-                 directory = normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.electricity")), stringsAsFactors = FALSE)
+      local_repos = data.frame(
+        repo = "openpharma/stageddeps.electricity", host = "https://github.com",
+        directory = normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.electricity")), stringsAsFactors = FALSE
+      )
     ),
-    data.frame(repo = c("openpharma/stageddeps.electricity", "openpharma/stageddeps.food"),
-               host = c("https://github.com", "https://github.com"),
-               directory = c(
-                 normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.electricity")),
-                 normalize_path(project)
-               ),
-               stringsAsFactors = FALSE)
+    data.frame(
+      repo = c("openpharma/stageddeps.electricity", "openpharma/stageddeps.food"),
+      host = c("https://github.com", "https://github.com"),
+      directory = c(
+        normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.electricity")),
+        normalize_path(project)
+      ),
+      stringsAsFactors = FALSE
+    )
   )
 })
 
@@ -125,13 +138,17 @@ test_that("yaml_from_dep_table works", {
 test_that("parse_remote_project works", {
 
   # repo@host
-  expect_equal(parse_remote_project("x@y"),
-               list(repo = "x", host = "y"))
+  expect_equal(
+    parse_remote_project("x@y"),
+    list(repo = "x", host = "y")
+  )
 
 
   # missing host uses default
-  expect_equal(parse_remote_project("x"),
-               list(repo = "x", host = "https://github.com"))
+  expect_equal(
+    parse_remote_project("x"),
+    list(repo = "x", host = "https://github.com")
+  )
 
   # more than 1 @ throws error
   expect_error(parse_remote_project("x@y@z"))
@@ -144,7 +161,7 @@ test_that("parse_remote_project works", {
 
 # run_package_actions ----
 test_that("run_package_actions works", {
-  mockery::stub(run_package_actions, 'install_repo_add_sha', function(cache_dir, ...) {
+  mockery::stub(run_package_actions, "install_repo_add_sha", function(cache_dir, ...) {
     cat(paste0("Mocking install_repo_add_sha for ", cache_dir, "\n"))
   })
 
@@ -154,8 +171,10 @@ test_that("run_package_actions works", {
       data.frame(
         cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
         actions = c("install", "install"),
-        sha = c(get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra"))),
-                get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.electricity")))),
+        sha = c(
+          get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra"))),
+          get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.electricity")))
+        ),
         installable = c(TRUE, TRUE),
         stringsAsFactors = FALSE
       ),
@@ -167,23 +186,21 @@ test_that("run_package_actions works", {
     c(
       paste0("Mocking install_repo_add_sha for ", file.path(TESTS_GIT_REPOS, "stageddeps.elecinfra")),
       paste0("Mocking install_repo_add_sha for ", file.path(TESTS_GIT_REPOS, "stageddeps.electricity"))
-
     )
   )
 
-  #invalid sha
+  # invalid sha
   expect_error(
     run_package_actions(
       data.frame(
         cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
         actions = c("install", "install"),
-        sha = c("xxx","yyy"),
+        sha = c("xxx", "yyy"),
         installable = c(TRUE, TRUE),
         stringsAsFactors = FALSE
       ),
       install_external_deps = FALSE
     )
-
   )
 
   # if installable is FALSE then package is skipped
@@ -192,8 +209,10 @@ test_that("run_package_actions works", {
       data.frame(
         cache_dir = file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra", "stageddeps.electricity")),
         actions = c("install", "install"),
-        sha = c(get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra"))),
-                get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.electricity")))),
+        sha = c(
+          get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.elecinfra"))),
+          get_short_sha(file.path(TESTS_GIT_REPOS, c("stageddeps.electricity")))
+        ),
         installable = c(TRUE, FALSE),
         stringsAsFactors = FALSE
       ),
@@ -205,7 +224,6 @@ test_that("run_package_actions works", {
     output, # not installing electricity
     paste0("Mocking install_repo_add_sha for ", file.path(TESTS_GIT_REPOS, "stageddeps.elecinfra"))
   )
-
 })
 
 # parse_deps_table ----

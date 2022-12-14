@@ -15,6 +15,7 @@ get_renv_lock_from_repo_dir <- function(repo_dir, renv_profile = NULL) {
     error = function(cond) {
       warning(paste("Unable to open renv.lock file", renv_file, "so it will be ignored"))
       NULL
-    })
+    }
+  )
   return(renv_lock)
 }
