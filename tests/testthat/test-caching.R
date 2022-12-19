@@ -242,3 +242,14 @@ test_that("copy_renv_profiles does not copy any files if no /profiles folder", {
     expect_length(fs::dir_ls("to"), 0)
   })
 })
+
+test_that("copy_config_to_storage_dir", {
+  storage_dir <- get_storage_dir()
+  on.exit(set_storage_dir(storage_dir))
+
+  dir <- tempdir()
+  set_storage_dir(dir)
+  expect_error(copy_config_to_storage_dir(), NA)
+  # doesn't fail if config.yaml already exists
+  expect_error(copy_config_to_storage_dir(), NA)
+})
