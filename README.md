@@ -29,8 +29,9 @@ The package also provides:
 
 ## Usage
 
-The directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and
-the directory does not exist and this is where checked out repositories are cached.
+### Storage directory
+
+By deault, the directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and the directory does not exist. This is where checked out repositories are cached. To use a different location, you can set the option `staged.dependencies._storage_dir` before loading the package. Note that on Windows, the path `~/.staged.dependencies` may be a subdirectory of One Drive and this can lead to [problems](https://github.com/openpharma/staged.dependencies/issues/169).
 
 Note staged.dependencies requires a git signature setup this can be checked with `git2r::default_signature(".")`.
 If this is not setup it can be created using `git2r::config(git2r::repository("."), user.name = <<name>>, user.email = <<email>>)`
