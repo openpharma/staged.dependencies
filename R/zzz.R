@@ -30,7 +30,7 @@ set_storage_dir <- function(storage_dir) {
 
   storage_dir <- getOption(
     "staged.dependencies._storage_dir",
-    path.expand("~/.staged_dependencies")
+    path.expand("~/.staged.dependencies")
   )
   op <- options()
   op.package <- list(
