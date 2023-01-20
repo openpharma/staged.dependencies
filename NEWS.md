@@ -1,6 +1,8 @@
 # staged.dependecies 0.2.8
 
 * Updated code for changes in `tidyselect 1.2.0`.
+* Fixed issue with storage directory being overwritten if set by user.
+* Updated copying of config file so it doesn't fail if file already exists.
 
 # staged.dependencies 0.2.7
 

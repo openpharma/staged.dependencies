@@ -36,10 +36,18 @@ clear_cache <- function(pattern = "*") {
 # copies example config file to package settings directory
 # fails if copy did not work
 copy_config_to_storage_dir <- function() {
-  stopifnot(file.copy(
-    system.file("config.yaml", package = "staged.dependencies", mustWork = TRUE),
-    get_storage_dir()
-  ))
+  
+  path <- file.path(get_storage_dir(), "config.yaml")
+
+  if (!file.exists(path)) {
+    copied_ok <- file.copy(
+      system.file("config.yaml", package = "staged.dependencies", mustWork = TRUE),
+      get_storage_dir()
+    )
+    if (!copied_ok) {
+      stop("Could not copy config.yaml to storage directory")
+    }
+  }
 }
 
 # directory where repo is cached locally
