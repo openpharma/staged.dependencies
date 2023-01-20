@@ -48,12 +48,6 @@
 <li>
   <a href="news/index.html">Changelog</a>
 </li>
-<!-- start dropdown for versions --> <li class="nav-item dropdown">
-        <a href="#" class="nav-link dropdown-toggle"
-          data-bs-toggle="dropdown" role="button"
-          aria-expanded="false" aria-haspopup="true"
-          id="dropdown-versions">Versions</a> <div class="dropdown-menu" aria-labelledby="dropdown-versions"> <a class="dropdown-item" data-toggle="tooltip" title="" href="https://openpharma.github.io/staged.dependencies/main">main</a> </div></li>
-<!-- end dropdown for versions -->
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -99,8 +93,12 @@
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<p>The directory <code>~/.staged.dependencies</code> as well as a dummy config file are created whenever the package is loaded and the directory does not exist and this is where checked out repositories are cached.</p>
+<div class="section level3">
+<h3 id="storage-directory">Storage directory<a class="anchor" aria-label="anchor" href="#storage-directory"></a>
+</h3>
+<p>By deault, the directory <code>~/.staged.dependencies</code> as well as a dummy config file are created whenever the package is loaded and the directory does not exist. This is where checked out repositories are cached. To use a different location, you can set the option <code>staged.dependencies._storage_dir</code> before loading the package. Note that on Windows, the path <code>~/.staged.dependencies</code> may be a subdirectory of One Drive and this can lead to <a href="https://github.com/openpharma/staged.dependencies/issues/169" class="external-link">problems</a>.</p>
 <p>Note staged.dependencies requires a git signature setup this can be checked with <code>git2r::default_signature(".")</code>. If this is not setup it can be created using <code>git2r::config(git2r::repository("."), user.name = &lt;&lt;name&gt;&gt;, user.email = &lt;&lt;email&gt;&gt;)</code> or via the git cli using, for example <code>git config --global user.email &lt;email&gt;</code>.</p>
+</div>
 <div class="section level3">
 <h3 id="setup-tokens">Setup tokens<a class="anchor" aria-label="anchor" href="#setup-tokens"></a>
 </h3>
