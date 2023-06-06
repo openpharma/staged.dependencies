@@ -31,15 +31,15 @@ The package also provides:
 
 ### Storage directory
 
-By deault, the directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and the directory does not exist. This is where checked out repositories are cached. To use a different location, you can set the option `staged.dependencies._storage_dir` before loading the package. Note that on Windows, the path `~/.staged.dependencies` may be a subdirectory of One Drive and this can lead to [problems](https://github.com/openpharma/staged.dependencies/issues/169).
+By default, the directory `~/.staged.dependencies` as well as a dummy config file are created whenever the package is loaded and the directory does not exist. This is where checked out repositories are cached. To use a different location, you can set the option `staged.dependencies._storage_dir` before loading the package. Note that on Windows, the path `~/.staged.dependencies` may be a subdirectory of One Drive and this can lead to [problems](https://github.com/openpharma/staged.dependencies/issues/169).
 
-Note staged.dependencies requires a git signature setup this can be checked with `git2r::default_signature(".")`.
+Note staged.dependencies requires a git signature setup that can be checked with `git2r::default_signature(".")`.
 If this is not setup it can be created using `git2r::config(git2r::repository("."), user.name = <<name>>, user.email = <<email>>)`
 or via the git cli using, for example `git config --global user.email <email>`.
 
 ### Setup tokens
 
-If you internal packages require [personal access tokens](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) then these must be available to staged.dependencies.
+If your internal packages require [personal access tokens](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) then these must be available to staged.dependencies.
 
 There are two approaches:
 
