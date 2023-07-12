@@ -212,10 +212,9 @@
       ]
     },
     "digest": {
-      "Package": "rlang",
-      "Version": "1.1.0",
-      "Source": "Repository",
-      "Repository": "CRAN"
+      "Package": "digest",
+      "Version": "0.6.33",
+      "Source": "Repository"
     },
     "downlit": {
       "Package": "downlit",
