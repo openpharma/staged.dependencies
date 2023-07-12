@@ -212,12 +212,10 @@
       ]
     },
     "digest": {
-      "Package": "digest",
-      "Version": "0.6.29",
+      "Package": "rlang",
+      "Version": "1.1.0",
       "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "cf6b206a045a684728c3267ef7596190",
-      "Requirements": []
+      "Repository": "CRAN"
     },
     "downlit": {
       "Package": "downlit",
@@ -780,11 +778,8 @@
     },
     "rlang": {
       "Package": "rlang",
-      "Version": "1.0.6",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "4ed1f8336c8d52c3e750adcdc57228a7",
-      "Requirements": []
+      "Version": "1.1.0",
+      "Source": "Repository"
     },
     "rmarkdown": {
       "Package": "rmarkdown",
