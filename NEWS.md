@@ -1,3 +1,7 @@
+# staged.dependecies 0.2.8.9000
+
+* Support subdirectories in configuration.
+
 # staged.dependecies 0.2.8
 
 * Updated code for changes in `tidyselect 1.2.0`.
@@ -10,9 +14,9 @@
 
 # staged.dependencies 0.2.6
 
-* Fixed bug whereby `renv` did not recognize internal dependencies already installed. 
+* Fixed bug whereby `renv` did not recognize internal dependencies already installed.
 
-# staged.dependencies 0.2.5 
+# staged.dependencies 0.2.5
 
 * Added `renv_files` element into `dependency_structure` object to capture (in JSON) the renv.lock files from internal dependencies for future processing. The `renv_profile` argument to `dependency_table` allows you to choose which renv profile to include if not using the default one.
 * Use `renv::install` to install external dependencies if inside an `renv` environment so that the renv cache is used
@@ -38,7 +42,7 @@
 * `staged.dependencies` can handle only having access to part of the internal dependency graph.
 * `install_deps_app` allows `repo`, `host` and `ref` to be configured by users.
 * Created addin to install current project's dependencies alongside current project.
-* `get_all_external_dependencies` now returns the vector of external packages ordered by install order and the core R packages are not included. 
+* `get_all_external_dependencies` now returns the vector of external packages ordered by install order and the core R packages are not included.
 
 ## Other improvements
 
@@ -50,7 +54,7 @@
 
 * Allow a remote other than `origin`.
 * `install_external_deps` argument to `install_deps_app` is now respected.
-* Fix bug when calling `check_downstream` after `install_deps` whereby incorrect error was shown saying sha has changed. 
+* Fix bug when calling `check_downstream` after `install_deps` whereby incorrect error was shown saying sha has changed.
 * Fallback branch for repositories can now be specified and is not hard-coded as `main`.
 * `check_downstream` will not stop on first package error but will run on all expected packages and all failures are output.
-* More gracefully handles error in `install_deps_app`. 
+* More gracefully handles error in `install_deps_app`.

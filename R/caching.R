@@ -36,7 +36,7 @@ clear_cache <- function(pattern = "*") {
 # copies example config file to package settings directory
 # fails if copy did not work
 copy_config_to_storage_dir <- function() {
-  
+
   path <- file.path(get_storage_dir(), "config.yaml")
 
   if (!file.exists(path)) {
@@ -80,8 +80,11 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
 # that cache dir, so the SHA can be added to the DESCRIPTION file
 # note: files in .gitignore are also available to the package locally
 copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, verbose = 0) {
-  check_dir_exists(local_dir, prefix = "Local directory: ")
   check_verbose_arg(verbose)
+
+  local_dir <- fs::path_dir(git2r::discover_repository(local_dir))
+
+  check_dir_exists(local_dir, prefix = "Local directory: ")
 
   repo_dir <- get_repo_cache_dir(repo, host, local = TRUE)
   if (dir.exists(repo_dir)) {
@@ -281,18 +284,20 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
       )
     }
 
+    repo_info$subdir <- parse_git_ref(repo_and_host$repo)$subdir
+
     hashed_new_repos <- c()
     if (repo_info$accessible) {
       if (direction %in% c("upstream", "all")) {
-        hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$upstream_repos, hash_repo_and_host)
+        hashed_upstream_repos <- lapply(get_yaml_deps_info(fs::path_join(c(repo_info$dir, repo_info$subdir)))$upstream_repos, hash_repo_and_host)
         hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
       }
       if (direction %in% c("downstream", "all")) {
-        hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_info$dir)$downstream_repos, hash_repo_and_host)
+        hashed_downstream_repos <- lapply(get_yaml_deps_info(fs::path_join(c(repo_info$dir, repo_info$subdir)))$downstream_repos, hash_repo_and_host)
         hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
       }
     }
-    hashed_processed_repos[[hashed_repo_and_host]] <- repo_info$dir
+    hashed_processed_repos[[hashed_repo_and_host]] <- fs::path_join(c(repo_info$dir, repo_info$subdir))
     hashed_repos_accessible[[hashed_repo_and_host]] <- repo_info$accessible
     hashed_repos_refs[[hashed_repo_and_host]] <- repo_info$ref
     hashed_repos_shas[[hashed_repo_and_host]] <- repo_info$sha
