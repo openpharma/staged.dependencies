@@ -82,12 +82,7 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
 copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, verbose = 0) {
   check_verbose_arg(verbose)
 
-  message(sprintf("local_dir: %s", local_dir))
-  message(sprintf("list files: %s", paste0(list.files(local_dir, all.files = TRUE, recursive = FALSE), collapse = ", ")))
   local_dir <- fs::path_dir(git2r::discover_repository(local_dir))
-  message("local_dir modification")
-  message(sprintf("local_dir: %s", local_dir))
-  message(sprintf("list files: %s", paste0(list.files(local_dir, all.files = TRUE, recursive = FALSE), collapse = ", ")))
 
   check_dir_exists(local_dir, prefix = "Local directory: ")
 
