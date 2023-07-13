@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="caching" timestamp="2023-07-13T11:30:18Z" hostname="2ff48db69070" tests="25" skipped="0" failures="0" errors="0" time="0.779">
+    <testcase time="0.0690000000000001" classname="caching" name="clear_cache"/>
+    <testcase time="0.026" classname="caching" name="clear_cache"/>
+    <testcase time="0.00900000000000001" classname="caching" name="clear_cache"/>
+    <testcase time="0.00600000000000001" classname="caching" name="clear_cache"/>
+    <testcase time="0.002" classname="caching" name="clear_cache"/>
+    <testcase time="0.123" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_"/>
+    <testcase time="0.172" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_"/>
+    <testcase time="0.00500000000000012" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_"/>
+    <testcase time="0.00099999999999989" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_"/>
+    <testcase time="0.00100000000000011" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_"/>
+    <testcase time="0.002" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_"/>
+    <testcase time="0.00099999999999989" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_"/>
+    <testcase time="0.177" classname="caching" name="rec_checkout_internal_deps_works_for_inaccessible_repos_with_mocking_checkout_"/>
+    <testcase time="0.00299999999999989" classname="caching" name="rec_checkout_internal_deps_works_for_inaccessible_repos_with_mocking_checkout_"/>
+    <testcase time="0.00100000000000011" classname="caching" name="rec_checkout_internal_deps_works_for_inaccessible_repos_with_mocking_checkout_"/>
+    <testcase time="0.00600000000000001" classname="caching" name="get_hashed_repo_to_dir_mapping_works"/>
+    <testcase time="0.129" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.004" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.00499999999999989" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.00100000000000011" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.00600000000000001" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.0149999999999999" classname="caching" name="copy_renv_profiles_only_copies_profiles_x_renv.lock_files"/>
+    <testcase time="0.00700000000000012" classname="caching" name="copy_renv_profiles_does_not_copy_any_files_if_no_profiles_folder"/>
+    <testcase time="0.0069999999999999" classname="caching" name="copy_config_to_storage_dir"/>
+    <testcase time="0.00100000000000011" classname="caching" name="copy_config_to_storage_dir"/>
+  </testsuite>
+  <testsuite name="check_set_equal" timestamp="2023-07-13T11:30:18Z" hostname="2ff48db69070" tests="6" skipped="0" failures="0" errors="0" time="0.051">
+    <testcase time="0.018" classname="check_set_equal" name="check_set_equal_returns_no_error_if_sets_are_equal"/>
+    <testcase time="0.002" classname="check_set_equal" name="check_set_equal_returns_no_error_if_sets_are_equal"/>
+    <testcase time="0.002" classname="check_set_equal" name="check_set_equal_returns_no_error_if_sets_are_equal"/>
+    <testcase time="0.0089999999999999" classname="check_set_equal" name="check_set_equal_returns_error_message_containing_the_set_differences"/>
+    <testcase time="0.00600000000000001" classname="check_set_equal" name="check_set_equal_returns_error_message_containing_the_set_differences"/>
+    <testcase time="0.014" classname="check_set_equal" name="pre_msg_appears_at_the_start_of_check_set_equal_error_message"/>
+  </testsuite>
+  <testsuite name="dependencies" timestamp="2023-07-13T11:30:18Z" hostname="2ff48db69070" tests="36" skipped="0" failures="0" errors="0" time="5.017">
+    <testcase time="0.0700000000000001" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.34" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.00099999999999989" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.00100000000000033" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.00099999999999989" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.0139999999999998" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.0950000000000002" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.324" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.00700000000000012" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.586" classname="dependencies" name="dependency_table_wih_local_pkgs_works"/>
+    <testcase time="0.521" classname="dependencies" name="dependency_table_wih_local_pkgs_works"/>
+    <testcase time="0.206" classname="dependencies" name="check_yamls_consistent_works"/>
+    <testcase time="0.315" classname="dependencies" name="check_yamls_consistent_works"/>
+    <testcase time="0.00200000000000067" classname="dependencies" name="check_yamls_consistent_works"/>
+    <testcase time="0.0110000000000001" classname="dependencies" name="check_yamls_consistent_works"/>
+    <testcase time="0.329999999999999" classname="dependencies" name="check_yamls_consistent_works"/>
+    <testcase time="0.0610000000000008" classname="dependencies" name="plot.dependency_structure_works"/>
+    <testcase time="0.327" classname="dependencies" name="plot.dependency_structure_works"/>
+    <testcase time="0.507" classname="dependencies" name="plot.dependency_structure_works"/>
+    <testcase time="0.00399999999999956" classname="dependencies" name="plot.dependency_structure_works"/>
+    <testcase time="0.0580000000000007" classname="dependencies" name="install_deps_works"/>
+    <testcase time="0.342" classname="dependencies" name="install_deps_works"/>
+    <testcase time="0.0179999999999998" classname="dependencies" name="install_deps_works"/>
+    <testcase time="0.00900000000000034" classname="dependencies" name="install_deps_works"/>
+    <testcase time="0.056" classname="dependencies" name="check_downstream_works"/>
+    <testcase time="0.347" classname="dependencies" name="check_downstream_works"/>
+    <testcase time="0.0350000000000001" classname="dependencies" name="check_downstream_works"/>
+    <testcase time="0.0510000000000002" classname="dependencies" name="build_check_install_works"/>
+    <testcase time="0.35" classname="dependencies" name="build_check_install_works"/>
+    <testcase time="0.00900000000000034" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00300000000000011" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00199999999999978" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00400000000000045" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.000999999999999446" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00300000000000011" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00600000000000023" classname="dependencies" name="get_all_external_deps_works"/>
+  </testsuite>
+  <testsuite name="dependencies_helper" timestamp="2023-07-13T11:30:23Z" hostname="2ff48db69070" tests="23" skipped="0" failures="0" errors="0" time="0.272">
+    <testcase time="0.069" classname="dependencies_helper" name="get_true_deps_graph_works"/>
+    <testcase time="0.0439999999999996" classname="dependencies_helper" name="get_local_pkgs_from_config_works"/>
+    <testcase time="0.00400000000000045" classname="dependencies_helper" name="get_local_pkgs_from_config_works"/>
+    <testcase time="0.0129999999999999" classname="dependencies_helper" name="add_project_to_local_repos_works"/>
+    <testcase time="0.00499999999999989" classname="dependencies_helper" name="add_project_to_local_repos_works"/>
+    <testcase time="0.00700000000000056" classname="dependencies_helper" name="yaml_from_dep_table_works"/>
+    <testcase time="0.00499999999999989" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.000999999999999446" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.00600000000000023" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.00499999999999989" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.00600000000000023" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.00600000000000023" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.00899999999999945" classname="dependencies_helper" name="run_package_actions_works"/>
+    <testcase time="0.0730000000000004" classname="dependencies_helper" name="run_package_actions_works"/>
+    <testcase time="0.00399999999999956" classname="dependencies_helper" name="run_package_actions_works"/>
+    <testcase time="0.00499999999999989" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00100000000000033" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00199999999999978" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00100000000000033" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00100000000000033" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00199999999999978" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.000999999999999446" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00200000000000067" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+  </testsuite>
+  <testsuite name="get_descendants_distance" timestamp="2023-07-13T11:30:24Z" hostname="2ff48db69070" tests="14" skipped="0" failures="0" errors="0" time="0.059">
+    <testcase time="0.00899999999999945" classname="get_descendants_distance" name="get_descendants_distance_with_no_descendants_returns_dataframe_with_0_rows"/>
+    <testcase time="0.00200000000000067" classname="get_descendants_distance" name="get_descendants_distance_with_no_descendants_returns_dataframe_with_0_rows"/>
+    <testcase time="0.00599999999999934" classname="get_descendants_distance" name="get_descendants_distance_with_no_descendants_returns_dataframe_with_0_rows"/>
+    <testcase time="0.00600000000000023" classname="get_descendants_distance" name="get_descendants_distance_takes_minimum_distance_between_two_nodes"/>
+    <testcase time="0.00199999999999978" classname="get_descendants_distance" name="get_descendants_distance_takes_minimum_distance_between_two_nodes"/>
+    <testcase time="0.00499999999999989" classname="get_descendants_distance" name="get_descendants_distance_only_includes_descendants"/>
+    <testcase time="0.00200000000000067" classname="get_descendants_distance" name="get_descendants_distance_only_includes_descendants"/>
+    <testcase time="0.000999999999999446" classname="get_descendants_distance" name="get_descendants_distance_only_includes_descendants"/>
+    <testcase time="0.00200000000000067" classname="get_descendants_distance" name="get_descendants_distance_only_includes_descendants"/>
+    <testcase time="0.00499999999999989" classname="get_descendants_distance" name="get_descendants_distance_handles_minimum_distances_greater_than_1"/>
+    <testcase time="0.000999999999999446" classname="get_descendants_distance" name="get_descendants_distance_handles_minimum_distances_greater_than_1"/>
+    <testcase time="0.00600000000000023" classname="get_descendants_distance" name="get_descendants_distance_node_names_can_include_symbols"/>
+    <testcase time="0.00100000000000033" classname="get_descendants_distance" name="get_descendants_distance_node_names_can_include_symbols"/>
+    <testcase time="0.0110000000000001" classname="get_descendants_distance" name="get_descendants_distance_works_another_example"/>
+  </testsuite>
+  <testsuite name="git_tools" timestamp="2023-07-13T11:30:24Z" hostname="2ff48db69070" tests="8" skipped="0" failures="0" errors="0" time="2.145">
+    <testcase time="0.0179999999999998" classname="git_tools" name="get_authtoken_envvar_works"/>
+    <testcase time="0.00100000000000033" classname="git_tools" name="get_authtoken_envvar_works"/>
+    <testcase time="0.00499999999999989" classname="git_tools" name="get_repo_url_works"/>
+    <testcase time="0.0129999999999999" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+    <testcase time="0.443000000000001" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+    <testcase time="0.26" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+    <testcase time="1.404" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+    <testcase time="0.000999999999999446" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+  </testsuite>
+  <testsuite name="git_tools_mocking" timestamp="2023-07-13T11:30:26Z" hostname="2ff48db69070" tests="11" skipped="0" failures="0" errors="0" time="0.243">
+    <testcase time="0.0739999999999998" classname="git_tools_mocking" name="checkout_repo_with_mocking_works"/>
+    <testcase time="0.0800000000000001" classname="git_tools_mocking" name="checkout_repo_with_mocking_works"/>
+    <testcase time="0.00200000000000067" classname="git_tools_mocking" name="checkout_repo_with_mocking_works"/>
+    <testcase time="0.00999999999999979" classname="git_tools_mocking" name="checkout_repo_with_mocking_works"/>
+    <testcase time="0.0409999999999986" classname="git_tools_mocking" name="check_only_remote_branches_works"/>
+    <testcase time="0.016" classname="git_tools_mocking" name="check_only_remote_branches_works"/>
+    <testcase time="0.00700000000000145" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+    <testcase time="0.00799999999999912" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+    <testcase time="0.00200000000000067" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+    <testcase time="0.00199999999999889" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+    <testcase time="0.00100000000000122" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+  </testsuite>
+  <testsuite name="graph_methods" timestamp="2023-07-13T11:30:26Z" hostname="2ff48db69070" tests="21" skipped="0" failures="0" errors="0" time="0.099">
+    <testcase time="0.0129999999999999" classname="graph_methods" name="topological_sort_throws_error_if_circular_relationship"/>
+    <testcase time="0.00600000000000023" classname="graph_methods" name="topological_sort_throws_error_if_circular_relationship"/>
+    <testcase time="0.00999999999999979" classname="graph_methods" name="topological_sort_throws_error_if_circular_relationship"/>
+    <testcase time="0.00600000000000023" classname="graph_methods" name="topological_sort_correctly_sorts_graph_with_no_branching"/>
+    <testcase time="0.00799999999999912" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.00399999999999956" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.00400000000000134" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.000999999999999446" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.000999999999999446" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.00600000000000023" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.000999999999999446" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.00100000000000122" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.000999999999999446" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.00200000000000067" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.00499999999999901" classname="graph_methods" name="topological_sort_works_when_parent_occurs_twice_in_graph"/>
+    <testcase time="0.0199999999999996" classname="graph_methods" name="adj_list_to_edge_df_works"/>
+    <testcase time="0.00500000000000078" classname="graph_methods" name="get_descendants_works"/>
+    <testcase time="0.00200000000000067" classname="graph_methods" name="get_descendants_works"/>
+    <testcase time="0.000999999999999446" classname="graph_methods" name="get_descendants_works"/>
+    <testcase time="0.000999999999999446" classname="graph_methods" name="get_descendants_works"/>
+    <testcase time="0.000999999999999446" classname="graph_methods" name="get_descendants_works"/>
+  </testsuite>
+  <testsuite name="ref_strategy" timestamp="2023-07-13T11:30:26Z" hostname="2ff48db69070" tests="18" skipped="0" failures="0" errors="0" time="0.163">
+    <testcase time="0.0540000000000003" classname="ref_strategy" name="infer_ref_from_branch_works"/>
+    <testcase time="0.00499999999999901" classname="ref_strategy" name="infer_ref_from_branch_works"/>
+    <testcase time="0.0600000000000005" classname="ref_strategy" name="check_ref_consistency_works"/>
+    <testcase time="0.00399999999999956" classname="ref_strategy" name="check_ref_consistency_works"/>
+    <testcase time="0.00699999999999967" classname="ref_strategy" name="check_ref_consistency_works"/>
+    <testcase time="0.00700000000000145" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00199999999999889" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00200000000000067" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00199999999999889" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00100000000000122" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00199999999999889" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00200000000000067" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.000999999999999446" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00200000000000067" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00200000000000067" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00599999999999845" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00200000000000067" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00200000000000067" classname="ref_strategy" name="determine_ref_works"/>
+  </testsuite>
+  <testsuite name="renv" timestamp="2023-07-13T11:30:26Z" hostname="2ff48db69070" tests="8" skipped="0" failures="0" errors="0" time="0.056">
+    <testcase time="0.016" classname="renv" name="get_renv_lock_from_repo_dir_returns_json_lockfile_if_exists_and_profile_is_NULL"/>
+    <testcase time="0.00699999999999967" classname="renv" name="get_renv_lock_from_repo_dir_returns_json_lockfile_from_non_NULL_profile"/>
+    <testcase time="0.00900000000000034" classname="renv" name="get_renv_lock_from_repo_dir_returns_NULL_if_no_lockfile"/>
+    <testcase time="0.00399999999999956" classname="renv" name="get_renv_lock_from_repo_dir_returns_NULL_if_no_lockfile"/>
+    <testcase time="0.00399999999999956" classname="renv" name="get_renv_lock_from_repo_dir_returns_NULL_if_no_lockfile"/>
+    <testcase time="0.00600000000000023" classname="renv" name="get_renv_lock_from_repo_dir_returns_NULL_if_no_lockfile"/>
+    <testcase time="0.00600000000000023" classname="renv" name="get_renv_lock_from_repo_dir_give_warning_and_returns_NULL_if_cannot_read_json_of_lockfile"/>
+    <testcase time="0.00399999999999956" classname="renv" name="get_renv_lock_from_repo_dir_give_warning_and_returns_NULL_if_cannot_read_json_of_lockfile"/>
+  </testsuite>
+  <testsuite name="utils" timestamp="2023-07-13T11:30:26Z" hostname="2ff48db69070" tests="14" skipped="0" failures="0" errors="0" time="0.08">
+    <testcase time="0.0150000000000006" classname="utils" name="cbind_handle_empty_works"/>
+    <testcase time="0.00300000000000011" classname="utils" name="cbind_handle_empty_works"/>
+    <testcase time="0.00799999999999912" classname="utils" name="hash_repo_and_host_works"/>
+    <testcase time="0.00100000000000122" classname="utils" name="hash_repo_and_host_works"/>
+    <testcase time="0.000999999999999446" classname="utils" name="hash_repo_and_host_works"/>
+    <testcase time="0.00600000000000023" classname="utils" name="unhash_repo_and_host_works"/>
+    <testcase time="0.000999999999999446" classname="utils" name="unhash_repo_and_host_works"/>
+    <testcase time="0.000999999999999446" classname="utils" name="unhash_repo_and_host_works"/>
+    <testcase time="0.0140000000000011" classname="utils" name="get_pkg_names_from_paths_works"/>
+    <testcase time="0.00499999999999901" classname="utils" name="get_yaml_deps_info_works"/>
+    <testcase time="0.0170000000000012" classname="utils" name="error_if_stageddeps_inexistent_works"/>
+    <testcase time="0.00600000000000023" classname="utils" name="rep_with_names_works"/>
+    <testcase time="0.000999999999999446" classname="utils" name="rep_with_names_works"/>
+    <testcase time="0.000999999999999446" classname="utils" name="rep_with_names_works"/>
+  </testsuite>
+  <testsuite name="validate_yaml" timestamp="2023-07-13T11:30:27Z" hostname="2ff48db69070" tests="18" skipped="0" failures="0" errors="0" time="0.163">
+    <testcase time="0.00999999999999979" classname="validate_yaml" name="staged_dep_yaml_without_dependencies_is_valid_"/>
+    <testcase time="0.00600000000000023" classname="validate_yaml" name="staged_dep_yaml_allows_additional_fields_beyond_those_required"/>
+    <testcase time="0.00999999999999979" classname="validate_yaml" name="empty_staged_dep_yaml_file_throws_error"/>
+    <testcase time="0.011000000000001" classname="validate_yaml" name="empty_staged_dep_yaml_file_throws_error"/>
+    <testcase time="0.0109999999999992" classname="validate_yaml" name="staged_dep_yaml_file_missing_expected_fields_throws_error"/>
+    <testcase time="0.00600000000000023" classname="validate_yaml" name="staged_dep_yaml_file_missing_expected_fields_throws_error"/>
+    <testcase time="0.00999999999999979" classname="validate_yaml" name="staged_dep_yaml_file_without_current_repo_content_throws_error"/>
+    <testcase time="0.00999999999999979" classname="validate_yaml" name="staged_dep_yaml_file_with_current_repo_as_array_throws_error"/>
+    <testcase time="0.0170000000000012" classname="validate_yaml" name="staged_dep_yaml_file_cannot_contain_non_character_values"/>
+    <testcase time="0.00599999999999845" classname="validate_yaml" name="staged_dep_yaml_file_cannot_contain_non_character_values"/>
+    <testcase time="0.00700000000000145" classname="validate_yaml" name="staged_dep_yaml_file_cannot_contain_non_character_values"/>
+    <testcase time="0.00599999999999845" classname="validate_yaml" name="staged_dep_yaml_file_cannot_contain_non_character_values"/>
+    <testcase time="0.0100000000000016" classname="validate_yaml" name="staged_dep_yaml_file_missing_repo_or_host_throws_error"/>
+    <testcase time="0.0129999999999999" classname="validate_yaml" name="staged_dep_yaml_file_missing_repo_or_host_throws_error"/>
+    <testcase time="0.00999999999999979" classname="validate_yaml" name="staged_dep_yaml_with_nesting_naming_inside_repo_or_host_throws_an_error"/>
+    <testcase time="0.00699999999999967" classname="validate_yaml" name="staged_dep_yaml_with_nesting_naming_inside_repo_or_host_throws_an_error"/>
+    <testcase time="0.00699999999999967" classname="validate_yaml" name="staged_dep_yaml_with_nesting_naming_inside_repo_or_host_throws_an_error"/>
+    <testcase time="0.00600000000000023" classname="validate_yaml" name="staged_dep_yaml_with_nesting_naming_inside_repo_or_host_throws_an_error"/>
+  </testsuite>
+  <testsuite name="zzz" timestamp="2023-07-13T11:30:27Z" hostname="2ff48db69070" tests="7" skipped="0" failures="0" errors="0" time="0.027">
+    <testcase time="0.0150000000000006" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.000999999999999446" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.00300000000000011" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.000999999999999446" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.000999999999999446" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.00499999999999901" classname="zzz" name="get_set_storage_dir"/>
+    <testcase time="0.00100000000000122" classname="zzz" name="get_set_storage_dir"/>
+  </testsuite>
+</testsuites>
