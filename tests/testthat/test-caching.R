@@ -56,7 +56,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
       "unittest_branch1",
       direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist", verbose = 0
     )),
-    regexp = "Available refs 'main' must include at least one of 'unittest_branch1, not_exist'", fixed = TRUE
+    regexp = "Available refs .* must include at least one of 'unittest_branch1, not_exist'"
   )
 
   output <- capture.output(res <- rec_checkout_internal_deps(

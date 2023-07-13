@@ -14,7 +14,15 @@ get_repo_url <- function(repo, host) {
     is_non_empty_char(repo),
     is_non_empty_char(host)
   )
-  file.path(host, paste0(repo, ".git"))
+  file.path(host, paste0(do.call(file.path, parse_git_ref(repo)[1:2]), ".git"))
+}
+
+parse_git_ref <- function(ref) {
+  list(
+    username = strsplit(ref, "/")[[1]][1],
+    repo = strsplit(ref, "/")[[1]][2],
+    subdir = paste0(strsplit(ref, "/")[[1]][-(1:2)], collapse = "/")
+  )
 }
 
 # gets the currently checked out branch
