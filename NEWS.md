@@ -1,6 +1,7 @@
 # staged.dependecies 0.2.8.9000
 
 * Support subdirectories in configuration.
+* Remove `.lock` file and clean the project with that regard.
 
 # staged.dependecies 0.2.8
 
