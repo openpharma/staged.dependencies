@@ -83,7 +83,7 @@ test_that("add_project_to_local_repos works", {
   expect_equal(
     add_project_to_local_repos(project, local_repos = NULL),
     data.frame(
-      repo = "openpharma/stageddeps.food", host = "https://github.com",
+      repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".",
       directory = normalize_path(project),
       stringsAsFactors = FALSE
     )
@@ -93,13 +93,14 @@ test_that("add_project_to_local_repos works", {
     add_project_to_local_repos(
       project,
       local_repos = data.frame(
-        repo = "openpharma/stageddeps.electricity", host = "https://github.com",
+        repo = "openpharma/stageddeps.electricity", host = "https://github.com", subdir = ".",
         directory = normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.electricity")), stringsAsFactors = FALSE
       )
     ),
     data.frame(
       repo = c("openpharma/stageddeps.electricity", "openpharma/stageddeps.food"),
       host = c("https://github.com", "https://github.com"),
+      subdir = ".",
       directory = c(
         normalize_path(file.path(TESTS_GIT_REPOS, "stageddeps.electricity")),
         normalize_path(project)

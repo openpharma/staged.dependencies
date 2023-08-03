@@ -193,6 +193,7 @@ add_project_to_local_repos <- function(project, local_repos) {
     data.frame(
       repo = repo_deps_info$current_repo$repo,
       host = repo_deps_info$current_repo$host,
+      subdir = ".",
       directory = normalize_path(project), stringsAsFactors = FALSE
     )
   )

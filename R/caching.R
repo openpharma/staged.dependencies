@@ -199,7 +199,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
   } else {
     stopifnot(
       is.data.frame(local_repos),
-      setequal(colnames(local_repos), c("repo", "host", "directory"))
+      setequal(colnames(local_repos), c("repo", "host", "subdir", "directory"))
     )
     stats::setNames(local_repos$directory, hash_repo_and_host(local_repos))
   }

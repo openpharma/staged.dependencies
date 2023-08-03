@@ -8,7 +8,7 @@ local_pkgs <- c("stageddeps.elecinfra", "stageddeps.electricity", "stageddeps.fo
 mock_rec_checkout_internal_deps <- function(source_dir) {
   function(repos_to_process, ...) {
     cat(paste0("Mocking rec_checkout_internal_deps", "\n"))
-    expect_equal(repos_to_process, list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")))
+    expect_equal(repos_to_process, list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")))
 
     # stageddeps.food is local
     internal_deps <- data.frame(
@@ -105,6 +105,7 @@ test_that("dependency_table wih local_pkgs works", {
   local_repos <- data.frame(
     repo = paste0("openpharma/", local_pkgs),
     host = rep("https://github.com", 6),
+    subdir = ".",
     directory = file.path(copied_ecosystem, local_pkgs),
     stringsAsFactors = FALSE
   )

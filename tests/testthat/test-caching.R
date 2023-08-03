@@ -52,7 +52,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
   # check error if fallback_branch argument is incorrect
   expect_error(
     capture.output(rec_checkout_internal_deps(
-      list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
+      list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
       "unittest_branch1",
       direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist", verbose = 0
     )),
@@ -60,7 +60,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
   )
 
   output <- capture.output(res <- rec_checkout_internal_deps(
-    list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
+    list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
     "fix1@main",
     direction = c("upstream"), local_repos = NULL, verbose = 0
   ))
@@ -132,7 +132,7 @@ test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking
   })
 
   res <- rec_checkout_internal_deps(
-    list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")),
+    list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
     "main",
     local_repos = NULL, verbose = 0, direction = "all"
   )
@@ -152,11 +152,12 @@ test_that("get_hashed_repo_to_dir_mapping works", {
       data.frame(
         repo = "openpharma/stageddeps.food",
         host = "https://github.com",
+        subdir = ".",
         directory = "dummy_dir",
         stringsAsFactors = FALSE
       )
     ),
-    c(`openpharma/stageddeps.food @ https://github.com` = "dummy_dir")
+    c(`openpharma/stageddeps.food @ https://github.com @ .` = "dummy_dir")
   )
 })
 
