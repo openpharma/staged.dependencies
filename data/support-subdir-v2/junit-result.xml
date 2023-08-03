@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="caching" timestamp="2023-08-03T10:05:19Z" hostname="938bcfbf04dd" tests="18" skipped="0" failures="2" errors="2" time="0.692">
+    <testcase time="0.0919999999999999" classname="caching" name="clear_cache"/>
+    <testcase time="0.0350000000000001" classname="caching" name="clear_cache"/>
+    <testcase time="0.0129999999999999" classname="caching" name="clear_cache"/>
+    <testcase time="0.00900000000000012" classname="caching" name="clear_cache"/>
+    <testcase time="0.002" classname="caching" name="clear_cache"/>
+    <testcase time="0.0339999999999998" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_">
+      <failure type="failure" message="`capture.output(...)` threw an error with unexpected message. ('test-caching.R:53:3')">`capture.output(...)` threw an error with unexpected message.
+Expected match: "Available refs .* must include at least one of 'unittest_branch1, not_exist'"
+Actual message: "subscript out of bounds"
+Backtrace:
+     ▆
+  1. ├─testthat::expect_error(...) at test-caching.R:53:2
+  2. │ └─testthat:::quasi_capture(...)
+  3. │   ├─testthat (local) .capture(...)
+  4. │   │ └─base::withCallingHandlers(...)
+  5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+  6. ├─utils::capture.output(...)
+  7. │ └─base::withVisible(...elt(i))
+  8. └─staged.dependencies:::rec_checkout_internal_deps(...)
+  9.   └─staged.dependencies:::unhash_repo_and_host(hashed_repo_and_host)
+ 10.     └─staged.dependencies:::extract_str_field(repo_and_host, 3)
+ 11.       └─base::vapply(lst, function(x) x[[field]], character(1))
+ 12.         └─staged.dependencies (local) FUN(X[[i]], ...)</failure>
+    </testcase>
+    <testcase time="0.124" classname="caching" name="rec_checkout_internal_deps_works_with_mocking_checkout_">
+      <error type="error" message="&lt;subscriptOutOfBoundsError/error/condition&gt; ('test-caching.R:62:3')">&lt;subscriptOutOfBoundsError/error/condition&gt;
+Error in `x[[field]]`: subscript out of bounds
+Backtrace:
+    ▆
+ 1. ├─utils::capture.output(...) at test-caching.R:62:2
+ 2. │ └─base::withVisible(...elt(i))
+ 3. └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 4.   └─staged.dependencies:::unhash_repo_and_host(hashed_repo_and_host)
+ 5.     └─staged.dependencies:::extract_str_field(repo_and_host, 3)
+ 6.       └─base::vapply(lst, function(x) x[[field]], character(1))
+ 7.         └─staged.dependencies (local) FUN(X[[i]], ...)</error>
+    </testcase>
+    <testcase time="0.0469999999999999" classname="caching" name="rec_checkout_internal_deps_works_for_inaccessible_repos_with_mocking_checkout_">
+      <error type="error" message="&lt;subscriptOutOfBoundsError/error/condition&gt; ('test-caching.R:134:3')">&lt;subscriptOutOfBoundsError/error/condition&gt;
+Error in `x[[field]]`: subscript out of bounds
+Backtrace:
+    ▆
+ 1. └─staged.dependencies:::rec_checkout_internal_deps(...) at test-caching.R:134:2
+ 2.   └─staged.dependencies:::unhash_repo_and_host(hashed_repo_and_host)
+ 3.     └─staged.dependencies:::extract_str_field(repo_and_host, 3)
+ 4.       └─base::vapply(lst, function(x) x[[field]], character(1))
+ 5.         └─staged.dependencies (local) FUN(X[[i]], ...)</error>
+    </testcase>
+    <testcase time="0.0530000000000002" classname="caching" name="get_hashed_repo_to_dir_mapping_works">
+      <failure type="failure" message="get_hashed_repo_to_dir_mapping(...) not equal to c(`openpharma/stageddeps.food @ https://github.com` = &quot;dummy_dir&quot;). ('test-caching.R:150:3')">get_hashed_repo_to_dir_mapping(...) not equal to c(`openpharma/stageddeps.food @ https://github.com` = "dummy_dir").
+Names: 1 string mismatch</failure>
+    </testcase>
+    <testcase time="0.213" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.00600000000000023" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.00599999999999978" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.00200000000000022" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.0089999999999999" classname="caching" name="copy_local_repo_to_cachedir_works"/>
+    <testcase time="0.0249999999999999" classname="caching" name="copy_renv_profiles_only_copies_profiles_x_renv.lock_files"/>
+    <testcase time="0.0110000000000001" classname="caching" name="copy_renv_profiles_does_not_copy_any_files_if_no_profiles_folder"/>
+    <testcase time="0.0089999999999999" classname="caching" name="copy_config_to_storage_dir"/>
+    <testcase time="0.00199999999999978" classname="caching" name="copy_config_to_storage_dir"/>
+  </testsuite>
+  <testsuite name="check_set_equal" timestamp="2023-08-03T10:05:20Z" hostname="938bcfbf04dd" tests="6" skipped="0" failures="0" errors="0" time="0.144">
+    <testcase time="0.0390000000000001" classname="check_set_equal" name="check_set_equal_returns_no_error_if_sets_are_equal"/>
+    <testcase time="0.00700000000000012" classname="check_set_equal" name="check_set_equal_returns_no_error_if_sets_are_equal"/>
+    <testcase time="0.00800000000000001" classname="check_set_equal" name="check_set_equal_returns_no_error_if_sets_are_equal"/>
+    <testcase time="0.048" classname="check_set_equal" name="check_set_equal_returns_error_message_containing_the_set_differences"/>
+    <testcase time="0.0179999999999998" classname="check_set_equal" name="check_set_equal_returns_error_message_containing_the_set_differences"/>
+    <testcase time="0.024" classname="check_set_equal" name="pre_msg_appears_at_the_start_of_check_set_equal_error_message"/>
+  </testsuite>
+  <testsuite name="dependencies" timestamp="2023-08-03T10:05:20Z" hostname="938bcfbf04dd" tests="35" skipped="0" failures="9" errors="0" time="11.335">
+    <testcase time="0.172" classname="dependencies" name="dependency_table_works">
+      <failure type="failure" message="`repos_to_process` not equal to list(list(repo = &quot;openpharma/stageddeps.food&quot;, host = &quot;https://github.com&quot;)). ('test-dependencies.R:39:3')">`repos_to_process` not equal to list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")).
+Component 1: Length mismatch: comparison on first 2 components
+Backtrace:
+     ▆
+  1. ├─staged.dependencies:::with_tmp_cachedir(...) at test-dependencies.R:39:2
+  2. │ └─base::force(code) at tests/testthat/setup-storagedir_repos.R:55:2
+  3. ├─testthat::expect_output(...) at test-dependencies.R:40:4
+  4. │ └─testthat:::quasi_capture(...)
+  5. │   ├─testthat (local) .capture(...)
+  6. │   │ └─testthat::capture_output_lines(code, print, width = width)
+  7. │   │   └─testthat:::eval_with_output(code, print = print, width = width)
+  8. │   │     ├─withr::with_output_sink(path, withVisible(code))
+  9. │   │     │ └─base::force(code)
+ 10. │   │     └─base::withVisible(code)
+ 11. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 12. └─staged.dependencies::dependency_table(repo_dir, ref = "main")
+ 13.   └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 14.     └─testthat::expect_equal(...) at test-dependencies.R:11:4</failure>
+    </testcase>
+    <testcase time="0.544" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.00199999999999978" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.00200000000000022" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.00199999999999978" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.0180000000000002" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.106" classname="dependencies" name="dependency_table_works">
+      <failure type="failure" message="`repos_to_process` not equal to list(list(repo = &quot;openpharma/stageddeps.food&quot;, host = &quot;https://github.com&quot;)). ('test-dependencies.R:39:3')">`repos_to_process` not equal to list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")).
+Component 1: Length mismatch: comparison on first 2 components
+Backtrace:
+     ▆
+  1. ├─staged.dependencies:::with_tmp_cachedir(...) at test-dependencies.R:39:2
+  2. │ └─base::force(code) at tests/testthat/setup-storagedir_repos.R:55:2
+  3. ├─testthat::expect_output(...) at test-dependencies.R:78:4
+  4. │ └─testthat:::quasi_capture(...)
+  5. │   ├─testthat (local) .capture(...)
+  6. │   │ └─testthat::capture_output_lines(code, print, width = width)
+  7. │   │   └─testthat:::eval_with_output(code, print = print, width = width)
+  8. │   │     ├─withr::with_output_sink(path, withVisible(code))
+  9. │   │     │ └─base::force(code)
+ 10. │   │     └─base::withVisible(code)
+ 11. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 12. └─staged.dependencies::dependency_table(...)
+ 13.   └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 14.     └─testthat::expect_equal(...) at test-dependencies.R:11:4</failure>
+    </testcase>
+    <testcase time="0.632" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="0.00999999999999979" classname="dependencies" name="dependency_table_works"/>
+    <testcase time="3.356" classname="dependencies" name="dependency_table_wih_local_pkgs_works">
+      <failure type="failure" message="`dependency_table(repo_dir, ref = &quot;fixgarden@main&quot;, local_repos = local_repos)` did not throw an error. ('test-dependencies.R:113:3')">`dependency_table(repo_dir, ref = "fixgarden@main", local_repos = local_repos)` did not throw an error.</failure>
+    </testcase>
+    <testcase time="1.962" classname="dependencies" name="dependency_table_wih_local_pkgs_works"/>
+    <testcase time="0.266999999999999" classname="dependencies" name="check_yamls_consistent_works">
+      <failure type="failure" message="`check_yamls_consistent(dependency_table(repo_dir, ref = &quot;main&quot;))` threw an error with unexpected message. ('test-dependencies.R:131:3')">`check_yamls_consistent(dependency_table(repo_dir, ref = "main"))` threw an error with unexpected message.
+Expected match: "for package stageddeps.garden"
+Actual message: "`repos_to_process` not equal to list(list(repo = \"openpharma/stageddeps.food\", host = \"https://github.com\")).\nComponent 1: Length mismatch: comparison on first 2 components"
+Backtrace:
+     ▆
+  1. ├─staged.dependencies:::with_tmp_cachedir(...) at test-dependencies.R:131:2
+  2. │ └─base::force(code) at tests/testthat/setup-storagedir_repos.R:55:2
+  3. ├─testthat::expect_output(...) at test-dependencies.R:136:4
+  4. │ └─testthat:::quasi_capture(...)
+  5. │   ├─testthat (local) .capture(...)
+  6. │   │ └─testthat::capture_output_lines(code, print, width = width)
+  7. │   │   └─testthat:::eval_with_output(code, print = print, width = width)
+  8. │   │     ├─withr::with_output_sink(path, withVisible(code))
+  9. │   │     │ └─base::force(code)
+ 10. │   │     └─base::withVisible(code)
+ 11. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 12. ├─testthat::expect_error(...)
+ 13. │ └─testthat:::quasi_capture(...)
+ 14. │   ├─testthat (local) .capture(...)
+ 15. │   │ └─base::withCallingHandlers(...)
+ 16. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 17. ├─staged.dependencies::check_yamls_consistent(...)
+ 18. │ ├─base::stopifnot(methods::is(dep_structure, "dependency_structure"))
+ 19. │ └─methods::is(dep_structure, "dependency_structure")
+ 20. └─staged.dependencies::dependency_table(repo_dir, ref = "main")
+ 21.   └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 22.     └─testthat::expect_equal(...) at test-dependencies.R:11:4</failure>
+    </testcase>
+    <testcase time="0.0519999999999996" classname="dependencies" name="check_yamls_consistent_works"/>
+    <testcase time="0.0510000000000002" classname="dependencies" name="check_yamls_consistent_works">
+      <failure type="failure" message="`repos_to_process` not equal to list(list(repo = &quot;openpharma/stageddeps.food&quot;, host = &quot;https://github.com&quot;)). ('test-dependencies.R:131:3')">`repos_to_process` not equal to list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")).
+Component 1: Length mismatch: comparison on first 2 components
+Backtrace:
+     ▆
+  1. ├─staged.dependencies:::with_tmp_cachedir(...) at test-dependencies.R:131:2
+  2. │ └─base::force(code) at tests/testthat/setup-storagedir_repos.R:55:2
+  3. ├─testthat::expect_output(...) at test-dependencies.R:147:4
+  4. │ └─testthat:::quasi_capture(...)
+  5. │   ├─testthat (local) .capture(...)
+  6. │   │ └─testthat::capture_output_lines(code, print, width = width)
+  7. │   │   └─testthat:::eval_with_output(code, print = print, width = width)
+  8. │   │     ├─withr::with_output_sink(path, withVisible(code))
+  9. │   │     │ └─base::force(code)
+ 10. │   │     └─base::withVisible(code)
+ 11. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 12. ├─staged.dependencies::check_yamls_consistent(...)
+ 13. │ ├─base::stopifnot(methods::is(dep_structure, "dependency_structure"))
+ 14. │ └─methods::is(dep_structure, "dependency_structure")
+ 15. └─staged.dependencies::dependency_table(repo_dir, ref = "fixgarden@main")
+ 16.   └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 17.     └─testthat::expect_equal(...) at test-dependencies.R:11:4</failure>
+    </testcase>
+    <testcase time="0.551" classname="dependencies" name="check_yamls_consistent_works"/>
+    <testcase time="0.0960000000000001" classname="dependencies" name="plot.dependency_structure_works">
+      <failure type="failure" message="`repos_to_process` not equal to list(list(repo = &quot;openpharma/stageddeps.food&quot;, host = &quot;https://github.com&quot;)). ('test-dependencies.R:165:3')">`repos_to_process` not equal to list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")).
+Component 1: Length mismatch: comparison on first 2 components
+Backtrace:
+     ▆
+  1. ├─testthat::expect_output(...) at test-dependencies.R:165:2
+  2. │ └─testthat:::quasi_capture(...)
+  3. │   ├─testthat (local) .capture(...)
+  4. │   │ └─testthat::capture_output_lines(code, print, width = width)
+  5. │   │   └─testthat:::eval_with_output(code, print = print, width = width)
+  6. │   │     ├─withr::with_output_sink(path, withVisible(code))
+  7. │   │     │ └─base::force(code)
+  8. │   │     └─base::withVisible(code)
+  9. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─staged.dependencies::dependency_table(repo_dir, ref = "main")
+ 11.   └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 12.     └─testthat::expect_equal(...) at test-dependencies.R:11:4</failure>
+    </testcase>
+    <testcase time="0.56" classname="dependencies" name="plot.dependency_structure_works"/>
+    <testcase time="0.825999999999999" classname="dependencies" name="plot.dependency_structure_works"/>
+    <testcase time="0.00600000000000023" classname="dependencies" name="plot.dependency_structure_works"/>
+    <testcase time="0.0800000000000001" classname="dependencies" name="install_deps_works">
+      <failure type="failure" message="`repos_to_process` not equal to list(list(repo = &quot;openpharma/stageddeps.food&quot;, host = &quot;https://github.com&quot;)). ('test-dependencies.R:181:3')">`repos_to_process` not equal to list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")).
+Component 1: Length mismatch: comparison on first 2 components
+Backtrace:
+    ▆
+ 1. ├─utils::capture.output(...) at test-dependencies.R:181:2
+ 2. │ └─base::withVisible(...elt(i))
+ 3. └─staged.dependencies::dependency_table(repo_dir, ref = "fixgarden@main")
+ 4.   └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 5.     └─testthat::expect_equal(...) at test-dependencies.R:11:4</failure>
+    </testcase>
+    <testcase time="0.648" classname="dependencies" name="install_deps_works"/>
+    <testcase time="0.0259999999999998" classname="dependencies" name="install_deps_works"/>
+    <testcase time="0.0130000000000017" classname="dependencies" name="install_deps_works"/>
+    <testcase time="0.0809999999999995" classname="dependencies" name="check_downstream_works">
+      <failure type="failure" message="`repos_to_process` not equal to list(list(repo = &quot;openpharma/stageddeps.food&quot;, host = &quot;https://github.com&quot;)). ('test-dependencies.R:244:3')">`repos_to_process` not equal to list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")).
+Component 1: Length mismatch: comparison on first 2 components
+Backtrace:
+    ▆
+ 1. ├─utils::capture.output(...) at test-dependencies.R:244:2
+ 2. │ └─base::withVisible(...elt(i))
+ 3. └─staged.dependencies::dependency_table(repo_dir, ref = "fixgarden@main")
+ 4.   └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 5.     └─testthat::expect_equal(...) at test-dependencies.R:11:4</failure>
+    </testcase>
+    <testcase time="0.600999999999999" classname="dependencies" name="check_downstream_works"/>
+    <testcase time="0.0340000000000007" classname="dependencies" name="check_downstream_works"/>
+    <testcase time="0.0820000000000007" classname="dependencies" name="build_check_install_works">
+      <failure type="failure" message="`repos_to_process` not equal to list(list(repo = &quot;openpharma/stageddeps.food&quot;, host = &quot;https://github.com&quot;)). ('test-dependencies.R:279:3')">`repos_to_process` not equal to list(list(repo = "openpharma/stageddeps.food", host = "https://github.com")).
+Component 1: Length mismatch: comparison on first 2 components
+Backtrace:
+    ▆
+ 1. ├─utils::capture.output(...) at test-dependencies.R:279:2
+ 2. │ └─base::withVisible(...elt(i))
+ 3. └─staged.dependencies::dependency_table(repo_dir, ref = "fixgarden@main")
+ 4.   └─staged.dependencies:::rec_checkout_internal_deps(...)
+ 5.     └─testthat::expect_equal(...) at test-dependencies.R:11:4</failure>
+    </testcase>
+    <testcase time="0.516999999999999" classname="dependencies" name="build_check_install_works"/>
+    <testcase time="0.0169999999999995" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00399999999999956" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00400000000000134" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00600000000000023" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00199999999999889" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00300000000000011" classname="dependencies" name="get_all_external_deps_works"/>
+    <testcase time="0.00200000000000067" classname="dependencies" name="get_all_external_deps_works"/>
+  </testsuite>
+  <testsuite name="dependencies_helper" timestamp="2023-08-03T10:05:31Z" hostname="938bcfbf04dd" tests="23" skipped="0" failures="0" errors="0" time="0.545">
+    <testcase time="0.181999999999999" classname="dependencies_helper" name="get_true_deps_graph_works"/>
+    <testcase time="0.0770000000000017" classname="dependencies_helper" name="get_local_pkgs_from_config_works"/>
+    <testcase time="0.0119999999999987" classname="dependencies_helper" name="get_local_pkgs_from_config_works"/>
+    <testcase time="0.0300000000000011" classname="dependencies_helper" name="add_project_to_local_repos_works"/>
+    <testcase time="0.0179999999999989" classname="dependencies_helper" name="add_project_to_local_repos_works"/>
+    <testcase time="0.0240000000000009" classname="dependencies_helper" name="yaml_from_dep_table_works"/>
+    <testcase time="0.0180000000000007" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.00600000000000023" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.016" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.00900000000000034" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.00799999999999912" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.0080000000000009" classname="dependencies_helper" name="parse_remote_project_works"/>
+    <testcase time="0.0129999999999999" classname="dependencies_helper" name="run_package_actions_works"/>
+    <testcase time="0.0960000000000001" classname="dependencies_helper" name="run_package_actions_works"/>
+    <testcase time="0.00600000000000023" classname="dependencies_helper" name="run_package_actions_works"/>
+    <testcase time="0.00799999999999912" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00200000000000067" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00199999999999889" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00200000000000067" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00199999999999889" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00200000000000067" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00200000000000067" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+    <testcase time="0.00199999999999889" classname="dependencies_helper" name="parse_deps_table_works_as_expected"/>
+  </testsuite>
+  <testsuite name="get_descendants_distance" timestamp="2023-08-03T10:05:32Z" hostname="938bcfbf04dd" tests="14" skipped="0" failures="0" errors="0" time="0.086">
+    <testcase time="0.0129999999999999" classname="get_descendants_distance" name="get_descendants_distance_with_no_descendants_returns_dataframe_with_0_rows"/>
+    <testcase time="0.00199999999999889" classname="get_descendants_distance" name="get_descendants_distance_with_no_descendants_returns_dataframe_with_0_rows"/>
+    <testcase time="0.00200000000000067" classname="get_descendants_distance" name="get_descendants_distance_with_no_descendants_returns_dataframe_with_0_rows"/>
+    <testcase time="0.00799999999999912" classname="get_descendants_distance" name="get_descendants_distance_takes_minimum_distance_between_two_nodes"/>
+    <testcase time="0.00200000000000067" classname="get_descendants_distance" name="get_descendants_distance_takes_minimum_distance_between_two_nodes"/>
+    <testcase time="0.0139999999999993" classname="get_descendants_distance" name="get_descendants_distance_only_includes_descendants"/>
+    <testcase time="0.00300000000000011" classname="get_descendants_distance" name="get_descendants_distance_only_includes_descendants"/>
+    <testcase time="0.00300000000000011" classname="get_descendants_distance" name="get_descendants_distance_only_includes_descendants"/>
+    <testcase time="0.00200000000000067" classname="get_descendants_distance" name="get_descendants_distance_only_includes_descendants"/>
+    <testcase time="0.00799999999999912" classname="get_descendants_distance" name="get_descendants_distance_handles_minimum_distances_greater_than_1"/>
+    <testcase time="0.00200000000000067" classname="get_descendants_distance" name="get_descendants_distance_handles_minimum_distances_greater_than_1"/>
+    <testcase time="0.0080000000000009" classname="get_descendants_distance" name="get_descendants_distance_node_names_can_include_symbols"/>
+    <testcase time="0.00199999999999889" classname="get_descendants_distance" name="get_descendants_distance_node_names_can_include_symbols"/>
+    <testcase time="0.0170000000000012" classname="get_descendants_distance" name="get_descendants_distance_works_another_example"/>
+  </testsuite>
+  <testsuite name="git_tools" timestamp="2023-08-03T10:05:32Z" hostname="938bcfbf04dd" tests="8" skipped="0" failures="0" errors="0" time="3.167">
+    <testcase time="0.0249999999999986" classname="git_tools" name="get_authtoken_envvar_works"/>
+    <testcase time="0.00300000000000011" classname="git_tools" name="get_authtoken_envvar_works"/>
+    <testcase time="0.00999999999999979" classname="git_tools" name="get_repo_url_works"/>
+    <testcase time="0.0180000000000007" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+    <testcase time="0.442" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+    <testcase time="0.284000000000001" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+    <testcase time="2.383" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+    <testcase time="0.00199999999999889" classname="git_tools" name="checkout_repo_works_requires_Internet_access_"/>
+  </testsuite>
+  <testsuite name="git_tools_mocking" timestamp="2023-08-03T10:05:35Z" hostname="938bcfbf04dd" tests="11" skipped="0" failures="0" errors="0" time="0.405">
+    <testcase time="0.0990000000000002" classname="git_tools_mocking" name="checkout_repo_with_mocking_works"/>
+    <testcase time="0.111999999999998" classname="git_tools_mocking" name="checkout_repo_with_mocking_works"/>
+    <testcase time="0.00200000000000244" classname="git_tools_mocking" name="checkout_repo_with_mocking_works"/>
+    <testcase time="0.0129999999999981" classname="git_tools_mocking" name="checkout_repo_with_mocking_works"/>
+    <testcase time="0.125" classname="git_tools_mocking" name="check_only_remote_branches_works"/>
+    <testcase time="0.0289999999999999" classname="git_tools_mocking" name="check_only_remote_branches_works"/>
+    <testcase time="0.00700000000000145" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+    <testcase time="0.0109999999999992" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+    <testcase time="0.00199999999999889" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+    <testcase time="0.00300000000000011" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+    <testcase time="0.00200000000000244" classname="git_tools_mocking" name="get_remote_name_provides_remote_name_of_repo"/>
+  </testsuite>
+  <testsuite name="graph_methods" timestamp="2023-08-03T10:05:35Z" hostname="938bcfbf04dd" tests="21" skipped="0" failures="0" errors="0" time="0.255">
+    <testcase time="0.0249999999999986" classname="graph_methods" name="topological_sort_throws_error_if_circular_relationship"/>
+    <testcase time="0.00799999999999912" classname="graph_methods" name="topological_sort_throws_error_if_circular_relationship"/>
+    <testcase time="0.00800000000000267" classname="graph_methods" name="topological_sort_throws_error_if_circular_relationship"/>
+    <testcase time="0.00799999999999912" classname="graph_methods" name="topological_sort_correctly_sorts_graph_with_no_branching"/>
+    <testcase time="0.0120000000000005" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.00600000000000023" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.122999999999998" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.00200000000000244" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.00199999999999889" classname="graph_methods" name="topological_sort_correctly_sorts_disconnected_graph"/>
+    <testcase time="0.00799999999999912" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.00199999999999889" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.00100000000000122" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.00199999999999889" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.00200000000000244" classname="graph_methods" name="topological_sort_works_with_graph_with_branching"/>
+    <testcase time="0.00799999999999912" classname="graph_methods" name="topological_sort_works_when_parent_occurs_twice_in_graph"/>
+    <testcase time="0.0219999999999985" classname="graph_methods" name="adj_list_to_edge_df_works"/>
+    <testcase time="0.00800000000000267" classname="graph_methods" name="get_descendants_works"/>
+    <testcase time="0.00199999999999889" classname="graph_methods" name="get_descendants_works"/>
+    <testcase time="0.00199999999999889" classname="graph_methods" name="get_descendants_works"/>
+    <testcase time="0.00200000000000244" classname="graph_methods" name="get_descendants_works"/>
+    <testcase time="0.00200000000000244" classname="graph_methods" name="get_descendants_works"/>
+  </testsuite>
+  <testsuite name="ref_strategy" timestamp="2023-08-03T10:05:36Z" hostname="938bcfbf04dd" tests="18" skipped="0" failures="0" errors="0" time="0.225">
+    <testcase time="0.0729999999999968" classname="ref_strategy" name="infer_ref_from_branch_works"/>
+    <testcase time="0.00700000000000145" classname="ref_strategy" name="infer_ref_from_branch_works"/>
+    <testcase time="0.0730000000000004" classname="ref_strategy" name="check_ref_consistency_works"/>
+    <testcase time="0.00700000000000145" classname="ref_strategy" name="check_ref_consistency_works"/>
+    <testcase time="0.0109999999999992" classname="ref_strategy" name="check_ref_consistency_works"/>
+    <testcase time="0.0120000000000005" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00299999999999656" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00200000000000244" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00999999999999801" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+    <testcase time="0.00300000000000011" classname="ref_strategy" name="determine_ref_works"/>
+  </testsuite>
+  <testsuite name="renv" timestamp="2023-08-03T10:05:36Z" hostname="938bcfbf04dd" tests="8" skipped="0" failures="0" errors="0" time="0.084">
+    <testcase time="0.0190000000000019" classname="renv" name="get_renv_lock_from_repo_dir_returns_json_lockfile_if_exists_and_profile_is_NULL"/>
+    <testcase time="0.0109999999999992" classname="renv" name="get_renv_lock_from_repo_dir_returns_json_lockfile_from_non_NULL_profile"/>
+    <testcase time="0.0179999999999971" classname="renv" name="get_renv_lock_from_repo_dir_returns_NULL_if_no_lockfile"/>
+    <testcase time="0.00700000000000145" classname="renv" name="get_renv_lock_from_repo_dir_returns_NULL_if_no_lockfile"/>
+    <testcase time="0.00600000000000023" classname="renv" name="get_renv_lock_from_repo_dir_returns_NULL_if_no_lockfile"/>
+    <testcase time="0.00799999999999912" classname="renv" name="get_renv_lock_from_repo_dir_returns_NULL_if_no_lockfile"/>
+    <testcase time="0.00900000000000034" classname="renv" name="get_renv_lock_from_repo_dir_give_warning_and_returns_NULL_if_cannot_read_json_of_lockfile"/>
+    <testcase time="0.00600000000000023" classname="renv" name="get_renv_lock_from_repo_dir_give_warning_and_returns_NULL_if_cannot_read_json_of_lockfile"/>
+  </testsuite>
+  <testsuite name="utils" timestamp="2023-08-03T10:05:36Z" hostname="938bcfbf04dd" tests="13" skipped="0" failures="3" errors="1" time="0.223">
+    <testcase time="0.0139999999999993" classname="utils" name="cbind_handle_empty_works"/>
+    <testcase time="0.00400000000000134" classname="utils" name="cbind_handle_empty_works"/>
+    <testcase time="0.00999999999999801" classname="utils" name="hash_repo_and_host_works"/>
+    <testcase time="0.00700000000000145" classname="utils" name="hash_repo_and_host_works">
+      <failure type="failure" message="hash_repo_and_host(list(repo = &quot;repo1&quot;, host = &quot;host1&quot;)) not equal to &quot;repo1 @ host1&quot;. ('test-utils.R:29:3')">hash_repo_and_host(list(repo = "repo1", host = "host1")) not equal to "repo1 @ host1".
+1/1 mismatches
+x[1]: "repo1 @ host1 @ "
+y[1]: "repo1 @ host1"</failure>
+    </testcase>
+    <testcase time="0.0199999999999996" classname="utils" name="hash_repo_and_host_works">
+      <failure type="failure" message="hash_repo_and_host(...) not equal to c(&quot;repo1 @ host1&quot;, &quot;repo2 @ host2&quot;). ('test-utils.R:34:3')">hash_repo_and_host(...) not equal to c("repo1 @ host1", "repo2 @ host2").
+2/2 mismatches
+x[1]: "repo1 @ host1 @ "
+y[1]: "repo1 @ host1"
+
+x[2]: "repo2 @ host2 @ "
+y[2]: "repo2 @ host2"</failure>
+    </testcase>
+    <testcase time="0.0249999999999986" classname="utils" name="unhash_repo_and_host_works">
+      <failure type="failure" message="unhash_repo_and_host(character(0)) not equal to list(repo = character(0), host = character(0)). ('test-utils.R:42:3')">unhash_repo_and_host(character(0)) not equal to list(repo = character(0), host = character(0)).
+Length mismatch: comparison on first 2 components</failure>
+    </testcase>
+    <testcase time="0.0259999999999998" classname="utils" name="unhash_repo_and_host_works">
+      <error type="error" message="&lt;subscriptOutOfBoundsError/error/condition&gt; ('test-utils.R:44:3')">&lt;subscriptOutOfBoundsError/error/condition&gt;
+Error in `x[[field]]`: subscript out of bounds
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_equal(...) at test-utils.R:44:2
+ 2. │ └─testthat::quasi_label(enquo(object), label, arg = "object")
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─staged.dependencies:::unhash_repo_and_host("repo1 @ host1")
+ 5.   └─staged.dependencies:::extract_str_field(repo_and_host, 3)
+ 6.     └─base::vapply(lst, function(x) x[[field]], character(1))
+ 7.       └─staged.dependencies (local) FUN(X[[i]], ...)</error>
+    </testcase>
+    <testcase time="0.0489999999999995" classname="utils" name="get_pkg_names_from_paths_works"/>
+    <testcase time="0.0110000000000028" classname="utils" name="get_yaml_deps_info_works"/>
+    <testcase time="0.0229999999999997" classname="utils" name="error_if_stageddeps_inexistent_works"/>
+    <testcase time="0.0210000000000008" classname="utils" name="rep_with_names_works"/>
+    <testcase time="0.00700000000000145" classname="utils" name="rep_with_names_works"/>
+    <testcase time="0.00600000000000023" classname="utils" name="rep_with_names_works"/>
+  </testsuite>
+  <testsuite name="validate_yaml" timestamp="2023-08-03T10:05:36Z" hostname="938bcfbf04dd" tests="18" skipped="0" failures="0" errors="0" time="0.21">
+    <testcase time="0.0209999999999972" classname="validate_yaml" name="staged_dep_yaml_without_dependencies_is_valid_"/>
+    <testcase time="0.00800000000000267" classname="validate_yaml" name="staged_dep_yaml_allows_additional_fields_beyond_those_required"/>
+    <testcase time="0.0129999999999981" classname="validate_yaml" name="empty_staged_dep_yaml_file_throws_error"/>
+    <testcase time="0.00900000000000034" classname="validate_yaml" name="empty_staged_dep_yaml_file_throws_error"/>
+    <testcase time="0.0150000000000006" classname="validate_yaml" name="staged_dep_yaml_file_missing_expected_fields_throws_error"/>
+    <testcase time="0.00799999999999912" classname="validate_yaml" name="staged_dep_yaml_file_missing_expected_fields_throws_error"/>
+    <testcase time="0.0150000000000006" classname="validate_yaml" name="staged_dep_yaml_file_without_current_repo_content_throws_error"/>
+    <testcase time="0.0150000000000006" classname="validate_yaml" name="staged_dep_yaml_file_with_current_repo_as_array_throws_error"/>
+    <testcase time="0.0150000000000006" classname="validate_yaml" name="staged_dep_yaml_file_cannot_contain_non_character_values"/>
+    <testcase time="0.00999999999999801" classname="validate_yaml" name="staged_dep_yaml_file_cannot_contain_non_character_values"/>
+    <testcase time="0.00799999999999912" classname="validate_yaml" name="staged_dep_yaml_file_cannot_contain_non_character_values"/>
+    <testcase time="0.00900000000000034" classname="validate_yaml" name="staged_dep_yaml_file_cannot_contain_non_character_values"/>
+    <testcase time="0.0150000000000006" classname="validate_yaml" name="staged_dep_yaml_file_missing_repo_or_host_throws_error"/>
+    <testcase time="0.00900000000000034" classname="validate_yaml" name="staged_dep_yaml_file_missing_repo_or_host_throws_error"/>
+    <testcase time="0.0139999999999993" classname="validate_yaml" name="staged_dep_yaml_with_nesting_naming_inside_repo_or_host_throws_an_error"/>
+    <testcase time="0.00900000000000034" classname="validate_yaml" name="staged_dep_yaml_with_nesting_naming_inside_repo_or_host_throws_an_error"/>
+    <testcase time="0.00799999999999912" classname="validate_yaml" name="staged_dep_yaml_with_nesting_naming_inside_repo_or_host_throws_an_error"/>
+    <testcase time="0.00900000000000034" classname="validate_yaml" name="staged_dep_yaml_with_nesting_naming_inside_repo_or_host_throws_an_error"/>
+  </testsuite>
+  <testsuite name="zzz" timestamp="2023-08-03T10:05:36Z" hostname="938bcfbf04dd" tests="7" skipped="0" failures="0" errors="0" time="0.037">
+    <testcase time="0.0130000000000017" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.00300000000000011" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.00799999999999912" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.00199999999999889" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.00200000000000244" classname="zzz" name="setup_storage_dir_works"/>
+    <testcase time="0.0069999999999979" classname="zzz" name="get_set_storage_dir"/>
+    <testcase time="0.00200000000000244" classname="zzz" name="get_set_storage_dir"/>
+  </testsuite>
+</testsuites>
