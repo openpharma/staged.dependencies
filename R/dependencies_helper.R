@@ -193,6 +193,7 @@ add_project_to_local_repos <- function(project, local_repos) {
     data.frame(
       repo = repo_deps_info$current_repo$repo,
       host = repo_deps_info$current_repo$host,
+      subdir = ".",
       directory = normalize_path(project), stringsAsFactors = FALSE
     )
   )
@@ -359,7 +360,7 @@ yaml_from_dep_table <- function(dep_table) {
 }
 
 
-# take string x@y and split it into list(repo=x, host=y)
+# take string x@y and split it into list(repo=x, host=y, subdir=z)
 # error if multiple "@'s" in string, if no @'s then take
 # host = "https://github.com"
 parse_remote_project <- function(project) {
@@ -377,7 +378,7 @@ parse_remote_project <- function(project) {
   if (any(nchar(trimws(split_string)) == 0)) {
     stop(error_message)
   }
-  return(list(repo = split_string[1], host = split_string[2]))
+  return(list(repo = split_string[1], host = split_string[2], subdir = "."))
 }
 
 # filter packages according to some criteria

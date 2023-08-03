@@ -199,7 +199,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
   } else {
     stopifnot(
       is.data.frame(local_repos),
-      setequal(colnames(local_repos), c("repo", "host", "directory"))
+      setequal(colnames(local_repos), c("repo", "host", "subdir", "directory"))
     )
     stats::setNames(local_repos$directory, hash_repo_and_host(local_repos))
   }
@@ -284,20 +284,21 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
       )
     }
 
-    repo_info$subdir <- parse_git_ref(repo_and_host$repo)$subdir
+    repo_info$subdir <- repo_and_host$subdir
+    repo_info$path <- fs::path_norm(fs::path_join(c(repo_info$dir, repo_info$subdir)))
 
     hashed_new_repos <- c()
     if (repo_info$accessible) {
       if (direction %in% c("upstream", "all")) {
-        hashed_upstream_repos <- lapply(get_yaml_deps_info(fs::path_join(c(repo_info$dir, repo_info$subdir)))$upstream_repos, hash_repo_and_host)
+        hashed_upstream_repos <- lapply(get_yaml_deps_info(repo_info$path)$upstream_repos, hash_repo_and_host)
         hashed_new_repos <- c(hashed_new_repos, hashed_upstream_repos)
       }
       if (direction %in% c("downstream", "all")) {
-        hashed_downstream_repos <- lapply(get_yaml_deps_info(fs::path_join(c(repo_info$dir, repo_info$subdir)))$downstream_repos, hash_repo_and_host)
+        hashed_downstream_repos <- lapply(get_yaml_deps_info(repo_info$path)$downstream_repos, hash_repo_and_host)
         hashed_new_repos <- c(hashed_new_repos, hashed_downstream_repos)
       }
     }
-    hashed_processed_repos[[hashed_repo_and_host]] <- fs::path_join(c(repo_info$dir, repo_info$subdir))
+    hashed_processed_repos[[hashed_repo_and_host]] <- repo_info$path
     hashed_repos_accessible[[hashed_repo_and_host]] <- repo_info$accessible
     hashed_repos_refs[[hashed_repo_and_host]] <- repo_info$ref
     hashed_repos_shas[[hashed_repo_and_host]] <- repo_info$sha

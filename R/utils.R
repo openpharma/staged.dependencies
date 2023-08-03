@@ -44,7 +44,7 @@ hash_repo_and_host <- function(repo_and_host) {
   if (length(repo_and_host) == 0) {
     c()
   } else {
-    paste0(repo_and_host$repo, " @ ", repo_and_host$host)
+    paste0(repo_and_host$repo, " @ ", repo_and_host$host, " @ ", repo_and_host$subdir)
   }
 }
 
@@ -55,7 +55,8 @@ unhash_repo_and_host <- function(hashed_repo_and_host) {
   repo_and_host <- strsplit(hashed_repo_and_host, " @ ", fixed = TRUE)
   list(
     repo = extract_str_field(repo_and_host, 1),
-    host = extract_str_field(repo_and_host, 2)
+    host = extract_str_field(repo_and_host, 2),
+    subdir = extract_str_field(repo_and_host, 3)
   )
 }
 
@@ -196,6 +197,10 @@ get_yaml_deps_info <- function(repo_dir) {
   if (file.exists(yaml_file)) {
     content <- yaml::read_yaml(yaml_file)
     validate_staged_deps_yaml(content, file_name = yaml_file)
+    # fill in optional subdir field if missing
+    if (is.null(content$current_repo$subdir)) content$current_repo$subdir <- "."
+    for (i in seq_along(content$upstream_repos)) if (is.null(content$upstream_repos[[i]]$subdir)) content$upstream_repos[[i]]$subdir <- "."
+    for (i in seq_along(content$downstream_repos)) if (is.null(content$downstream_repos[[i]]$subdir)) content$downstream_repos[[i]]$subdir <- "."
     content
   } else {
     list(

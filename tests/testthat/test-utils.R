@@ -27,25 +27,25 @@ test_that("hash_repo_and_host works", {
   expect_null(hash_repo_and_host(list()))
   # when lists contains one element
   expect_equal(
-    hash_repo_and_host(list(repo = "repo1", host = "host1")),
-    "repo1 @ host1"
+    hash_repo_and_host(list(repo = "repo1", host = "host1", subdir = "test1")),
+    "repo1 @ host1 @ test1"
   )
   # when lists contain two elements
   expect_equal(
-    hash_repo_and_host(list(repo = c("repo1", "repo2"), host = c("host1", "host2"))),
-    c("repo1 @ host1", "repo2 @ host2")
+    hash_repo_and_host(list(repo = c("repo1", "repo2"), host = c("host1", "host2"), subdir = c("test1", "test2"))),
+    c("repo1 @ host1 @ test1", "repo2 @ host2 @ test2")
   )
 })
 
 test_that("unhash_repo_and_host works", {
   # when empty
-  expect_equal(unhash_repo_and_host(character(0)), list(repo = character(0), host = character(0)))
+  expect_equal(unhash_repo_and_host(character(0)), list(repo = character(0), host = character(0), subdir = character(0)))
   # when of size 1
-  expect_equal(unhash_repo_and_host("repo1 @ host1"), list(repo = "repo1", host = "host1"))
+  expect_equal(unhash_repo_and_host("repo1 @ host1 @ test1"), list(repo = "repo1", host = "host1", subdir = "test1"))
   # when of size 2
   expect_equal(
-    unhash_repo_and_host(c("repo1 @ host1", "repo2 @ host2")),
-    list(repo = c("repo1", "repo2"), host = c("host1", "host2"))
+    unhash_repo_and_host(c("repo1 @ host1 @ test1", "repo2 @ host2 @ test2")),
+    list(repo = c("repo1", "repo2"), host = c("host1", "host2"), subdir = c("test1", "test2"))
   )
 })
 
