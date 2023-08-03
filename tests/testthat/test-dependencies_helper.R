@@ -141,14 +141,14 @@ test_that("parse_remote_project works", {
   # repo@host
   expect_equal(
     parse_remote_project("x@y"),
-    list(repo = "x", host = "y")
+    list(repo = "x", host = "y", subdir = ".")
   )
 
 
   # missing host uses default
   expect_equal(
     parse_remote_project("x"),
-    list(repo = "x", host = "https://github.com")
+    list(repo = "x", host = "https://github.com", subdir = ".")
   )
 
   # more than 1 @ throws error
