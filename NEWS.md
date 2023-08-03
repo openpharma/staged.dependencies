@@ -1,4 +1,4 @@
-# staged.dependecies 0.3.0.9001
+# staged.dependecies 0.3.1
 
 * Enhanced support of subdirectories for gitlab.
 
