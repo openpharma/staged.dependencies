@@ -128,7 +128,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
     )
     ref <- select_ref_rule(available_refs)
 
-    # Better safenet for missing branch
+    # Safenet for missing branch
     if (!(ref %in% available_refs$ref)) {
       stop("Reference branch ", ref,
            " not found between the available ones in repo directory: ",
