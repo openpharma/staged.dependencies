@@ -26,7 +26,9 @@ get_current_branch <- function(git_repo) {
 # staged_dep has previously checked out a version where ref = <<tag_name>>)
 check_only_remote_branches <- function(git_repo, remote_name) {
   all_branches <- names(git2r::branches(git_repo))
-  stopifnot(all(vapply(all_branches, function(x) startsWith(x, paste0(remote_name, "/")) || startsWith(x, "staged_dep_tag_"), logical(1))))
+  stopifnot(all(vapply(all_branches, function(x) startsWith(x, paste0(remote_name, "/")) ||
+                         startsWith(x, "staged_dep_tag_") ||
+                         startsWith(x, "main"), logical(1))))
 }
 
 # clones the repo and only keeps remote branches
@@ -49,6 +51,8 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
   } else {
     git2r::cred_token(token = token_envvar)
   }
+
+  # If the directory does not exist -> clone
   if (!dir.exists(repo_dir)) {
     stopifnot(is_non_empty_char(repo_url))
     if (verbose >= 1) {
@@ -118,7 +122,6 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     git2r::branch_delete(local_branch)
     rm(local_branch, remote_branch)
 
-    # todo: on.exit if unsuccessful
   } else {
     if (verbose >= 1) {
       message(paste("fetch", git2r::remote_url(repo_dir), "in directory", repo_dir))
@@ -139,7 +142,6 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
       }
     )
   }
-
   check_only_remote_branches(git_repo, remote_name = get_remote_name(git_repo, repo_url))
 
   available_refs <- available_references(repo_dir, remote_name = get_remote_name(git_repo, repo_url))

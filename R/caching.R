@@ -127,7 +127,13 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
       branch_flag = "local"
     )
     ref <- select_ref_rule(available_refs)
-    stopifnot(ref %in% available_refs$ref)
+
+    # Better safenet for missing branch
+    if (!(ref %in% available_refs$ref)) {
+      stop("Reference branch ", ref,
+           " not found between the available ones in repo directory: ",
+           repo_dir) # nocov
+    }
 
     if (ref != get_current_branch(repo_dir)) {
       # if ref is a branch and you are on the wrong branch throw error
@@ -147,6 +153,7 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
     }
   }
 
+  # If there is something left unstaged or uncommitted it does it for you (should it?)
   if ((length(git2r::status(repo_dir)$staged) > 0) ||
     (length(git2r::status(repo_dir)$unstaged) > 0) ||
     (length(git2r::status(repo_dir)$untracked) > 0)) {
@@ -272,6 +279,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
         verbose = verbose
       )
     } else {
+      # Case some local repos were not specified
       repo_info <- checkout_repo(
         get_repo_cache_dir(repo_and_host$repo, repo_and_host$host),
         get_repo_url(repo_and_host$repo, repo_and_host$host),

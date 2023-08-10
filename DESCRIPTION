@@ -8,6 +8,7 @@ Authors@R: c(
   person("Nikolas", "Burkoff", email = "nikolas.burkoff@roche.com", role = "aut")
   )
 Imports:
+    checkmate,
     desc,
     devtools,
     digest,
@@ -51,6 +52,7 @@ Collate:
     'dependencies.R'
     'dependencies_app.R'
     'dependencies_helper.R'
+    'fnc_deps.R'
     'git_tools.R'
     'graph_methods.R'
     'host.R'
