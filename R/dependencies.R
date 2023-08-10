@@ -25,9 +25,7 @@
 #'   no other matches found
 #' @param renv_profile (`character`) the name of the renv profile of the `renv.lock` files
 #'   to be included from the repos. The standard `renv.lock` file uses the default `NULL` argument here.
-#' @param verbose (`numeric`) verbosity level, incremental;
-#'   (0: None, 1: packages that get installed + high-level git operations,
-#'   2: includes git checkout infos)
+#' @inheritParams argument_convention
 #' @return `dependency_structure` An S3 object with the following items:
 #' \describe{
 #'   \item{project}{`project` argument used to create
@@ -349,9 +347,9 @@ plot.dependency_structure <- function(x, y, ...) {
 #'   list will be considered and their dependencies installed if needed (advanced usage only).
 #' @param dry (`logical`) dry run that outputs what would happen without actually
 #'   doing it.
-#' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
 #' @param ... Additional args passed to [remotes::install_deps()]. Ignored
 #'   if inside an `renv` environment.
+#' @inheritParams argument_convention
 #'
 #' @return `data.frame` of performed actions
 #'

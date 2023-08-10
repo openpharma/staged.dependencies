@@ -225,9 +225,7 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'   local rather than cloned; columns are `repo, host, directory`
 #' @param fallback_branch (`character`) the default branch to try to use if
 #'   no other matches found
-#' @param verbose (`numeric`) verbosity level, incremental;
-#'   (0: None, 1: packages that get installed + high-level git operations,
-#'   2: includes git checkout infos)
+#' @inheritParams argument_convention
 #'
 #' @return A data frame, one row per checked out repository with columns
 #' repo, host and cache_dir

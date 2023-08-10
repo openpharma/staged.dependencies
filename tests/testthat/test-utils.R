@@ -82,3 +82,25 @@ test_that("rep_with_names works", {
   expect_equal(rep_with_names(list("hh"), c("aa", "bb")), list(aa = "hh", bb = "hh"))
   expect_equal(rep_with_names("hh", NULL), character(0))
 })
+
+test_that("setting verbosity works", {
+  # These should be part of the definition of <<-
+  f <- function() {
+    return(verbose_level_staged.deps)
+  }
+  f2 <- function() return(f())
+  expect_error(f())
+  expect_error(f2())
+  lev <- 2
+
+  # Assignment
+  verbose_staged.dependencies_set(level = lev)
+  expect_identical(f(), lev)
+  expect_identical(f2(), lev)
+  expect_identical(verbose_level_staged.deps, lev)
+
+  # Removal
+  verbose_staged.dependencies_rm()
+  expect_error(f2())
+  expect_error(verbose_staged.dependencies_rm())
+})

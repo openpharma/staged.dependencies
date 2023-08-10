@@ -1,6 +1,35 @@
 # cat pasted arguments + new line
-cat_nl <- function(...) cat(paste0(paste(...), "\n"))
+cat_nl <- function(...) {
+  cat(paste0(paste(...), "\n"))
+}
 # cat_nl("fff", "gg")
+#' Set staged.dependencies verbosity
+#'
+#' @description
+#' Functions to set and remove the internal variable `verbose_level_staged.deps` to an integer
+#' between `c(0, 1, 2)`. This will set this variable in all environments with `<<-`.
+#' Please remember to remove it. If not specified, there are a couple of high-level
+#' functions that still have `verbose` as a parameter
+#'
+#' @param level (integer)
+#'
+#'
+#' @export
+#' @name verbose
+verbose_staged.dependencies_set <- function(level = 1) {
+  checkmate::assert_int(level, lower = 0, upper = 2)
+  verbose_level_staged.deps <<- level
+}
+#'
+#' @export
+#' @name verbose
+verbose_staged.dependencies_rm <- function() {
+  if (exists("verbose_level_staged.deps")) {
+    rm("verbose_level_staged.deps", envir = parent.frame())
+  } else {
+    stop("No verbose_level_staged.deps to remove in general environment.")
+  }
+}
 
 # output message if verbose argument is at least required_verbose
 message_if_verbose <- function(..., verbose, required_verbose = 1) {
