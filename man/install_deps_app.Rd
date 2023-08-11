@@ -38,7 +38,9 @@ no other matches found}
 
 \item{run_as_job}{(\code{logical}) whether to run the installation as an RStudio job.}
 
-\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
+\item{verbose}{(\code{numeric}) \cr verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)}
 
 \item{install_external_deps}{logical to describe whether to install
 external dependencies of package using \code{\link[remotes:install_deps]{remotes::install_deps()}} (or \code{\link[renv:install]{renv::install()}} if

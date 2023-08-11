@@ -29,7 +29,7 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 \item{fallback_branch}{(\code{character}) the default branch to try to use if
 no other matches found}
 
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) \cr verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 }

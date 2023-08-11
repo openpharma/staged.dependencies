@@ -1,3 +1,7 @@
+# staged.dependecies 0.3.1.9001
+* Added functions to set and remove general verbosity of internal variable `verbose_level_staged.deps`.
+* Added `argument_convention.R` with verbose parameter definition.
+
 # staged.dependecies 0.3.1
 
 * Enhanced support of subdirectories for gitlab.

@@ -84,23 +84,26 @@ test_that("rep_with_names works", {
 })
 
 test_that("setting verbosity works", {
-  # These should be part of the definition of <<-
-  f <- function() {
-    return(verbose_level_staged.deps)
-  }
+  f <- function() return(verbose_sd_get())
   f2 <- function() return(f())
-  expect_error(f())
-  expect_error(f2())
-  lev <- 2
+  expect_identical(f2(), 1) # Default
 
   # Assignment
-  verbose_staged.dependencies_set(level = lev)
-  expect_identical(f(), lev)
+  lev <- 2
+  verbose_sd_set(lev)
   expect_identical(f2(), lev)
-  expect_identical(verbose_level_staged.deps, lev)
 
   # Removal
-  verbose_staged.dependencies_rm()
-  expect_error(f2())
-  expect_error(verbose_staged.dependencies_rm())
+  verbose_sd_rm()
+  expect_identical(f2(), 1) # Default
+  expect_error(verbose_sd_rm())
+
+  # Check that is only in the package environment
+  f3 <- function(lev) {
+    verbose_sd_set(lev)
+    ret <- f2()
+    verbose_sd_rm()
+    return(ret)
+  }
+  f3(2)
 })

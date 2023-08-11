@@ -42,7 +42,7 @@ no other matches found}
 \item{renv_profile}{(\code{character}) the name of the renv profile of the \code{renv.lock} files
 to be included from the repos. The standard \code{renv.lock} file uses the default \code{NULL} argument here.}
 
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) \cr verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 }

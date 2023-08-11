@@ -22,7 +22,7 @@ is assumed.}
 
 \item{project_type}{(\code{character}) See \code{project} argument}
 
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
+\item{verbose}{(\code{numeric}) \cr verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)}
 

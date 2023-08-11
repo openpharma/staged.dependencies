@@ -6,30 +6,43 @@ cat_nl <- function(...) {
 #' Set staged.dependencies verbosity
 #'
 #' @description
-#' Functions to set and remove the internal variable `verbose_level_staged.deps` to an integer
-#' between `c(0, 1, 2)`. This will set this variable in all environments with `<<-`.
-#' Please remember to remove it. If not specified, there are a couple of high-level
-#' functions that still have `verbose` as a parameter
+#' Functions to set and remove the option parameter `verbose_level_staged.deps`.
+#' It can assume integer values between `c(0, 1, 2)`. This will set this variable
+#' as an option with [options()] and [getOption()].
 #'
-#' @param level (integer)
+#' @inheritParams argument_convention
 #'
+#' @examples
+#' verbose_sd_set(2)
+#' verbose_sd_get() # 2, the inserted value
+#' verbose_sd_rm()
+#' verbose_sd_get() # 1, the default
 #'
 #' @export
-#' @name verbose
-verbose_staged.dependencies_set <- function(level = 1) {
-  checkmate::assert_int(level, lower = 0, upper = 2)
-  verbose_level_staged.deps <<- level
+#' @name verbose_sd_option
+verbose_sd_set <- function(verbose = 1) {
+  options("verbose_level_staged.deps" = verbose)
 }
-#'
-#' @export
 #' @name verbose
-verbose_staged.dependencies_rm <- function() {
-  if (exists("verbose_level_staged.deps")) {
-    rm("verbose_level_staged.deps", envir = parent.frame())
+#' @export
+verbose_sd_get <- function() {
+  ret <- getOption("verbose_level_staged.deps")
+  if (is.null(ret)) {
+    1 # Default
   } else {
-    stop("No verbose_level_staged.deps to remove in general environment.")
+    ret
   }
 }
+#' @export
+#' @name verbose
+verbose_sd_rm <- function() {
+  if (is.null(getOption("verbose_level_staged.deps"))) {
+    stop("No verbose_level_staged.deps to remove in general environment.")
+  } else {
+    options("verbose_level_staged.deps" = NULL) # Reset
+  }
+}
+
 
 # output message if verbose argument is at least required_verbose
 message_if_verbose <- function(..., verbose, required_verbose = 1) {
