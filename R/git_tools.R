@@ -26,9 +26,8 @@ get_current_branch <- function(git_repo) {
 # staged_dep has previously checked out a version where ref = <<tag_name>>)
 check_only_remote_branches <- function(git_repo, remote_name) {
   all_branches <- names(git2r::branches(git_repo))
-  stopifnot(all(vapply(all_branches, function(x) {
-    startsWith(x, paste0(remote_name, "/")) || startsWith(x, "staged_dep_tag_")
-  }, logical(1))))
+  stopifnot(all(vapply(all_branches, function(x) startsWith(x, paste0(remote_name, "/")) || startsWith(x, "staged_dep_tag_"),
+                       logical(1))))
 }
 
 # clones the repo and only keeps remote branches

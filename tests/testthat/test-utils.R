@@ -84,6 +84,7 @@ test_that("rep_with_names works", {
 })
 
 test_that("setting verbosity works", {
+  verbose_sd_rm()
   f <- function() {
     return(verbose_sd_get())
   }
@@ -109,5 +110,6 @@ test_that("setting verbosity works", {
     verbose_sd_rm()
     return(ret)
   }
-  f3(2)
+  expect_identical(f3(lev), lev)
+  expect_identical(verbose_sd_get(), 1)
 })
