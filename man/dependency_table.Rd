@@ -23,21 +23,21 @@ be character of the form \verb{openpharma/stageddeps.food@https://github.com}
 If host is not included in the string then the default \verb{https://github.com}
 is assumed.}
 
-\item{project_type}{(\code{character}) See \code{project} argument}
+\item{project_type}{(\code{character}) See \code{project} argument.}
 
 \item{ref}{(\code{character}) git branch (or tag) inferred from the
 branch of the project if not provided; warning if not consistent with
 current branch of project. If \code{project_type} is not \code{local} then this argument
-must be provided}
+must be provided.}
 
 \item{local_repos}{(\code{data.frame}) repositories that should be taken from
-local file system rather than cloned; columns are \verb{repo, host, directory}}
+local file system rather than cloned; columns are \verb{repo, host, directory}.}
 
 \item{direction}{(\code{character}) direction in which to discover packages
 either "upstream","downstream" or "all".}
 
 \item{fallback_branch}{(\code{character}) the default branch to try to use if
-no other matches found}
+no other matches found. It defaults to \code{"main"}.}
 
 \item{renv_profile}{(\code{character}) the name of the renv profile of the \code{renv.lock} files
 to be included from the repos. The standard \code{renv.lock} file uses the default \code{NULL} argument here.}

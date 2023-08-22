@@ -54,7 +54,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     capture.output(rec_checkout_internal_deps(
       list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
       "unittest_branch1",
-      direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist", verbose = 0
+      direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist"
     )),
     regexp = "Available refs .* must include at least one of 'unittest_branch1, not_exist'"
   )
@@ -62,7 +62,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
   output <- capture.output(res <- rec_checkout_internal_deps(
     list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
     "fix1@main",
-    direction = c("upstream"), local_repos = NULL, verbose = 0
+    direction = c("upstream"), local_repos = NULL
   ))
 
   # check mocked functions were called in correct order
@@ -134,7 +134,7 @@ test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking
   res <- rec_checkout_internal_deps(
     list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
     "main",
-    local_repos = NULL, verbose = 0, direction = "all"
+    local_repos = NULL, direction = "all"
   )
 
   # we should not see garden and water should not be accessible
@@ -195,8 +195,7 @@ test_that("copy_local_repo_to_cachedir works", {
         repo = "openpharma/stageddeps.food", host = "https://github.com",
         select_ref_rule = function(available_refs) {
           structure("main", type = "branch")
-        },
-        verbose = 2
+        }
       ),
       regexp = "Adding all of the following", fixed = TRUE
     )

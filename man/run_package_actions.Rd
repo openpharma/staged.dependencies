@@ -12,7 +12,6 @@ run_package_actions(
   upgrade = "never",
   rcmd_args = NULL,
   artifact_dir = NULL,
-  verbose = 0,
   ...
 )
 }
@@ -46,10 +45,6 @@ to the \verb{R CMD} commands}
 
 \item{artifact_dir}{directory to store log files, only when actions include
 \code{build}; action \code{test} only outputs to the console}
-
-\item{verbose}{(\code{numeric}) \cr verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
 
 \item{...}{Additional args passed to \code{\link[remotes:install_deps]{remotes::install_deps()}} Ignored
 if inside an \code{renv} environment.}

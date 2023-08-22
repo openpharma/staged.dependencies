@@ -23,7 +23,7 @@ cat_nl <- function(...) {
 verbose_sd_set <- function(verbose = 1) {
   options("verbose_level_staged.deps" = verbose)
 }
-#' @name verbose
+#' @name verbose_sd_option
 #' @export
 verbose_sd_get <- function() {
   ret <- getOption("verbose_level_staged.deps")
@@ -34,7 +34,7 @@ verbose_sd_get <- function() {
   }
 }
 #' @export
-#' @name verbose
+#' @name verbose_sd_option
 verbose_sd_rm <- function() {
   if (is.null(getOption("verbose_level_staged.deps"))) {
     stop("No verbose_level_staged.deps to remove in general environment.")
@@ -45,8 +45,11 @@ verbose_sd_rm <- function() {
 
 
 # output message if verbose argument is at least required_verbose
-message_if_verbose <- function(..., verbose, required_verbose = 1) {
-  if (verbose >= required_verbose) {
+message_if_verbose <- function(..., verbose = NULL, required_verbose = 1, type = "message") {
+  if (is.null(verbose)) {
+    verb <- verbose_sd_get()
+  }
+  if (verb == required_verbose) {
     message(...)
   }
 }

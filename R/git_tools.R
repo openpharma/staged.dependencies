@@ -26,7 +26,9 @@ get_current_branch <- function(git_repo) {
 # staged_dep has previously checked out a version where ref = <<tag_name>>)
 check_only_remote_branches <- function(git_repo, remote_name) {
   all_branches <- names(git2r::branches(git_repo))
-  stopifnot(all(vapply(all_branches, function(x) startsWith(x, paste0(remote_name, "/")) || startsWith(x, "staged_dep_tag_"), logical(1))))
+  stopifnot(all(vapply(all_branches, function(x) {
+    startsWith(x, paste0(remote_name, "/")) || startsWith(x, "staged_dep_tag_")
+    }, logical(1))))
 }
 
 # clones the repo and only keeps remote branches
@@ -34,15 +36,14 @@ check_only_remote_branches <- function(git_repo, remote_name) {
 # no longer there
 # select_ref_rule is a function that is given the available refs
 # and selects one of them
-# if must_work is TRUE then error is thrown if repo is not accessible, if FALSE then wantning is thrown
+# if must_work is TRUE then error is thrown if repo is not accessible, if FALSE then warning is thrown
 # verbose level: 0: none, 1: print high-level git operations, 2: print git clone detailed messages etc.
 # returns: list of repo_dir and checked out branch/ref (according to branch rule)
-checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NULL, must_work = FALSE, verbose = 0) {
+checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NULL, must_work = FALSE) {
   stopifnot(
     is.function(select_ref_rule),
     endsWith(repo_url, ".git")
   )
-  check_verbose_arg(verbose)
 
   creds <- if (is.null(token_envvar)) {
     NULL
@@ -51,15 +52,15 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
   }
   if (!dir.exists(repo_dir)) {
     stopifnot(is_non_empty_char(repo_url))
-    if (verbose >= 1) {
-      message(paste("clone", repo_url, "to directory", repo_dir))
-    }
+
+    message_if_verbose("Clone", repo_url, "to directory", repo_dir, required_verbose = 2)
+    message_if_verbose("Clone", repo_url, "to cache directory...", required_verbose = 1)
 
     cloned_repo <- tryCatch(
       {
         git_repo <- git2r::clone(
           url = repo_url, local_path = repo_dir,
-          credentials = creds, progress = verbose >= 2
+          credentials = creds, progress = verbose_sd_get() >= 2
         )
       },
       error = function(e) {
@@ -120,9 +121,8 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
 
     # todo: on.exit if unsuccessful
   } else {
-    if (verbose >= 1) {
-      message(paste("fetch", git2r::remote_url(repo_dir), "in directory", repo_dir))
-    }
+    message_if_verbose("fetch", git2r::remote_url(repo_dir), "in directory", repo_dir, required_verbose = 2)
+    message_if_verbose("fetch", git2r::remote_url(repo_dir), "in cache directory...", required_verbose = 1)
 
     git_repo <- git2r::repository(repo_dir)
     # prune (remove) remote branches that were deleted from remote
@@ -151,16 +151,17 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     }
 
     branch <- paste0(get_remote_name(git_repo, repo_url), "/", selected_ref)
-    if (verbose >= 1) {
-      message(paste("   - checkout branch", branch, "in directory", repo_dir))
-    }
+
+    message_if_verbose("   - checkout branch", branch, "in directory", repo_dir, required_verbose = 2)
+    message_if_verbose("   - checkout branch", branch, "in cache directory.", required_verbose = 1)
+
     git2r::checkout(git_repo, branch = branch, force = TRUE)
   } else if (attr(selected_ref, "type") == "tag") {
-    if (verbose >= 1) {
-      message(paste("   - checkout tag", selected_ref, "in directory", repo_dir))
-      git2r::branch_create(commit = git2r::commits(repo = repo_dir, ref = selected_ref, n = 1)[[1]], force = TRUE, name = paste0("staged_dep_tag_", selected_ref))
-      git2r::checkout(git_repo, branch = paste0("staged_dep_tag_", selected_ref), force = TRUE)
-    }
+    message_if_verbose("   - checkout tag", selected_ref, "in directory", repo_dir, required_verbose = 2)
+    message_if_verbose("   - checkout tag", selected_ref, "in cache directory.", required_verbose = 1)
+
+    git2r::branch_create(commit = git2r::commits(repo = repo_dir, ref = selected_ref, n = 1)[[1]], force = TRUE, name = paste0("staged_dep_tag_", selected_ref))
+    git2r::checkout(git_repo, branch = paste0("staged_dep_tag_", selected_ref), force = TRUE)
   } else {
     stop("The selected reference should have a type attribute as 'branch' or 'tag'")
   }
@@ -240,9 +241,8 @@ get_remote_name <- function(git_repo, repo_url) {
 #' @param repo_dir directory of repo
 #' @param ... Additional args passed to `remotes::install_deps`. Note `upgrade`
 #'   is set to "never" and shouldn't be passed into this function.
-install_repo_add_sha <- function(repo_dir,
-                                 ...) {
-  check_dir_exists(repo_dir)
+install_repo_add_sha <- function(repo_dir, ...) {
+  checkmate::assert_directory_exists(repo_dir)
 
   read_dcf <- function(path) {
     fields <- colnames(read.dcf(path))

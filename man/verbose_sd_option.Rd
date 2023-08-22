@@ -3,9 +3,15 @@
 \name{verbose_sd_option}
 \alias{verbose_sd_option}
 \alias{verbose_sd_set}
+\alias{verbose_sd_get}
+\alias{verbose_sd_rm}
 \title{Set staged.dependencies verbosity}
 \usage{
 verbose_sd_set(verbose = 1)
+
+verbose_sd_get()
+
+verbose_sd_rm()
 }
 \arguments{
 \item{verbose}{(\code{numeric}) \cr verbosity level, incremental;

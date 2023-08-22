@@ -20,7 +20,7 @@ be character of the form \verb{openpharma/stageddeps.food@https://github.com}
 If host is not included in the string then the default \verb{https://github.com}
 is assumed.}
 
-\item{project_type}{(\code{character}) See \code{project} argument}
+\item{project_type}{(\code{character}) See \code{project} argument.}
 
 \item{verbose}{(\code{numeric}) \cr verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
