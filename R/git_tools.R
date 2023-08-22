@@ -53,8 +53,8 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
   if (!dir.exists(repo_dir)) {
     stopifnot(is_non_empty_char(repo_url))
 
-    message_if_verbose("Clone", repo_url, "to directory", repo_dir, required_verbose = 2)
-    message_if_verbose("Clone", repo_url, "to cache directory...", required_verbose = 1)
+    message_if_verbose("clone ", repo_url, " to directory ", repo_dir, required_verbose = 2)
+    message_if_verbose("clone ", repo_url, " to cache directory...", required_verbose = 1)
 
     cloned_repo <- tryCatch(
       {
@@ -121,8 +121,8 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
 
     # todo: on.exit if unsuccessful
   } else {
-    message_if_verbose("fetch", git2r::remote_url(repo_dir), "in directory", repo_dir, required_verbose = 2)
-    message_if_verbose("fetch", git2r::remote_url(repo_dir), "in cache directory...", required_verbose = 1)
+    message_if_verbose("fetch ", git2r::remote_url(repo_dir), " in directory ", repo_dir, required_verbose = 2)
+    message_if_verbose("fetch ", git2r::remote_url(repo_dir), " in cache directory...", required_verbose = 1)
 
     git_repo <- git2r::repository(repo_dir)
     # prune (remove) remote branches that were deleted from remote
@@ -152,13 +152,13 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
 
     branch <- paste0(get_remote_name(git_repo, repo_url), "/", selected_ref)
 
-    message_if_verbose("   - checkout branch", branch, "in directory", repo_dir, required_verbose = 2)
-    message_if_verbose("   - checkout branch", branch, "in cache directory.", required_verbose = 1)
+    message_if_verbose("   - checkout branch ", branch, " in directory ", repo_dir, required_verbose = 2)
+    message_if_verbose("   - checkout branch ", branch, " in cache directory...", required_verbose = 1)
 
     git2r::checkout(git_repo, branch = branch, force = TRUE)
   } else if (attr(selected_ref, "type") == "tag") {
-    message_if_verbose("   - checkout tag", selected_ref, "in directory", repo_dir, required_verbose = 2)
-    message_if_verbose("   - checkout tag", selected_ref, "in cache directory.", required_verbose = 1)
+    message_if_verbose("   - checkout tag ", selected_ref, " in directory ", repo_dir, required_verbose = 2)
+    message_if_verbose("   - checkout tag ", selected_ref, " in cache directory...", required_verbose = 1)
 
     git2r::branch_create(commit = git2r::commits(repo = repo_dir, ref = selected_ref, n = 1)[[1]], force = TRUE, name = paste0("staged_dep_tag_", selected_ref))
     git2r::checkout(git_repo, branch = paste0("staged_dep_tag_", selected_ref), force = TRUE)

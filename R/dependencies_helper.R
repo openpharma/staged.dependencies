@@ -64,7 +64,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
     actions <- pkg_actions$actions[idx]
 
     if (!pkg_actions$installable[idx]) {
-      message_if_verbose("skipping package ", pkg_actions$package_name[idx],
+      message_if_verbose("Skipping package ", pkg_actions$package_name[idx],
         " as it (or one of its upstream dependencies) is not accessible"
       )
       next
@@ -156,7 +156,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
         }
       }
     } else { # dry run
-      message_if_verbose(cat_nl("(Dry run) Skipping", toString(actions), "of", cache_dir))
+      message_if_verbose(cat_nl("(Dry run) Skipping ", toString(actions), " of ", cache_dir))
     }
   }
 
