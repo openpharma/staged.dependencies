@@ -49,6 +49,7 @@ message_if_verbose <- function(..., verbose = NULL, required_verbose = 1, is_equ
   if (is.null(verbose)) {
     verb <- verbose_sd_get()
   }
+  # Should it be verbose equal to required or >= ?
   if (moe_sd(verb, required_verbose, is_equal)) {
     message(...)
   }
