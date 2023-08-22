@@ -10,8 +10,7 @@ rec_checkout_internal_deps(
   ref,
   direction = "upstream",
   local_repos = get_local_pkgs_from_config(),
-  fallback_branch = "main",
-  verbose = 0
+  fallback_branch = "main"
 )
 }
 \arguments{
@@ -28,10 +27,6 @@ local rather than cloned; columns are \verb{repo, host, directory}}
 
 \item{fallback_branch}{(\code{character}) the default branch to try to use if
 no other matches found}
-
-\item{verbose}{(\code{numeric}) verbosity level, incremental;
-(0: None, 1: packages that get installed + high-level git operations,
-2: includes git checkout infos)}
 }
 \value{
 A data frame, one row per checked out repository with columns
@@ -45,3 +40,4 @@ and downstream packages are listed there.
 The packages listed there are internal packages. All other dependencies
 listed in the \code{DESCRIPTION} file are external dependencies.
 }
+\keyword{internal}

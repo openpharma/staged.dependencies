@@ -21,21 +21,27 @@
 #' @param run_gadget (`logical`) whether to run the app as a gadget
 #' @param run_as_job (`logical`) whether to run the installation as an RStudio job.
 #' @inheritParams install_deps
-#' @export
 #' @return `shiny.app` or value returned by app (executed as a gadget)
 #' @examples
 #' \dontrun{
 #' install_deps_app("openpharma/stageddeps.food")
 #' }
+#' @export
 install_deps_app <- function(default_repo = NULL,
                              default_host = "https://github.com",
                              default_ref = "main",
                              fallback_branch = "main",
                              run_gadget = TRUE, run_as_job = TRUE,
-                             verbose = 1, install_external_deps = TRUE,
+                             verbose = 1,
+                             install_external_deps = TRUE,
                              renv_profile = NULL,
                              upgrade = "never", ...) {
   require_pkgs(c("shiny", "miniUI", "visNetwork"))
+
+  if (verbose != 1) {
+    checkmate::assert_int(verbose, lower = 0, upper = 2)
+    verbose_sd_set(verbose)
+  }
 
   app <- shiny::shinyApp(
     ui = function() {
@@ -80,9 +86,9 @@ install_deps_app <- function(default_repo = NULL,
           dep_table_rv(NULL)
           error_rv(NULL)
 
-          message_if_verbose("Computing dependency structure for ref ",
-            input$ref, " starting from project ", paste(input$repo, input$host, sep = "@"),
-            verbose = verbose
+          message_if_verbose(
+            "Computing dependency structure for ref ",
+            input$ref, " starting from project ", paste(input$repo, input$host, sep = "@")
           )
 
           x <- tryCatch(

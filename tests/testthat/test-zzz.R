@@ -11,7 +11,12 @@ test_that("setup_storage_dir works", {
   # modify storage directory to a new random one
   new_storage_dir <- tempfile("random_storage_dir")
   set_storage_dir(new_storage_dir)
-  on.exit({setup_storage_dir(TESTS_STORAGE_DIR)}, add = TRUE)
+  on.exit(
+    {
+      setup_storage_dir(TESTS_STORAGE_DIR)
+    },
+    add = TRUE
+  )
   setup_storage_dir(new_storage_dir)
 
   expect_equal(get_storage_dir(), new_storage_dir)

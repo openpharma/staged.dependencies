@@ -19,22 +19,20 @@ is_windows <- function() {
 #'   be character of the form `openpharma/stageddeps.food@https://github.com`
 #'   If host is not included in the string then the default `https://github.com`
 #'   is assumed.
-#' @param project_type (`character`) See `project` argument
+#' @param project_type (`character`) See `project` argument.
 #' @param ref (`character`) git branch (or tag) inferred from the
 #'   branch of the project if not provided; warning if not consistent with
 #'   current branch of project. If `project_type` is not `local` then this argument
-#'   must be provided
+#'   must be provided.
 #' @param local_repos (`data.frame`) repositories that should be taken from
-#'   local file system rather than cloned; columns are `repo, host, directory`
+#'   local file system rather than cloned; columns are `repo, host, directory`.
 #' @param direction (`character`) direction in which to discover packages
 #'   either "upstream","downstream" or "all".
 #' @param fallback_branch (`character`) the default branch to try to use if
-#'   no other matches found
+#'   no other matches found. It defaults to `"main"`.
 #' @param renv_profile (`character`) the name of the renv profile of the `renv.lock` files
 #'   to be included from the repos. The standard `renv.lock` file uses the default `NULL` argument here.
-#' @param verbose (`numeric`) verbosity level, incremental;
-#'   (0: None, 1: packages that get installed + high-level git operations,
-#'   2: includes git checkout infos)
+#' @inheritParams argument_convention
 #' @return `dependency_structure` An S3 object with the following items:
 #' \describe{
 #'   \item{project}{`project` argument used to create
@@ -56,8 +54,6 @@ is_windows <- function() {
 #'   \item{renv_files}{`named list` containing the json of the renv.lock files for the chosen profile for
 #'                     each repo. An entry to the list is `NULL` if a repos does not have the required lock file}
 #' }
-#' @md
-#' @export
 #' @examples
 #' \dontrun{
 #' dependency_table(verbose = 1)
@@ -73,6 +69,7 @@ is_windows <- function() {
 #' print(x)
 #' plot(x)
 #' }
+#' @export
 dependency_table <- function(project = ".",
                              project_type = c("local", "repo@host")[1],
                              ref = NULL,
@@ -81,10 +78,8 @@ dependency_table <- function(project = ".",
                              fallback_branch = "main",
                              renv_profile = NULL,
                              verbose = 1) {
-
   # validate arguments
   checkmate::assert_data_frame(local_repos, null.ok = TRUE)
-  checkmate::assert_int(verbose, lower = 0, upper = 2)
   direction <- check_direction_arg_deprecated(direction)
   check_direction_arg(direction)
   checkmate::assert_choice(project_type, c("local", "repo@host"))
@@ -93,19 +88,22 @@ dependency_table <- function(project = ".",
   # Ideally here we could catch the error for windows and too long paths
   # if (is_windows())
 
+  if (verbose != 1) {
+    checkmate::assert_int(verbose, lower = 0, upper = 2)
+    verbose_sd_set(verbose)
+  }
+
   if (project_type == "repo@host" && (is.null(ref) || nchar(ref) == 0)) {
     stop("For non-local projects the (branch/tag) must be specified")
   }
   if (project_type == "local") {
-    check_dir_exists(project)
+    checkmate::assert_directory_exists(project)
     error_if_stageddeps_inexistent(project)
     # infer ref if not given
     if (is.null(ref) || nchar(ref) == 0) {
       ref <- infer_ref_from_branch(project)
     }
-  }
 
-  if (project_type == "local") {
     # take local version of project (rather than remote)
     local_repos <- add_project_to_local_repos(project, local_repos)
     repo_deps_info <- get_yaml_deps_info(project)
@@ -117,7 +115,7 @@ dependency_table <- function(project = ".",
       ),
       fallback_branch
     )
-    repo_to_process <- list(repo_deps_info$current_repo)
+    repo_to_process <- list(repo_deps_info$current_repo) # This list will be updated with the deps
   } else {
     repo_to_process <- list(parse_remote_project(project))
   }
@@ -127,8 +125,7 @@ dependency_table <- function(project = ".",
     repo_to_process, ref,
     direction = direction,
     local_repos = local_repos,
-    fallback_branch = fallback_branch,
-    verbose = verbose
+    fallback_branch = fallback_branch
   )
 
   internal_deps$package_name[internal_deps$accessible] <-
@@ -228,7 +225,7 @@ print.dependency_structure <- function(x, ...) {
 
   if (!all(table$installable)) {
     table$package_name <- paste0(table$package_name, ifelse(table$installable, "", "*"))
-    cat(
+    warning(
       "packages denoted with '*' cannot be installed as either they or one of their internal",
       "dependencies is not accessible\n"
     )
@@ -245,7 +242,6 @@ print.dependency_structure <- function(x, ...) {
 #' @importFrom rlang .data
 #' @export
 plot.dependency_structure <- function(x, y, ...) {
-
   # construct visNetwork graph
   require_pkgs("visNetwork")
   # todo: put branch below node: https://github.com/almende/vis/issues/3436
@@ -359,13 +355,12 @@ plot.dependency_structure <- function(x, y, ...) {
 #'   list will be considered and their dependencies installed if needed (advanced usage only).
 #' @param dry (`logical`) dry run that outputs what would happen without actually
 #'   doing it.
-#' @param verbose verbosity level, incremental; from 0 (none) to 2 (high)
 #' @param ... Additional args passed to [remotes::install_deps()]. Ignored
 #'   if inside an `renv` environment.
+#' @inheritParams argument_convention
 #'
 #' @return `data.frame` of performed actions
 #'
-#' @export
 #' @seealso determine_branch
 #'
 #' @examples
@@ -377,6 +372,7 @@ plot.dependency_structure <- function(x, y, ...) {
 #' # install all dependencies
 #' install_deps(x, install_direction = "all")
 #' }
+#' @export
 install_deps <- function(dep_structure,
                          install_project = TRUE,
                          install_direction = "upstream",
@@ -392,6 +388,11 @@ install_deps <- function(dep_structure,
   install_direction <- check_direction_arg_deprecated(install_direction)
   if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
     stop("Invalid install_direction argument for this dependency object")
+  }
+
+  if (verbose != 1) {
+    checkmate::assert_int(verbose, lower = 0, upper = 2)
+    verbose_sd_set(verbose)
   }
 
   # get the packages to install
@@ -414,8 +415,9 @@ install_deps <- function(dep_structure,
     install_external_deps = install_external_deps,
     upgrade = upgrade,
     internal_pkg_deps = dep_structure$table$package_name,
-    verbose = verbose, ...
+    ...
   )
+
   pkg_actions
 }
 
@@ -459,6 +461,11 @@ check_downstream <- function(dep_structure,
     stop("Invalid dependency table - downstream dependencies must be have been calculated")
   }
 
+  if (verbose != 1) {
+    checkmate::assert_int(verbose, lower = 0, upper = 2)
+    verbose_sd_set(verbose)
+  }
+
   # get the packages to install
   pkg_df <- dep_structure$table
 
@@ -483,7 +490,7 @@ check_downstream <- function(dep_structure,
     upgrade = upgrade,
     internal_pkg_deps = dep_structure$table$package_name,
     rcmd_args = list(check = check_args),
-    verbose = verbose, ...
+    ...
   )
 
   pkg_actions
@@ -519,9 +526,7 @@ update_with_direct_deps <- function(dep_structure) {
 
 #' Build, check and install internal dependencies
 #'
-
 #'
-#' @md
 #' @inheritParams install_deps
 #' @inheritDotParams install_deps
 #' @param steps (`character` vector) subset of "build", "check", "install";
@@ -534,13 +539,13 @@ update_with_direct_deps <- function(dep_structure) {
 #' @return list with entries
 #'  - artifact_dir: `artifact_dir` directory with log files
 #'  - pkg_actions: `data.frame` of performed actions
-#' @export
 #' @examples
 #' \dontrun{
 #' x <- dependency_table(project = ".", verbose = 1)
 #' build_check_install(x, steps = c("build", "check"), verbose = 1)
 #' build_check_install(x, artifact_dir = "../output")
 #' }
+#' @export
 build_check_install <- function(dep_structure,
                                 install_direction = "all",
                                 steps = c("build", "check", "install"),
@@ -556,6 +561,10 @@ build_check_install <- function(dep_structure,
     methods::is(dep_structure, "dependency_structure"),
     is.logical(dry)
   )
+  if (verbose != 1) {
+    checkmate::assert_int(verbose, lower = 0, upper = 2)
+    verbose_sd_set(verbose)
+  }
 
   install_direction <- check_direction_arg_deprecated(install_direction)
   if (dep_structure$direction != "all" && dep_structure$direction != install_direction) {
@@ -589,7 +598,7 @@ build_check_install <- function(dep_structure,
     internal_pkg_deps = dep_structure$table$package_name,
     rcmd_args = rcmd_args,
     artifact_dir = artifact_dir,
-    verbose = verbose, ...
+    ...
   )
 
   return(list(artifact_dir = artifact_dir, pkg_actions = pkg_actions))
@@ -686,7 +695,6 @@ check_yamls_consistent <- function(dep_structure, skip_if_missing_yaml = FALSE) 
 #'   which fields of the DESCRIPTION file of the internal packages should be included. Default:
 #'   `c("Depends", "Imports", "LinkingTo")`
 #' @inheritParams build_check_install
-#' @md
 #' @return A vector of 'external' R packages required to install
 #'   the selected 'internal' packages, ordered by install order (unless `from_external_dependencies`
 #'   does not include `"Depends"`, `"Imports"` and `"LinkingTo"`). The core R packages

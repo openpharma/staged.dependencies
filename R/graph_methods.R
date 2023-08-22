@@ -67,7 +67,6 @@ topological_sort <- function(graph) {
 # get the descendants (all children) of node and their distances,
 # given list mapping parent to children
 get_descendants_distance <- function(parents_to_children, starting_node) {
-
   # implement BFS
   nodes_to_treat <- c(starting_node) # ordered queue
   distances <- list()
