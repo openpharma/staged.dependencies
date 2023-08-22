@@ -82,3 +82,34 @@ test_that("rep_with_names works", {
   expect_equal(rep_with_names(list("hh"), c("aa", "bb")), list(aa = "hh", bb = "hh"))
   expect_equal(rep_with_names("hh", NULL), character(0))
 })
+
+test_that("setting verbosity works", {
+  verbose_sd_rm()
+  f <- function() {
+    return(verbose_sd_get())
+  }
+  f2 <- function() {
+    return(f())
+  }
+  expect_identical(f2(), 1) # Default
+
+  # Assignment
+  lev <- 2
+  verbose_sd_set(lev)
+  expect_identical(f2(), lev)
+
+  # Removal
+  verbose_sd_rm()
+  expect_identical(f2(), 1) # Default
+  expect_error(verbose_sd_rm())
+
+  # Check that is only in the package environment
+  f3 <- function(lev) {
+    verbose_sd_set(lev)
+    ret <- f2()
+    verbose_sd_rm()
+    return(ret)
+  }
+  expect_identical(f3(lev), lev)
+  expect_identical(verbose_sd_get(), 1)
+})

@@ -27,7 +27,6 @@ set_storage_dir <- function(storage_dir) {
 }
 
 .onLoad <- function(libname, pkgname) {
-
   storage_dir <- getOption(
     "staged.dependencies._storage_dir",
     path.expand("~/.staged.dependencies")

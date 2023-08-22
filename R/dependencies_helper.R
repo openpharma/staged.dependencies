@@ -22,24 +22,24 @@
 #'   to the `R CMD` commands
 #' @param artifact_dir directory to store log files, only when actions include
 #'   `build`; action `test` only outputs to the console
-#' @param verbose verbosity level, incremental - from 0 (none) to 2 (high)
 #' @param ... Additional args passed to [remotes::install_deps()] Ignored
 #'   if inside an `renv` environment.
+#'
+#' @keywords internal
 run_package_actions <- function(pkg_actions, internal_pkg_deps,
                                 dry = FALSE,
                                 install_external_deps = TRUE,
                                 upgrade = "never",
                                 rcmd_args = NULL,
                                 artifact_dir = NULL,
-                                verbose = 0, ...) {
+                                ...) {
   all_actions <- unique(unlist(pkg_actions$actions))
   stopifnot(all(all_actions %in% c("test", "build", "check", "install")))
-  check_verbose_arg(verbose)
 
   rcmdcheck_outputs <- list()
 
   if (nrow(pkg_actions) == 0) {
-    message_if_verbose("No packages to process!", verbose = verbose)
+    message_if_verbose("No packages to process!")
     return(pkg_actions)
   }
 
@@ -55,9 +55,9 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
     )
   }
 
-  message_if_verbose("Processing packages in order: ",
-    toString(pkg_actions$package_name),
-    verbose = verbose
+  message_if_verbose(
+    "Processing packages in order: ",
+    toString(pkg_actions$package_name)
   )
 
   for (idx in seq_along(pkg_actions$cache_dir)) {
@@ -65,9 +65,9 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
     actions <- pkg_actions$actions[idx]
 
     if (!pkg_actions$installable[idx]) {
-      message_if_verbose("skipping package ", pkg_actions$package_name[idx],
-        " as it (or one of its upstream dependencies) is not accessible",
-        verbose = verbose
+      message_if_verbose(
+        "Skipping package ", pkg_actions$package_name[idx],
+        " as it (or one of its upstream dependencies) is not accessible"
       )
       next
     }
@@ -104,7 +104,7 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
             stop("Tests for package in directory ", cache_dir, " failed")
           }
         } else {
-          message_if_verbose("No tests found for package in directory ", cache_dir, verbose = verbose)
+          message_if_verbose("No tests found for package in directory ", cache_dir)
         }
       }
 
@@ -158,11 +158,11 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
         }
       }
     } else { # dry run
-      message_if_verbose(cat_nl("(Dry run) Skipping", toString(actions), "of", cache_dir), verbose = verbose)
+      message_if_verbose(cat_nl("(Dry run) Skipping ", toString(actions), " of ", cache_dir))
     }
   }
 
-  message_if_verbose("Processed packages in order: ", toString(pkg_actions$package_name), verbose = verbose)
+  message_if_verbose("Processed packages in order: ", toString(pkg_actions$package_name))
 
   # output rcmdcheck outputs
   if (!rlang::is_empty(rcmdcheck_outputs)) {
@@ -185,7 +185,7 @@ add_project_to_local_repos <- function(project, local_repos) {
   stopifnot(
     is.data.frame(local_repos) || is.null(local_repos)
   )
-  check_dir_exists(project)
+  checkmate::assert_directory_exists(project)
 
   repo_deps_info <- get_yaml_deps_info(project)
   rbind(
@@ -272,7 +272,6 @@ get_true_deps_graph <- function(pkgs_df,
   # for inaccessible packages we need to get their upstream
   # dependencies from yaml files of accessible repos
   if (!all(pkgs_df$accessible)) {
-
     # for each accessible package
     for (idx in seq_len(nrow(pkgs_df))) {
       if (!pkgs_df$accessible[idx]) {

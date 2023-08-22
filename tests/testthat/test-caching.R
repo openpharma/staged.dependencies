@@ -33,7 +33,6 @@ test_that("clear_cache", {
 
 
 test_that("rec_checkout_internal_deps works (with mocking checkout)", {
-
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
   mockery::stub(rec_checkout_internal_deps, "checkout_repo", function(repo_dir, repo_url, select_ref_rule, ...) {
     repo_name <- basename(repo_url)
@@ -54,7 +53,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
     capture.output(rec_checkout_internal_deps(
       list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
       "unittest_branch1",
-      direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist", verbose = 0
+      direction = c("upstream"), local_repos = NULL, fallback_branch = "not_exist"
     )),
     regexp = "Available refs .* must include at least one of 'unittest_branch1, not_exist'"
   )
@@ -62,7 +61,7 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
   output <- capture.output(res <- rec_checkout_internal_deps(
     list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
     "fix1@main",
-    direction = c("upstream"), local_repos = NULL, verbose = 0
+    direction = c("upstream"), local_repos = NULL
   ))
 
   # check mocked functions were called in correct order
@@ -108,7 +107,6 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
 })
 
 test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking checkout)", {
-
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
   # but stageddeps.water is not accessible
   mockery::stub(rec_checkout_internal_deps, "checkout_repo", function(repo_dir, repo_url, select_ref_rule, ...) {
@@ -134,7 +132,7 @@ test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking
   res <- rec_checkout_internal_deps(
     list(list(repo = "openpharma/stageddeps.food", host = "https://github.com", subdir = ".")),
     "main",
-    local_repos = NULL, verbose = 0, direction = "all"
+    local_repos = NULL, direction = "all"
   )
 
   # we should not see garden and water should not be accessible
@@ -187,6 +185,7 @@ test_that("copy_local_repo_to_cachedir works", {
 
   git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
+  verbose_sd_set(2)
   # ckeck all files (from above) are added to the git commit in a local cache dir
   with_tmp_cachedir({
     res <- expect_message(
@@ -195,8 +194,7 @@ test_that("copy_local_repo_to_cachedir works", {
         repo = "openpharma/stageddeps.food", host = "https://github.com",
         select_ref_rule = function(available_refs) {
           structure("main", type = "branch")
-        },
-        verbose = 2
+        }
       ),
       regexp = "Adding all of the following", fixed = TRUE
     )
@@ -205,6 +203,7 @@ test_that("copy_local_repo_to_cachedir works", {
     expect_equal(res$ref, "local (main)")
     expect_true(git_status_clean(res$dir))
   })
+  verbose_sd_rm()
 
   unlink(repo_dir, recursive = TRUE)
 })

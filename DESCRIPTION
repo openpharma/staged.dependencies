@@ -1,13 +1,14 @@
 Package: staged.dependencies
 Type: Package
 Title: Install R packages from Particular Git Branches
-Version: 0.3.1
+Version: 0.3.1.9001
 Authors@R: c(
   person("Adrian", "Waddell", email = "adrian.waddell@roche.com", role = c("aut", "cre")),
   person("Maximilian", "Mordig", email = "maximilian_oliver.mordig@roche.com", role = "aut"),
   person("Nikolas", "Burkoff", email = "nikolas.burkoff@roche.com", role = "aut")
   )
 Imports:
+    checkmate,
     desc,
     devtools,
     digest,
@@ -47,6 +48,7 @@ Suggests:
     visNetwork
 VignetteBuilder: knitr
 Collate:
+    'argument_convention.R'
     'caching.R'
     'dependencies.R'
     'dependencies_app.R'

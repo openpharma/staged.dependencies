@@ -44,7 +44,9 @@ list will be considered and their dependencies installed if needed (advanced usa
 \item{dry}{(\code{logical}) dry run that outputs what would happen without actually
 doing it.}
 
-\item{verbose}{verbosity level, incremental; from 0 (none) to 2 (high)}
+\item{verbose}{(\code{numeric}) \cr verbosity level, incremental;
+(0: None, 1: packages that get installed + high-level git operations,
+2: includes git checkout infos)}
 
 \item{...}{
   Arguments passed on to \code{\link[=install_deps]{install_deps}}

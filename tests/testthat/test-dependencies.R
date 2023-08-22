@@ -300,7 +300,6 @@ test_that("build_check_install works", {
 
 
 test_that("get_all_external_deps works", {
-
   # dummy dependency_structure object
 
   deps <- list(
@@ -368,12 +367,13 @@ test_that("get_all_external_deps works", {
   expect_equal(results, c("Q", "W", "U", "X", "V", "Y", "T", "Z", "S"))
 
   # message and unsorted list if not all of Depends, Imports and LinkingTo are `from_external_dependencies`
-  expect_message(results <- get_all_external_dependencies(x,
-    package_list = "B",
-    available_packages = available_packages,
-    from_external_dependencies = c("Depends", "Imports")
-  ),
-  regexp = "Packages will not be ordered as this requires"
+  expect_message(
+    results <- get_all_external_dependencies(x,
+      package_list = "B",
+      available_packages = available_packages,
+      from_external_dependencies = c("Depends", "Imports")
+    ),
+    regexp = "Packages will not be ordered as this requires"
   )
 
   expect_equal(sort(results), c("T", "Z"))

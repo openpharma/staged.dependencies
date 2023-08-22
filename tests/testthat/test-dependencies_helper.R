@@ -137,7 +137,6 @@ test_that("yaml_from_dep_table works", {
 
 
 test_that("parse_remote_project works", {
-
   # repo@host
   expect_equal(
     parse_remote_project("x@y"),
@@ -229,7 +228,6 @@ test_that("run_package_actions works", {
 
 # parse_deps_table ----
 test_that("parse_deps_table works as expected", {
-
   # empty/NA returns character(0)
   expect_length(parse_deps_table(""), 0)
   expect_length(parse_deps_table(NA), 0)

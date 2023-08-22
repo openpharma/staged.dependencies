@@ -26,9 +26,9 @@ clear_cache <- function(pattern = "*") {
   if (!identical(pattern, "*")) {
     direcs <- dir(get_packages_cache_dir())
     if (length(direcs) == 0) {
-      message("Cache empty")
+      message_if_verbose("Cache empty")
     } else {
-      message("Directories remaining in cache:\n", paste(direcs, collapse = "\n"))
+      message_if_verbose("Directories remaining in cache:\n", paste(direcs, collapse = "\n"))
     }
   }
 }
@@ -36,7 +36,6 @@ clear_cache <- function(pattern = "*") {
 # copies example config file to package settings directory
 # fails if copy did not work
 copy_config_to_storage_dir <- function() {
-
   path <- file.path(get_storage_dir(), "config.yaml")
 
   if (!file.exists(path)) {
@@ -79,9 +78,7 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
 # copies a local directory to the cache dir and commits the current state in
 # that cache dir, so the SHA can be added to the DESCRIPTION file
 # note: files in .gitignore are also available to the package locally
-copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, verbose = 0) {
-  check_verbose_arg(verbose)
-
+copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule) {
   local_dir <- fs::path_dir(git2r::discover_repository(local_dir))
 
   check_dir_exists(local_dir, prefix = "Local directory: ")
@@ -91,9 +88,11 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
     fs::dir_delete(repo_dir)
   }
 
-  if (verbose >= 1) {
-    message(paste("Copying local dir", local_dir, "to cache dir", repo_dir))
-  }
+  message_if_verbose("Copying local dir ", local_dir, " to cache dir ", repo_dir, required_verbose = 2)
+  message_if_verbose("Copying local dir ", local_dir, " to cache dir...",
+    required_verbose = 1, is_equal = TRUE
+  )
+
   # file.copy copies a directory inside an existing directory
   # we ignore the renv sub directories as it is large (so slow), has long
   # path names (so causes problems on Windows) and is not needed
@@ -151,12 +150,11 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule, 
     (length(git2r::status(repo_dir)$unstaged) > 0) ||
     (length(git2r::status(repo_dir)$untracked) > 0)) {
     # add all files, including untracked (all argument of git2r::commit does not do this)
-    if (verbose >= 2) {
-      message(
-        "Adding all of the following files: \n",
-        paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n")
-      )
-    }
+    static_msg <- paste0(
+      "Adding all of the following files: \n",
+      paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n")
+    )
+    message_if_verbose(static_msg, required_verbose = 2)
     git2r::add(repo_dir, ".")
     git2r::commit(
       repo_dir,
@@ -215,7 +213,6 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #' The packages listed there are internal packages. All other dependencies
 #' listed in the `DESCRIPTION` file are external dependencies.
 #'
-#' @md
 #' @param repos_to_process `list` of `list(repo, host)` repos to start from
 #' @param ref (`character`) tag/branch to build
 #' @param direction (`character`) direction in which to discover packages
@@ -225,23 +222,20 @@ get_hashed_repo_to_dir_mapping <- function(local_repos) {
 #'   local rather than cloned; columns are `repo, host, directory`
 #' @param fallback_branch (`character`) the default branch to try to use if
 #'   no other matches found
-#' @param verbose (`numeric`) verbosity level, incremental;
-#'   (0: None, 1: packages that get installed + high-level git operations,
-#'   2: includes git checkout infos)
 #'
 #' @return A data frame, one row per checked out repository with columns
 #' repo, host and cache_dir
+#'
+#' @keywords internal
 rec_checkout_internal_deps <- function(repos_to_process, ref,
                                        direction = "upstream",
                                        local_repos = get_local_pkgs_from_config(),
-                                       fallback_branch = "main",
-                                       verbose = 0) {
+                                       fallback_branch = "main") {
   stopifnot(
     is.list(repos_to_process)
   )
   direction <- check_direction_arg_deprecated(direction)
   check_direction_arg(direction)
-  check_verbose_arg(verbose)
 
   local_repo_to_dir <- get_hashed_repo_to_dir_mapping(local_repos)
   rm(local_repos)
@@ -268,8 +262,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
         local_repo_to_dir[[hashed_repo_and_host]], repo_and_host$repo, repo_and_host$host,
         select_ref_rule = function(available_refs) {
           determine_ref(ref, available_refs, fallback_branch = fallback_branch)
-        },
-        verbose = verbose
+        }
       )
     } else {
       repo_info <- checkout_repo(
@@ -279,8 +272,7 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
         select_ref_rule = function(available_refs) {
           determine_ref(ref, available_refs, fallback_branch = fallback_branch)
         },
-        must_work = (length(hashed_processed_repos) == 0), # first repo must be accessible
-        verbose = verbose
+        must_work = (length(hashed_processed_repos) == 0) # first repo must be accessible
       )
     }
 
@@ -312,5 +304,8 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
   df$accessible <- unlist(unname(hashed_repos_accessible))
   df$ref <- unlist(unname(hashed_repos_refs))
   df$sha <- unlist(unname(hashed_repos_shas))
+
+  message_if_verbose("Current cache directory: ", fs::path_norm(get_packages_cache_dir()))
+
   return(df)
 }

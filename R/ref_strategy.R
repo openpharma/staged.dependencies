@@ -112,13 +112,13 @@ determine_ref <- function(ref, available_refs, fallback_branch = "main", branch_
 
 # infer the ref if it is null
 infer_ref_from_branch <- function(project = ".") {
-  check_dir_exists(project)
+  checkmate::assert_directory_exists(project)
   return(get_current_branch(project))
 }
 
 
 check_ref_consistency <- function(ref, project = ".", remote_name = "origin", fallback_branch = "main") {
-  check_dir_exists(project)
+  checkmate::assert_directory_exists(project)
   current_branch <- get_current_branch(project)
   # if in detached HEAD then we ignore the ref_consistency check (i.e. so gitlab
   # automation does not throw a warning)

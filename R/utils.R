@@ -1,11 +1,66 @@
 # cat pasted arguments + new line
-cat_nl <- function(...) cat(paste0(paste(...), "\n"))
+cat_nl <- function(...) {
+  cat(paste0(paste(...), "\n"))
+}
 # cat_nl("fff", "gg")
+#' Set staged.dependencies verbosity
+#'
+#' @description
+#' Functions to set and remove the option parameter `verbose_level_staged.deps`.
+#' It can assume integer values between `c(0, 1, 2)`. This will set this variable
+#' as an option with [options()] and [getOption()].
+#'
+#' @inheritParams argument_convention
+#'
+#' @examples
+#' verbose_sd_set(2)
+#' verbose_sd_get() # 2, the inserted value
+#' verbose_sd_rm()
+#' verbose_sd_get() # 1, the default
+#'
+#' @export
+#' @name verbose_sd_option
+verbose_sd_set <- function(verbose = 1) {
+  options("verbose_level_staged.deps" = verbose)
+}
+#' @name verbose_sd_option
+#' @export
+verbose_sd_get <- function() {
+  ret <- getOption("verbose_level_staged.deps")
+  if (is.null(ret)) {
+    1 # Default
+  } else {
+    ret
+  }
+}
+#' @export
+#' @name verbose_sd_option
+verbose_sd_rm <- function() {
+  if (is.null(getOption("verbose_level_staged.deps"))) {
+    stop("No verbose_level_staged.deps to remove in general environment.")
+  } else {
+    options("verbose_level_staged.deps" = NULL) # Reset
+  }
+}
+
 
 # output message if verbose argument is at least required_verbose
-message_if_verbose <- function(..., verbose, required_verbose = 1) {
-  if (verbose >= required_verbose) {
+message_if_verbose <- function(..., verbose = NULL, required_verbose = 1, is_equal = FALSE) {
+  if (is.null(verbose)) {
+    verb <- verbose_sd_get()
+  }
+  # Should it be verbose equal to required or >= ?
+  if (moe_sd(verb, required_verbose, is_equal)) {
     message(...)
+  }
+}
+
+# Helper fnc - major or equal
+moe_sd <- function(verb, req_verb, is_equal) {
+  if (isTRUE(is_equal)) {
+    verb == req_verb
+  } else {
+    verb >= req_verb
   }
 }
 
@@ -98,7 +153,6 @@ check_dir_exists <- function(direc, prefix = "") {
 # validate the contents of the yaml file (after conversion into R)
 # return NULL if valid throw error if not
 validate_staged_deps_yaml <- function(content, file_name = "") {
-
   # A simplified schema object to capture the schema for the yaml file
   # each entry of the list contains the top level field, with their name
   # whether they can be NULL and their subfields. If array is TRUE then each element
@@ -140,7 +194,6 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
 
   # next check the contents of the fields is as expected
   lapply(required_schema, function(field) {
-
     # extract the contents for this field
     sub_content <- content[[field$name]]
 
