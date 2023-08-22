@@ -86,7 +86,8 @@ install_deps_app <- function(default_repo = NULL,
           dep_table_rv(NULL)
           error_rv(NULL)
 
-          message_if_verbose("Computing dependency structure for ref ",
+          message_if_verbose(
+            "Computing dependency structure for ref ",
             input$ref, " starting from project ", paste(input$repo, input$host, sep = "@")
           )
 

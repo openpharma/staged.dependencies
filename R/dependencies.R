@@ -71,7 +71,6 @@ dependency_table <- function(project = ".",
                              fallback_branch = "main",
                              renv_profile = NULL,
                              verbose = 1) {
-
   # validate arguments
   stopifnot(is.data.frame(local_repos) || is.null(local_repos))
   direction <- check_direction_arg_deprecated(direction)
@@ -233,7 +232,6 @@ print.dependency_structure <- function(x, ...) {
 #' @importFrom rlang .data
 #' @export
 plot.dependency_structure <- function(x, y, ...) {
-
   # construct visNetwork graph
   require_pkgs("visNetwork")
   # todo: put branch below node: https://github.com/almende/vis/issues/3436

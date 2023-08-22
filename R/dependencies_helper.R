@@ -55,7 +55,8 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
     )
   }
 
-  message_if_verbose("Processing packages in order: ",
+  message_if_verbose(
+    "Processing packages in order: ",
     toString(pkg_actions$package_name)
   )
 
@@ -64,7 +65,8 @@ run_package_actions <- function(pkg_actions, internal_pkg_deps,
     actions <- pkg_actions$actions[idx]
 
     if (!pkg_actions$installable[idx]) {
-      message_if_verbose("Skipping package ", pkg_actions$package_name[idx],
+      message_if_verbose(
+        "Skipping package ", pkg_actions$package_name[idx],
         " as it (or one of its upstream dependencies) is not accessible"
       )
       next
@@ -270,7 +272,6 @@ get_true_deps_graph <- function(pkgs_df,
   # for inaccessible packages we need to get their upstream
   # dependencies from yaml files of accessible repos
   if (!all(pkgs_df$accessible)) {
-
     # for each accessible package
     for (idx in seq_len(nrow(pkgs_df))) {
       if (!pkgs_df$accessible[idx]) {

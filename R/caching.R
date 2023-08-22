@@ -36,7 +36,6 @@ clear_cache <- function(pattern = "*") {
 # copies example config file to package settings directory
 # fails if copy did not work
 copy_config_to_storage_dir <- function() {
-
   path <- file.path(get_storage_dir(), "config.yaml")
 
   if (!file.exists(path)) {
@@ -80,7 +79,6 @@ get_active_branch_in_cache <- function(repo, host, local = FALSE) {
 # that cache dir, so the SHA can be added to the DESCRIPTION file
 # note: files in .gitignore are also available to the package locally
 copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule) {
-
   local_dir <- fs::path_dir(git2r::discover_repository(local_dir))
 
   check_dir_exists(local_dir, prefix = "Local directory: ")
@@ -150,8 +148,10 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule) 
     (length(git2r::status(repo_dir)$unstaged) > 0) ||
     (length(git2r::status(repo_dir)$untracked) > 0)) {
     # add all files, including untracked (all argument of git2r::commit does not do this)
-    static_msg <- paste0("Adding all of the following files: \n",
-                         paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n"))
+    static_msg <- paste0(
+      "Adding all of the following files: \n",
+      paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n")
+    )
     message_if_verbose(static_msg, required_verbose = 2)
     git2r::add(repo_dir, ".")
     git2r::commit(
