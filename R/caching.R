@@ -89,7 +89,9 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule) 
   }
 
   message_if_verbose("Copying local dir ", local_dir, " to cache dir ", repo_dir, required_verbose = 2)
-  message_if_verbose("Copying local dir ", local_dir, " to cache dir...", required_verbose = 1)
+  message_if_verbose("Copying local dir ", local_dir, " to cache dir...",
+    required_verbose = 1, is_equal = TRUE
+  )
 
   # file.copy copies a directory inside an existing directory
   # we ignore the renv sub directories as it is large (so slow), has long
@@ -277,8 +279,6 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
     repo_info$subdir <- repo_and_host$subdir
     repo_info$path <- fs::path_norm(fs::path_join(c(repo_info$dir, repo_info$subdir)))
 
-    message_if_verbose("Current cache directory: ", dirname(repo_info$path))
-
     hashed_new_repos <- c()
     if (repo_info$accessible) {
       if (direction %in% c("upstream", "all")) {
@@ -304,5 +304,8 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
   df$accessible <- unlist(unname(hashed_repos_accessible))
   df$ref <- unlist(unname(hashed_repos_refs))
   df$sha <- unlist(unname(hashed_repos_shas))
+
+  message_if_verbose("Current cache directory: ", fs::path_norm(get_packages_cache_dir()))
+
   return(df)
 }

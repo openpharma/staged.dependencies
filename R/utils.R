@@ -45,12 +45,21 @@ verbose_sd_rm <- function() {
 
 
 # output message if verbose argument is at least required_verbose
-message_if_verbose <- function(..., verbose = NULL, required_verbose = 1) {
+message_if_verbose <- function(..., verbose = NULL, required_verbose = 1, is_equal = FALSE) {
   if (is.null(verbose)) {
     verb <- verbose_sd_get()
   }
-  if (verb == required_verbose) {
+  if (moe_sd(verb, required_verbose)) {
     message(...)
+  }
+}
+
+# Helper fnc - major or equal
+moe_sd <- function(verb, req_verb, is_equal) {
+  if (isTRUE(is_equal)) {
+    verb == required_verbose
+  } else {
+    verb >= required_verbose
   }
 }
 
