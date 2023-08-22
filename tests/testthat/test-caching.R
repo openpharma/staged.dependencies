@@ -185,6 +185,7 @@ test_that("copy_local_repo_to_cachedir works", {
 
   git2r::remote_set_url(repo_dir, name = "origin", url = "https://github.com/openpharma/stageddeps.food.git")
 
+  verbose_sd_set(2)
   # ckeck all files (from above) are added to the git commit in a local cache dir
   with_tmp_cachedir({
     res <- expect_message(
@@ -202,6 +203,7 @@ test_that("copy_local_repo_to_cachedir works", {
     expect_equal(res$ref, "local (main)")
     expect_true(git_status_clean(res$dir))
   })
+  verbose_sd_rm()
 
   unlink(repo_dir, recursive = TRUE)
 })
