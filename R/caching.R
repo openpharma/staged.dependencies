@@ -277,6 +277,8 @@ rec_checkout_internal_deps <- function(repos_to_process, ref,
     repo_info$subdir <- repo_and_host$subdir
     repo_info$path <- fs::path_norm(fs::path_join(c(repo_info$dir, repo_info$subdir)))
 
+    message_if_verbose("Current cache directory: ", dirname(repo_info$path))
+
     hashed_new_repos <- c()
     if (repo_info$accessible) {
       if (direction %in% c("upstream", "all")) {
