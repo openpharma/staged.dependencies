@@ -4,6 +4,13 @@
 # todo: local_repos to data.frame: package name to directory: no, because this means that the package needs to be fetched from the remote first
 # todo? unlink(get_packages_cache_dir(), recursive = TRUE); dir.create(get_packages_cache_dir())
 
+# Helper function copied from fs internals
+is_windows <- function() {
+  if (isTRUE(Sys.getenv("FS_IS_WINDOWS", "FALSE") == "TRUE")) {
+    return(TRUE)
+  }
+  tolower(Sys.info()[["sysname"]]) == "windows"
+}
 
 #' Create dependency structure of your package collection
 #' @param project (`character`) If `project_type` is `local` then
@@ -72,11 +79,14 @@ dependency_table <- function(project = ".",
                              renv_profile = NULL,
                              verbose = 1) {
   # validate arguments
-  stopifnot(is.data.frame(local_repos) || is.null(local_repos))
+  checkmate::assert_data_frame(local_repos, null.ok = TRUE)
   direction <- check_direction_arg_deprecated(direction)
   check_direction_arg(direction)
-  stopifnot(project_type %in% c("local", "repo@host"))
-  stopifnot(rlang::is_scalar_character(fallback_branch))
+  checkmate::assert_choice(project_type, c("local", "repo@host"))
+  checkmate::assert_character(fallback_branch, max.len = 1)
+
+  # Ideally here we could catch the error for windows and too long paths
+  # if (is_windows())
 
   if (verbose != 1) {
     checkmate::assert_int(verbose, lower = 0, upper = 2)
@@ -110,12 +120,12 @@ dependency_table <- function(project = ".",
     repo_to_process <- list(parse_remote_project(project))
   }
 
-
   # a dataframe with columns repo, host, ref, sha, cache_dir, accessible (logical)
   internal_deps <- rec_checkout_internal_deps(
     repo_to_process, ref,
     direction = direction,
-    local_repos = local_repos, fallback_branch = fallback_branch
+    local_repos = local_repos,
+    fallback_branch = fallback_branch
   )
 
   internal_deps$package_name[internal_deps$accessible] <-

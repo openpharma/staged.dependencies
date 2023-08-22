@@ -53,6 +53,7 @@ Collate:
     'dependencies.R'
     'dependencies_app.R'
     'dependencies_helper.R'
+    'fnc_deps.R'
     'git_tools.R'
     'graph_methods.R'
     'host.R'
