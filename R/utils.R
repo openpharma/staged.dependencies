@@ -58,9 +58,9 @@ message_if_verbose <- function(..., verbose = NULL, required_verbose = 1, is_equ
 # Helper fnc - major or equal
 moe_sd <- function(verb, req_verb, is_equal) {
   if (isTRUE(is_equal)) {
-    verb == required_verbose
+    verb == req_verb
   } else {
-    verb >= required_verbose
+    verb >= req_verb
   }
 }
 
