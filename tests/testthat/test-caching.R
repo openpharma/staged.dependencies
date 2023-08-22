@@ -33,7 +33,6 @@ test_that("clear_cache", {
 
 
 test_that("rec_checkout_internal_deps works (with mocking checkout)", {
-
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
   mockery::stub(rec_checkout_internal_deps, "checkout_repo", function(repo_dir, repo_url, select_ref_rule, ...) {
     repo_name <- basename(repo_url)
@@ -108,7 +107,6 @@ test_that("rec_checkout_internal_deps works (with mocking checkout)", {
 })
 
 test_that("rec_checkout_internal_deps works for inaccessible repos (with mocking checkout)", {
-
   # mock checkout_repo by copying the appropriate directory to the repo_dir directory
   # but stageddeps.water is not accessible
   mockery::stub(rec_checkout_internal_deps, "checkout_repo", function(repo_dir, repo_url, select_ref_rule, ...) {

@@ -143,7 +143,6 @@ check_dir_exists <- function(direc, prefix = "") {
 # validate the contents of the yaml file (after conversion into R)
 # return NULL if valid throw error if not
 validate_staged_deps_yaml <- function(content, file_name = "") {
-
   # A simplified schema object to capture the schema for the yaml file
   # each entry of the list contains the top level field, with their name
   # whether they can be NULL and their subfields. If array is TRUE then each element
@@ -185,7 +184,6 @@ validate_staged_deps_yaml <- function(content, file_name = "") {
 
   # next check the contents of the fields is as expected
   lapply(required_schema, function(field) {
-
     # extract the contents for this field
     sub_content <- content[[field$name]]
 
