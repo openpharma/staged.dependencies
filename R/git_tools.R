@@ -129,7 +129,9 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     git2r::config(git_repo, remote.origin.prune = "true")
     tryCatch(
       {
-        git2r::fetch(git_repo, name = get_remote_name(git_repo, repo_url), credentials = creds, verbose = verbose >= 2)
+        git2r::fetch(git_repo, name = get_remote_name(git_repo, repo_url),
+                     credentials = creds,
+                     verbose = verbose_sd_get() >= 2)
       },
       error = function(cond) {
         warning(
