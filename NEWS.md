@@ -1,8 +1,8 @@
 # staged.dependecies 0.3.1.9001
 
 ### Enhancements
-* Added functions to set and remove general verbosity of internal variable `verbose_level_staged.deps`.
-* Added `argument_convention.R` with verbose parameter definition.
+* Added functions to set and remove general level of messaging as option variable `verbose_level_staged.deps`.
+* Added `argument_convention.R` with default parameter definitions.
 
 ### Miscellaneous
 * Replaced internal function that checks directory existence with assertion from `checkmate` when there is no prefix. 

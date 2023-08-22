@@ -1,4 +1,4 @@
-#' Standard Arguments
+#' Default Arguments
 #'
 #' The documentation to this function lists all the arguments in `staged.dependencies`
 #' that are used repeatedly.

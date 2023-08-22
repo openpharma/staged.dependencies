@@ -150,11 +150,9 @@ copy_local_repo_to_cachedir <- function(local_dir, repo, host, select_ref_rule) 
     (length(git2r::status(repo_dir)$unstaged) > 0) ||
     (length(git2r::status(repo_dir)$untracked) > 0)) {
     # add all files, including untracked (all argument of git2r::commit does not do this)
-    message_if_verbose(
-      "Adding all of the following files: \n",
-      paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n"),
-      required_verbose = 2
-    )
+    static_msg <- paste0("Adding all of the following files: \n",
+                         paste(utils::capture.output(git2r::status(repo_dir)), collapse = "\n"))
+    message_if_verbose(static_msg, required_verbose = 2)
     git2r::add(repo_dir, ".")
     git2r::commit(
       repo_dir,

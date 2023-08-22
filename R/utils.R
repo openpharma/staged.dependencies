@@ -45,7 +45,7 @@ verbose_sd_rm <- function() {
 
 
 # output message if verbose argument is at least required_verbose
-message_if_verbose <- function(..., verbose = NULL, required_verbose = 1, type = "message") {
+message_if_verbose <- function(..., verbose = NULL, required_verbose = 1) {
   if (is.null(verbose)) {
     verb <- verbose_sd_get()
   }

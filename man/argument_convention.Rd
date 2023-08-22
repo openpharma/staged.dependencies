@@ -2,7 +2,7 @@
 % Please edit documentation in R/argument_convention.R
 \name{argument_convention}
 \alias{argument_convention}
-\title{Standard Arguments}
+\title{Default Arguments}
 \arguments{
 \item{verbose}{(\code{numeric}) \cr verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
