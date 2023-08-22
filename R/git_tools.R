@@ -28,7 +28,7 @@ check_only_remote_branches <- function(git_repo, remote_name) {
   all_branches <- names(git2r::branches(git_repo))
   stopifnot(all(vapply(all_branches, function(x) {
     startsWith(x, paste0(remote_name, "/")) || startsWith(x, "staged_dep_tag_")
-    }, logical(1))))
+  }, logical(1))))
 }
 
 # clones the repo and only keeps remote branches
@@ -129,9 +129,11 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
     git2r::config(git_repo, remote.origin.prune = "true")
     tryCatch(
       {
-        git2r::fetch(git_repo, name = get_remote_name(git_repo, repo_url),
-                     credentials = creds,
-                     verbose = verbose_sd_get() >= 2)
+        git2r::fetch(git_repo,
+          name = get_remote_name(git_repo, repo_url),
+          credentials = creds,
+          verbose = verbose_sd_get() >= 2
+        )
       },
       error = function(cond) {
         warning(
@@ -177,7 +179,6 @@ checkout_repo <- function(repo_dir, repo_url, select_ref_rule, token_envvar = NU
 # Install the external deps required for a package
 # does not install dependencies that appear in `internal_pkg_deps`
 install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
-
   # `remotes::install_deps` (and renv::install)
   #  only makes use of the package DESCRIPTION file
   # So we create a temp directory containing this file and then call this function
@@ -213,7 +214,6 @@ install_external_deps <- function(repo_dir, internal_pkg_deps, ...) {
 # function to get the remote name (e.g. origin) which matches
 # the url given in the staged.deps yaml file
 get_remote_name <- function(git_repo, repo_url) {
-
   # remove the https:// and .git from repo_url
   repo_url <- gsub("^.+://|.git$", "", repo_url, perl = TRUE)
 
