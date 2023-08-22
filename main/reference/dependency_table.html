@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">staged.dependencies</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.1.9001</span>
       </span>
     </div>
 
@@ -28,15 +28,6 @@
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
-<!-- start dropdown for versions --> <li class="nav-item dropdown">
-        <a href="#" class="nav-link dropdown-toggle"
-          data-bs-toggle="dropdown" role="button"
-          aria-expanded="false" aria-haspopup="true"
-          id="dropdown-versions">Versions</a> <div class="dropdown-menu" aria-labelledby="dropdown-versions"> <a class="dropdown-item" data-toggle="tooltip" title="" href="https://openpharma.github.io/staged.dependencies/main">main</a>
-<a class="dropdown-item" data-toggle="tooltip" title="" href="https://openpharma.github.io/staged.dependencies/latest-tag">latest-tag</a>
-<a class="dropdown-item" data-toggle="tooltip" title="" href="https://openpharma.github.io/staged.dependencies/v0.3.1">v0.3.1</a>
-<a class="dropdown-item" data-toggle="tooltip" title="" href="https://openpharma.github.io/staged.dependencies/v0.3.0">v0.3.0</a> </div></li>
-<!-- end dropdown for versions -->
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/openpharma/staged.dependencies" class="external-link">
     <span class="fa fa-github"></span>
@@ -86,19 +77,19 @@ is assumed.</p></dd>
 
 
 <dt>project_type</dt>
-<dd><p>(<code>character</code>) See <code>project</code> argument</p></dd>
+<dd><p>(<code>character</code>) See <code>project</code> argument.</p></dd>
 
 
 <dt>ref</dt>
 <dd><p>(<code>character</code>) git branch (or tag) inferred from the
 branch of the project if not provided; warning if not consistent with
 current branch of project. If <code>project_type</code> is not <code>local</code> then this argument
-must be provided</p></dd>
+must be provided.</p></dd>
 
 
 <dt>local_repos</dt>
 <dd><p>(<code>data.frame</code>) repositories that should be taken from
-local file system rather than cloned; columns are <code>repo, host, directory</code></p></dd>
+local file system rather than cloned; columns are <code>repo, host, directory</code>.</p></dd>
 
 
 <dt>direction</dt>
@@ -108,7 +99,7 @@ either "upstream","downstream" or "all".</p></dd>
 
 <dt>fallback_branch</dt>
 <dd><p>(<code>character</code>) the default branch to try to use if
-no other matches found</p></dd>
+no other matches found. It defaults to <code>"main"</code>.</p></dd>
 
 
 <dt>renv_profile</dt>
@@ -117,7 +108,7 @@ to be included from the repos. The standard <code>renv.lock</code> file uses the
 
 
 <dt>verbose</dt>
-<dd><p>(<code>numeric</code>) verbosity level, incremental;
+<dd><p>(<code>numeric</code>) <br> verbosity level, incremental;
 (0: None, 1: packages that get installed + high-level git operations,
 2: includes git checkout infos)</p></dd>
 
